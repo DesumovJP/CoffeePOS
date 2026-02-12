@@ -1,0 +1,136 @@
+/**
+ * POS Page Styles
+ *
+ * Split-panel layout: products + order summary
+ * Glass panels with warm background
+ */
+
+.layout {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--bg-secondary);
+  max-width: var(--grid-max-width);
+  margin-inline: auto;
+  padding-inline: var(--grid-margin);
+  width: 100%;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+  padding-bottom: var(--space-3);
+}
+
+.main {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(var(--grid-columns), 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  gap: var(--grid-gutter);
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* Products panel — 8 of 12 cols */
+.products {
+  grid-column: 1 / 9;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--glass-bg-elevated);
+  backdrop-filter: blur(var(--blur-lg));
+  -webkit-backdrop-filter: blur(var(--blur-lg));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+}
+
+/* Order panel — 4 of 12 cols */
+.order {
+  grid-column: 9 / -1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+/* Wide screens: more room for products */
+@media (min-width: 1440px) {
+  .products {
+    grid-column: 1 / 10;
+  }
+
+  .order {
+    grid-column: 10 / -1;
+  }
+}
+
+/* Tablet: wider cart */
+@media (max-width: 1024px) {
+  .products {
+    grid-column: 1 / 8;
+  }
+
+  .order {
+    grid-column: 8 / -1;
+  }
+}
+
+@media (max-width: 768px) {
+  .layout {
+    flex-direction: column;
+    padding: var(--space-3);
+    gap: 0;
+  }
+
+  .main {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .products {
+    flex: 1;
+    min-height: 0;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    border-bottom: none;
+  }
+
+  .order {
+    width: 100%;
+    flex-shrink: 0;
+    max-height: 45vh;
+    overflow: hidden;
+  }
+}
+
+@media (max-width: 480px) {
+  .layout {
+    padding: 0;
+    gap: 0;
+  }
+
+  .main {
+    position: relative;
+  }
+
+  .order {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-height: 70vh;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.08);
+    z-index: var(--z-modal);
+  }
+
+  .products {
+    padding-bottom: 60px;
+    border-radius: 0;
+    border: none;
+  }
+}

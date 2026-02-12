@@ -1,0 +1,58 @@
+{
+  "kind": "collectionType",
+  "collectionName": "ingredients",
+  "info": {
+    "singularName": "ingredient",
+    "pluralName": "ingredients",
+    "displayName": "Ingredient",
+    "description": "Raw ingredients for inventory management"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true,
+      "maxLength": 200
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "name"
+    },
+    "unit": {
+      "type": "enumeration",
+      "enum": ["g", "kg", "ml", "l", "pcs", "portion"],
+      "required": true
+    },
+    "quantity": {
+      "type": "decimal",
+      "default": 0,
+      "min": 0
+    },
+    "minQuantity": {
+      "type": "decimal",
+      "default": 0,
+      "min": 0
+    },
+    "costPerUnit": {
+      "type": "decimal",
+      "default": 0,
+      "min": 0
+    },
+    "supplier": {
+      "type": "string",
+      "maxLength": 200
+    },
+    "category": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::ingredient-category.ingredient-category",
+      "inversedBy": "ingredients"
+    },
+    "isActive": {
+      "type": "boolean",
+      "default": true
+    }
+  }
+}

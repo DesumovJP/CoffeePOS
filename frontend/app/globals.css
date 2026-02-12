@@ -1,0 +1,633 @@
+/**
+ * ParadisePOS - Global Styles
+ *
+ * iOS 26 Liquid Glass Design System
+ * All styles use CSS variables from design tokens
+ * NO inline styles allowed - all styling through this system
+ */
+
+@import "tailwindcss";
+
+/* ============================================
+   CSS CUSTOM PROPERTIES (Design Tokens)
+   ============================================ */
+
+:root {
+  /* Color Scheme */
+  color-scheme: light;
+
+  /* ----------------------------------------
+     Glass Surfaces (Light mode - translucent for real glass)
+     ---------------------------------------- */
+  --glass-bg: rgba(255, 255, 255, 0.72);
+  --glass-bg-subtle: rgba(255, 255, 255, 0.45);
+  --glass-bg-elevated: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(0, 0, 0, 0.06);
+  --glass-border-strong: rgba(0, 0, 0, 0.1);
+  --glass-border-inner: rgba(255, 255, 255, 0.5);
+  --glass-border-inner-strong: rgba(255, 255, 255, 0.7);
+  --overlay-bg: rgba(0, 0, 0, 0.4);
+
+  /* ----------------------------------------
+     Neutral Colors (Clean, minimal)
+     ---------------------------------------- */
+  --color-neutral-0: #FFFFFF;
+  --color-neutral-50: #F7F7F7;
+  --color-neutral-100: #F0F0F0;
+  --color-neutral-200: #E4E4E4;
+  --color-neutral-300: #D1D1D1;
+  --color-neutral-400: #A0A0A0;
+  --color-neutral-500: #6B6B6B;
+  --color-neutral-600: #525252;
+  --color-neutral-700: #3D3D3D;
+  --color-neutral-800: #292929;
+  --color-neutral-900: #1A1A1A;
+  --color-neutral-950: #0D0D0D;
+
+  /* ----------------------------------------
+     Accent Colors (Deep charcoal + warm brown brand)
+     ---------------------------------------- */
+  --color-accent: #2C2C2E;
+  --color-accent-hover: #3A3A3C;
+  --color-accent-active: #1C1C1E;
+  --color-accent-subtle: rgba(44, 44, 46, 0.06);
+  --color-accent-50: #F7F7F7;
+  --color-accent-100: #E4E4E4;
+  --color-accent-200: #D1D1D1;
+  --color-accent-300: #A0A0A0;
+  --color-accent-400: #6B6B6B;
+  --color-accent-500: #525252;
+  --color-accent-600: #3D3D3D;
+  --color-accent-700: #2C2C2E;
+  --color-accent-800: #1C1C1E;
+  --color-accent-900: #0D0D0D;
+
+  /* Brand — warm brown for cafe identity */
+  --color-brand: #8B5E3C;
+  --color-brand-hover: #A0704D;
+  --color-brand-active: #764E30;
+  --color-brand-subtle: rgba(139, 94, 60, 0.08);
+  --color-brand-bg: rgba(139, 94, 60, 0.06);
+
+  /* ----------------------------------------
+     Semantic Colors
+     ---------------------------------------- */
+  --color-success: #30B350;
+  --color-success-light: #34C759;
+  --color-success-dark: #248A3D;
+  --color-success-bg: rgba(52, 199, 89, 0.12);
+
+  --color-warning: #FF9500;
+  --color-warning-light: #FFB340;
+  --color-warning-dark: #C97800;
+  --color-warning-bg: rgba(255, 149, 0, 0.12);
+
+  --color-error: #FF3B30;
+  --color-error-light: #FF6961;
+  --color-error-dark: #D70015;
+  --color-error-bg: rgba(255, 59, 48, 0.12);
+
+  --color-info: #007AFF;
+  --color-info-light: #4DA2FF;
+  --color-info-dark: #0062CC;
+  --color-info-bg: rgba(0, 122, 255, 0.08);
+
+  /* ----------------------------------------
+     Background Colors (Warm whites for cafe vibe)
+     ---------------------------------------- */
+  --bg-primary: #FAFAF8;
+  --bg-secondary: #F5F3F0;
+  --bg-tertiary: #EDEAE6;
+  --bg-inverse: #1C1C1E;
+
+  /* ----------------------------------------
+     Text Colors (Charcoal for readability)
+     ---------------------------------------- */
+  --text-primary: #1C1C1E;
+  --text-secondary: #48484A;
+  --text-tertiary: #787880;
+  --text-disabled: #AEAEB2;
+  --text-inverse: #FAFAF8;
+
+  /* ----------------------------------------
+     Typography
+     ---------------------------------------- */
+  --font-sans: var(--font-inter, Inter), -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
+
+  /* Fluid typography: mobile → desktop via clamp() */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: clamp(1.125rem, 1.05rem + 0.25vw, 1.25rem);
+  --text-2xl: clamp(1.25rem, 1.1rem + 0.5vw, 1.5rem);
+  --text-3xl: clamp(1.5rem, 1.3rem + 0.65vw, 1.875rem);
+  --text-4xl: clamp(1.75rem, 1.5rem + 0.75vw, 2.25rem);
+  --text-5xl: clamp(2.25rem, 1.85rem + 1.25vw, 3rem);
+  --text-6xl: clamp(2.5rem, 2rem + 1.5vw, 3.75rem);
+
+  --leading-none: 1;
+  --leading-tight: 1.25;
+  --leading-snug: 1.375;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+  --leading-loose: 2;
+
+  --font-thin: 100;
+  --font-extralight: 200;
+  --font-light: 300;
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+  --font-extrabold: 800;
+  --font-black: 900;
+
+  /* ----------------------------------------
+     Spacing
+     ---------------------------------------- */
+  --space-0: 0;
+  --space-px: 1px;
+  --space-0-5: 0.125rem;
+  --space-1: 0.25rem;
+  --space-1-5: 0.375rem;
+  --space-2: 0.5rem;
+  --space-2-5: 0.625rem;
+  --space-3: 0.75rem;
+  --space-3-5: 0.875rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-7: 1.75rem;
+  --space-8: 2rem;
+  --space-9: 2.25rem;
+  --space-10: 2.5rem;
+  --space-11: 2.75rem;
+  --space-12: 3rem;
+  --space-14: 3.5rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+
+  /* ----------------------------------------
+     Border Radius
+     ---------------------------------------- */
+  --radius-none: 0;
+  --radius-xs: 0.25rem;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.5rem;
+  --radius-3xl: 2rem;
+  --radius-full: 9999px;
+
+  /* ----------------------------------------
+     Shadows (Soft, subtle)
+     ---------------------------------------- */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.08);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.1);
+  --shadow-2xl: 0 24px 64px rgba(0, 0, 0, 0.14);
+  --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.03);
+  --shadow-glass: 0 4px 24px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.04), 0 0 1px rgba(0, 0, 0, 0.04);
+  --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+  --shadow-modal: 0 24px 48px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(0, 0, 0, 0.06);
+  --shadow-focus: 0 0 0 3px rgba(44, 44, 46, 0.15);
+
+  /* ----------------------------------------
+     Blur
+     ---------------------------------------- */
+  --blur-xs: 4px;
+  --blur-sm: 8px;
+  --blur-md: 12px;
+  --blur-lg: 16px;
+  --blur-xl: 24px;
+  --blur-2xl: 40px;
+  --blur-glass: 24px;
+
+  /* ----------------------------------------
+     Z-Index
+     ---------------------------------------- */
+  --z-behind: -1;
+  --z-base: 0;
+  --z-docked: 10;
+  --z-dropdown: 1000;
+  --z-sticky: 1100;
+  --z-banner: 1200;
+  --z-overlay: 1300;
+  --z-modal: 1400;
+  --z-popover: 1500;
+  --z-toast: 1700;
+  --z-tooltip: 1800;
+  --z-max: 9999;
+
+  /* ----------------------------------------
+     Motion
+     ---------------------------------------- */
+  --duration-instant: 50ms;
+  --duration-faster: 100ms;
+  --duration-fast: 150ms;
+  --duration-normal: 200ms;
+  --duration-moderate: 250ms;
+  --duration-slow: 300ms;
+  --duration-slower: 400ms;
+  --duration-slowest: 500ms;
+
+  --ease-default: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+  --transition-all: all 200ms var(--ease-default);
+  --transition-colors: color, background-color, border-color, fill, stroke 150ms var(--ease-default);
+  --transition-transform: transform 200ms var(--ease-default);
+  --transition-opacity: opacity 200ms var(--ease-default);
+  --transition-shadow: box-shadow 200ms var(--ease-default);
+
+  /* ----------------------------------------
+     Layout
+     ---------------------------------------- */
+  --sidebar-collapsed: 4rem;
+  --sidebar-expanded: 14rem;
+  --header-height: 3.5rem;
+  --page-padding-mobile: 0.75rem;
+  --page-padding-tablet: 1rem;
+  --page-padding-desktop: 1.5rem;
+
+  /* Grid System */
+  --grid-columns: 12;
+  --grid-gutter: 12px;
+  --grid-margin: var(--page-padding-mobile);
+  --grid-max-width: 1440px;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --grid-gutter: 16px;
+    --grid-margin: var(--page-padding-tablet);
+  }
+}
+@media (min-width: 1024px) {
+  :root {
+    --grid-gutter: 24px;
+    --grid-margin: var(--page-padding-desktop);
+  }
+}
+@media (min-width: 1920px) {
+  :root {
+    --grid-max-width: 1680px;
+    --grid-gutter: 28px;
+  }
+}
+@media (min-width: 2560px) {
+  :root {
+    --grid-max-width: 1920px;
+    --grid-gutter: 32px;
+  }
+}
+
+/* ============================================
+   DARK MODE OVERRIDES
+   ============================================ */
+
+.dark,
+:root.dark {
+  color-scheme: dark;
+
+  /* Glass Surfaces */
+  --glass-bg: rgba(0, 0, 0, 0.65);
+  --glass-bg-subtle: rgba(0, 0, 0, 0.45);
+  --glass-bg-elevated: rgba(0, 0, 0, 0.78);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-border-strong: rgba(255, 255, 255, 0.24);
+  --overlay-bg: rgba(0, 0, 0, 0.7);
+
+  /* Background */
+  --bg-primary: #0A0A0A;
+  --bg-secondary: #171717;
+  --bg-tertiary: #262626;
+  --bg-inverse: #FFFFFF;
+
+  /* Text */
+  --text-primary: #FAFAFA;
+  --text-secondary: #D4D4D4;
+  --text-tertiary: #A3A3A3;
+  --text-disabled: #525252;
+  --text-inverse: #171717;
+
+  /* Adjusted shadows for dark mode */
+  --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.4);
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* ============================================
+   ACCESSIBILITY
+   ============================================ */
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* High Contrast */
+.high-contrast {
+  --glass-bg: rgba(255, 255, 255, 0.95);
+  --glass-border: rgba(0, 0, 0, 0.3);
+  --text-secondary: var(--text-primary);
+  --text-tertiary: var(--text-primary);
+}
+
+.dark.high-contrast {
+  --glass-bg: rgba(0, 0, 0, 0.95);
+  --glass-border: rgba(255, 255, 255, 0.3);
+}
+
+/* Focus Visible */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+
+/* ============================================
+   GRID SYSTEM
+   ============================================ */
+.container {
+  width: 100%;
+  max-width: var(--grid-max-width);
+  margin-inline: auto;
+  padding-inline: var(--grid-margin);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(var(--grid-columns), 1fr);
+  gap: var(--grid-gutter);
+}
+
+/* ============================================
+   BASE RESET & DEFAULTS
+   ============================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: clamp(16px, 15px + 0.15vw, 18px);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+#main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* Typography defaults */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: var(--font-semibold);
+  line-height: var(--leading-tight);
+  color: var(--text-primary);
+}
+
+h1 { font-size: var(--text-4xl); }
+h2 { font-size: var(--text-3xl); }
+h3 { font-size: var(--text-2xl); }
+h4 { font-size: var(--text-xl); }
+h5 { font-size: var(--text-lg); }
+h6 { font-size: var(--text-base); }
+
+p {
+  color: var(--text-secondary);
+  line-height: var(--leading-relaxed);
+}
+
+a {
+  color: var(--color-accent);
+  text-decoration: none;
+  transition: color var(--duration-fast) var(--ease-default);
+}
+
+a:hover {
+  color: var(--color-accent-hover);
+}
+
+/* Lists */
+ul, ol {
+  list-style: none;
+}
+
+/* Images */
+img, picture, video, canvas, svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* Form elements */
+input, button, textarea, select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+/* Tables */
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+/* ============================================
+   UTILITY CLASSES (Design System Based)
+   ============================================ */
+
+/* Glass Effect */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--blur-glass));
+  -webkit-backdrop-filter: blur(var(--blur-glass));
+  border: 1px solid var(--glass-border);
+}
+
+.glass-subtle {
+  background: var(--glass-bg-subtle);
+  backdrop-filter: blur(var(--blur-lg));
+  -webkit-backdrop-filter: blur(var(--blur-lg));
+  border: 1px solid var(--glass-border);
+}
+
+.glass-elevated {
+  background: var(--glass-bg-elevated);
+  backdrop-filter: blur(var(--blur-2xl));
+  -webkit-backdrop-filter: blur(var(--blur-2xl));
+  border: 1px solid var(--glass-border-strong);
+  box-shadow: var(--shadow-glass);
+}
+
+/* ============================================
+   KEYFRAME ANIMATIONS
+   ============================================ */
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes scaleOut {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(0.95); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideLeft {
+  from { opacity: 0; transform: translateX(10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideRight {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+  20%, 40%, 60%, 80% { transform: translateX(4px); }
+}
+
+@keyframes skeleton {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes ping {
+  0% { transform: scale(1); opacity: 1; }
+  75%, 100% { transform: scale(2); opacity: 0; }
+}
+
+/* ============================================
+   TAILWIND THEME EXTENSIONS
+   ============================================ */
+
+@theme inline {
+  /* Map CSS variables to Tailwind */
+  --color-background: var(--bg-primary);
+  --color-foreground: var(--text-primary);
+
+  --color-accent-DEFAULT: var(--color-accent);
+  --color-success-DEFAULT: var(--color-success);
+  --color-warning-DEFAULT: var(--color-warning);
+  --color-error-DEFAULT: var(--color-error);
+  --color-info-DEFAULT: var(--color-info);
+
+  --font-family-sans: var(--font-sans);
+  --font-family-mono: var(--font-mono);
+
+  --radius-DEFAULT: var(--radius-md);
+}
+
+/* ============================================
+   SCROLLBAR STYLING
+   ============================================ */
+
+/* Hidden scrollbars by default for clean UI */
+::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  background: transparent;
+}
+
+/* Firefox */
+* {
+  scrollbar-width: none;
+}
+
+/* ============================================
+   SELECTION STYLING
+   ============================================ */
+
+::selection {
+  background: var(--color-accent-subtle);
+  color: var(--text-primary);
+}

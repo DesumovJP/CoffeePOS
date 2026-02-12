@@ -1,0 +1,41 @@
+{
+  "kind": "collectionType",
+  "collectionName": "write_offs",
+  "info": {
+    "singularName": "write-off",
+    "pluralName": "write-offs",
+    "displayName": "Write Off",
+    "description": "Ingredient and product write-offs"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "type": {
+      "type": "enumeration",
+      "enum": ["expired", "damaged", "other"],
+      "required": true
+    },
+    "items": {
+      "type": "json"
+    },
+    "totalCost": {
+      "type": "decimal",
+      "default": 0,
+      "min": 0
+    },
+    "reason": {
+      "type": "text",
+      "maxLength": 1000
+    },
+    "performedBy": {
+      "type": "string",
+      "maxLength": 200
+    },
+    "shift": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::shift.shift"
+    }
+  }
+}

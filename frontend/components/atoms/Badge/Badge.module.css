@@ -1,0 +1,101 @@
+/**
+ * Badge Component Styles
+ *
+ * Glass pill badges
+ */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: var(--font-medium);
+  white-space: nowrap;
+  border-radius: var(--radius-full);
+}
+
+/* Size variants */
+.size-sm {
+  height: 1.25rem;
+  padding: 0 var(--space-1-5);
+  font-size: 0.625rem;
+}
+
+.size-md {
+  height: 1.375rem;
+  padding: 0 var(--space-2);
+  font-size: 0.6875rem;
+}
+
+.size-lg {
+  height: 1.625rem;
+  padding: 0 var(--space-2-5);
+  font-size: 0.75rem;
+}
+
+/* Variant styles — glass-tinted backgrounds */
+.variant-default {
+  background-color: var(--bg-tertiary);
+  color: var(--text-secondary);
+}
+
+.variant-primary {
+  background-color: var(--color-accent-subtle);
+  color: var(--color-accent);
+}
+
+.variant-success {
+  background-color: var(--color-success-bg);
+  color: var(--color-success-dark);
+}
+
+.variant-warning {
+  background-color: var(--color-warning-bg);
+  color: var(--color-warning-dark);
+}
+
+.variant-error {
+  background-color: var(--color-error-bg);
+  color: var(--color-error-dark);
+}
+
+.variant-info {
+  background-color: var(--color-info-bg);
+  color: var(--color-info-dark);
+}
+
+/* Outline — text only */
+.outline {
+  background-color: transparent;
+  padding: 0;
+  height: auto;
+}
+
+.outline.variant-default { color: var(--text-tertiary); }
+.outline.variant-primary { color: var(--color-accent); }
+.outline.variant-success { color: var(--color-success); }
+.outline.variant-warning { color: var(--color-warning); }
+.outline.variant-error { color: var(--color-error); }
+.outline.variant-info { color: var(--color-info); }
+
+/* Pill shape — already default */
+.pill {
+  border-radius: var(--radius-full);
+}
+
+/* Dot mode */
+.dot {
+  padding: 0;
+  min-width: 0;
+  border-radius: var(--radius-full);
+}
+
+.dot.size-sm { width: 6px; height: 6px; }
+.dot.size-md { width: 8px; height: 8px; }
+.dot.size-lg { width: 10px; height: 10px; }
+
+.dot.variant-default { background-color: var(--text-disabled); }
+.dot.variant-primary { background-color: var(--color-accent); }
+.dot.variant-success { background-color: var(--color-success); }
+.dot.variant-warning { background-color: var(--color-warning); }
+.dot.variant-error { background-color: var(--color-error); }
+.dot.variant-info { background-color: var(--color-info); }

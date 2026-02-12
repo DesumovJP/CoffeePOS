@@ -1,0 +1,35 @@
+{
+  "kind": "collectionType",
+  "collectionName": "cafe_tables",
+  "info": {
+    "singularName": "cafe-table",
+    "pluralName": "cafe-tables",
+    "displayName": "Cafe Table"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "number": {
+      "type": "integer",
+      "required": true,
+      "unique": true
+    },
+    "seats": {
+      "type": "integer",
+      "required": true,
+      "default": 4
+    },
+    "zone": {
+      "type": "string"
+    },
+    "isActive": {
+      "type": "boolean",
+      "default": true
+    },
+    "sortOrder": {
+      "type": "integer",
+      "default": 0
+    }
+  }
+}

@@ -1,0 +1,105 @@
+/**
+ * Profile Page Styles
+ *
+ * Clean personal dashboard with glass cards
+ */
+
+.page {
+  display: grid;
+  grid-template-columns: repeat(var(--grid-columns), 1fr);
+  column-gap: var(--grid-gutter);
+  row-gap: var(--space-4);
+  padding: var(--grid-margin);
+  padding-top: var(--space-4);
+  height: 100%;
+  overflow-y: auto;
+  max-width: var(--grid-max-width);
+  margin-inline: auto;
+}
+
+.page > * {
+  grid-column: 1 / -1;
+}
+
+/* ============================================
+   PROFILE CARD
+   ============================================ */
+
+.profileCard {
+  padding: var(--space-6);
+  max-width: 720px;
+  margin-inline: auto;
+  width: 100%;
+}
+
+.profileHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  margin-bottom: var(--space-6);
+}
+
+.profileName {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+/* ============================================
+   INFO GRID
+   ============================================ */
+
+.infoGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-3);
+}
+
+.infoField {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-4);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--blur-md));
+  -webkit-backdrop-filter: blur(var(--blur-md));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+}
+
+/* ============================================
+   SHIFTS CONTENT
+   ============================================ */
+
+.shiftsContent {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: 720px;
+  margin-inline: auto;
+  width: 100%;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 768px) {
+  .page {
+    padding: var(--space-3);
+  }
+
+  .profileCard {
+    padding: var(--space-4);
+  }
+
+  .profileHeader {
+    flex-direction: column;
+    text-align: center;
+    gap: var(--space-3);
+  }
+
+  .infoGrid {
+    grid-template-columns: 1fr;
+  }
+}

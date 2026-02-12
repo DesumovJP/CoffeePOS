@@ -1,0 +1,362 @@
+/**
+ * Sidebar Component Styles
+ *
+ * Glass-styled sidebar with expandable/collapsed states
+ */
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  width: var(--sidebar-expanded);
+  height: 100%;
+  padding: var(--space-3) 0;
+  transition: width var(--duration-normal) var(--ease-default);
+  overflow: hidden;
+}
+
+.collapsed {
+  width: var(--sidebar-collapsed);
+}
+
+/* ============================================
+   BRAND
+   ============================================ */
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2-5);
+  padding: var(--space-2) var(--space-4) var(--space-4);
+}
+
+.collapsed .brand {
+  justify-content: center;
+  padding: var(--space-2) 0 var(--space-4);
+}
+
+.logo {
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-brand-subtle);
+  border-radius: var(--radius-lg);
+  color: var(--color-brand);
+}
+
+.logo svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.brandName {
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* ============================================
+   NAVIGATION
+   ============================================ */
+
+.nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: 0 var(--space-2);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.collapsed .nav {
+  align-items: center;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.group + .group {
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--glass-border);
+}
+
+.groupLabel {
+  padding: 0 var(--space-2);
+  margin-bottom: var(--space-1);
+}
+
+.collapsed .groupLabel {
+  display: none;
+}
+
+.items {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.collapsed .items {
+  align-items: center;
+}
+
+/* Nav item */
+.item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2-5);
+  width: 100%;
+  height: 2.5rem;
+  padding: 0 var(--space-3);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all var(--duration-fast) var(--ease-default);
+}
+
+.collapsed .item {
+  width: 2.75rem;
+  height: 2.75rem;
+  justify-content: center;
+  padding: 0;
+  border-radius: var(--radius-lg);
+}
+
+.item:hover:not(.disabled) {
+  color: var(--text-primary);
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.item:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+/* Active item with left accent bar */
+.item.active {
+  color: var(--color-brand);
+  background: var(--color-brand-subtle);
+  font-weight: var(--font-medium);
+}
+
+.item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 1.25rem;
+  background: var(--color-brand);
+  border-radius: 0 var(--radius-full) var(--radius-full) 0;
+}
+
+.collapsed .item.active::before {
+  display: none;
+}
+
+.item.disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.itemIcon {
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.itemLabel {
+  flex: 1;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Badge */
+.badge {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 var(--space-1);
+  background: var(--color-brand);
+  border-radius: var(--radius-full);
+  font-size: 0.625rem;
+  font-weight: var(--font-bold);
+  color: white;
+}
+
+.badgeDot {
+  position: absolute;
+  top: 0.375rem;
+  right: 0.375rem;
+  width: 6px;
+  height: 6px;
+  background: var(--color-brand);
+  border-radius: 50%;
+}
+
+/* ============================================
+   FOOTER
+   ============================================ */
+
+.footer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2);
+}
+
+.collapsed .footer {
+  align-items: center;
+}
+
+.collapseButton {
+  align-self: flex-end;
+}
+
+.collapsed .collapseButton {
+  align-self: center;
+}
+
+/* User */
+.user {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-2);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-default);
+  text-align: left;
+}
+
+.user:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.collapsed .user {
+  justify-content: center;
+  padding: var(--space-1);
+}
+
+.userInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Actions */
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.collapsed .actions {
+  align-items: center;
+}
+
+.actions button {
+  justify-content: flex-start;
+}
+
+.collapsed .actions button {
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  justify-content: center;
+}
+
+/* ============================================
+   RESPONSIVE — Mobile bottom bar
+   ============================================ */
+
+@media (max-width: 768px) {
+  .sidebar,
+  .sidebar.collapsed {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: auto;
+    flex-direction: row;
+    padding: var(--space-2) 0;
+    border-right: none;
+    border-top: 1px solid var(--glass-border);
+    z-index: var(--z-docked);
+    background: var(--glass-bg-elevated);
+    backdrop-filter: blur(var(--blur-2xl));
+    -webkit-backdrop-filter: blur(var(--blur-2xl));
+  }
+
+  .brand {
+    display: none;
+  }
+
+  .nav,
+  .collapsed .nav {
+    flex: 1;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+    overflow: visible;
+  }
+
+  .group + .group {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+  }
+
+  .items,
+  .collapsed .items {
+    flex-direction: row;
+    justify-content: center;
+    gap: var(--space-4);
+  }
+
+  .item,
+  .collapsed .item {
+    width: 2.75rem;
+    height: 2.75rem;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .item.active::before {
+    display: none;
+  }
+
+  .itemLabel,
+  .badge {
+    display: none;
+  }
+
+  .footer {
+    display: none;
+  }
+}

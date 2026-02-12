@@ -1,0 +1,225 @@
+/**
+ * ProductCard Component Styles
+ *
+ * Pinterest-inspired card with glass effects
+ */
+
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  background: var(--glass-bg-elevated);
+  backdrop-filter: blur(var(--blur-lg));
+  -webkit-backdrop-filter: blur(var(--blur-lg));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  cursor: pointer;
+  text-align: left;
+  box-shadow: var(--shadow-card);
+  transition:
+    transform var(--duration-normal) var(--ease-spring),
+    box-shadow var(--duration-normal) var(--ease-default);
+}
+
+.card:hover:not(:disabled) {
+  transform: scale(1.02);
+  box-shadow: var(--shadow-card-hover);
+}
+
+.card:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.card:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+/* Selected state */
+.selected {
+  box-shadow: 0 0 0 2px var(--color-brand);
+}
+
+/* Out of stock */
+.outOfStock {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.outOfStock:hover {
+  transform: none;
+  box-shadow: var(--shadow-card);
+}
+
+/* Compact mode */
+.compact {
+  border-radius: var(--radius-lg);
+}
+
+.compact .imageContainer {
+  height: 70px;
+}
+
+.compact .content {
+  padding: var(--space-2);
+}
+
+/* ============================================
+   IMAGE
+   ============================================ */
+
+.imageContainer {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: var(--bg-tertiary);
+  overflow: hidden;
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--duration-slow) var(--ease-default);
+}
+
+.card:hover:not(:disabled) .image {
+  transform: scale(1.06);
+}
+
+.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--text-disabled);
+}
+
+/* Badges — glass pills top-right */
+.badges {
+  position: absolute;
+  top: var(--space-2);
+  left: var(--space-2);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+/* ============================================
+   CONTENT
+   ============================================ */
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1-5);
+  padding: var(--space-3);
+  flex: 1;
+}
+
+@media (min-width: 1440px) {
+  .content {
+    padding: var(--space-4);
+  }
+}
+
+.name {
+  flex: 1;
+  min-height: 2.4em;
+  line-height: 1.35;
+  font-weight: var(--font-medium);
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-top: auto;
+}
+
+/* ============================================
+   ADD INDICATOR — glass circle
+   ============================================ */
+
+.addIndicator {
+  position: absolute;
+  bottom: var(--space-3);
+  right: var(--space-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: rgba(44, 44, 46, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: white;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  opacity: 0;
+  transform: scale(0.85);
+  transition:
+    opacity var(--duration-fast) var(--ease-default),
+    transform var(--duration-fast) var(--ease-spring);
+  z-index: 2;
+}
+
+.card:hover:not(:disabled) .addIndicator {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.compact .addIndicator {
+  width: 28px;
+  height: 28px;
+  bottom: var(--space-2);
+  right: var(--space-2);
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (hover: none) and (pointer: coarse) {
+  .addIndicator {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .card:hover:not(:disabled) {
+    transform: none;
+    box-shadow: var(--shadow-card);
+  }
+
+  .card:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+
+  .card:hover:not(:disabled) .image {
+    transform: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .imageContainer {
+    aspect-ratio: 1 / 1;
+  }
+
+  .content {
+    padding: var(--space-2-5);
+  }
+
+  .name {
+    font-size: 0.8125rem;
+  }
+
+  .addIndicator {
+    width: 32px;
+    height: 32px;
+  }
+}

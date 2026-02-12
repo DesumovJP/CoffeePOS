@@ -1,0 +1,247 @@
+Я хочу, щоб ти виступив(ла) як технічний продакт/архітектор і створив(ла) повний, ультра‑детальний, покроковий план реалізації веб‑POS‑платформи для HoReCa (кав’ярні, кафе, ресторани) з можливістю модульного розширення на інші вертикалі (Florist, Retail). Це має бути готовий промпт/завдання для команди розробки та дизайну — щоб я міг(могла) просто вставити його в таск‑систему або передати аутсорс‑команді.
+
+Нижче — чіткі вимоги. Виконай їх усі, структуровано, без пропусків. Пиши українською.
+
+---
+
+## Мета продукту
+- **Ціль:** must‑have POS для HoReCa з «легким ядром» (POS + інвентар + аналітика + мульти‑точки) і модульною архітектурою для вертикалей.
+- **Стек:** Frontend — Next.js (PWA); Backend/CMS — Strapi; DB — PostgreSQL.
+- **UI:** стиль **iOS 26 Liquid Glass** — мінімум кольору, мінімум візуального шуму, преміальна чистота.
+- **Ключова вимога:** **всі UI‑елементи мають бути в дизайн‑системі** (tokens + компоненти). Зміна стилю в одному місці має змінювати весь продукт. **Ніяких інлайн стилів і ніякої інлайн логіки.**
+
+---
+
+## Загальні принципи реалізації (обов’язково)
+1. **Design system first**
+   - Один файл tokens (кольори, типографіка, spacing, radius, elevation, opacity, motion).
+   - Theme provider; всі компоненти читають стилі з tokens.
+   - Atomic design: atoms → molecules → organisms → templates → pages.
+   - Accessibility: контраст, масштаб шрифтів, можливість вимкнути анімації.
+2. **Компонентна архітектура**
+   - Кожен UI‑елемент — компонент з чітким Props API, unit tests, visual snapshot.
+   - Заборонено інлайн стилі та інлайн event handlers.
+3. **Модульність**
+   - Core (ядро) + плагіни/модулі (HoReCa Pack, Florist Pack, Delivery, Loyalty, Analytics).
+   - Feature flags для включення/вимкнення модулів per‑tenant.
+4. **Offline‑first**
+   - Локальний кеш транзакцій, автоматична синхронізація, conflict resolution.
+5. **Multi‑tenant**
+   - Tenant → locations → devices → users; per‑tenant settings, themes, feature flags.
+6. **Security & Compliance**
+   - RBAC, audit logs, TLS, encryption at rest, GDPR/локальні вимоги, інтеграція з фіскальними реєстраторами (UA) в roadmap.
+
+---
+
+## Обов’язковий функціонал (MUST‑HAVE)
+### POS core (ядро)
+- Швидкий чек‑флоу: вибір товару → модифікатори → оплата (максимум 3 кліки).
+- Quick actions / шорткати для популярних позицій.
+- Offline queue + local storage + синхронізація.
+- Рахунки, повернення, часткова оплата, split bill.
+- Кастомні модифікатори (розмір, додатки, знижки).
+
+### Inventory & BOM
+- Продукти + інгредієнти (ingredients) + рецепти (BOM).
+- Автоматичне списання інгредієнтів при продажі.
+- Попередження про низький запас; reorder point.
+- FIFO / термін придатності (для продуктів зі строком).
+
+### Прозорість і контроль
+- Audit log (всі дії користувачів).
+- Shift reports: відкриття/закриття зміни, cash reconciliation.
+- Ролі: barista, manager, owner; granular permissions.
+- Фото/підтвердження операцій (опціонально).
+
+### KDS / CDS / Delivery
+- Kitchen Display System: черга замовлень, SLA таймери, пріоритезація.
+- Customer Display: статус замовлення, чек.
+- Delivery & Takeaway: прийом замовлень, scheduled pickup, інтеграції з агрегаторами (через API).
+
+### Multi‑location & Network
+- Централізоване управління меню, цінами, акціями.
+- Deploy themes / settings across locations.
+- White‑label можливість.
+
+### Analytics & Reporting
+- Продажі, маржинальність, топ‑позиції, пікові години, ефективність персоналу.
+- Експорт звітів (CSV/PDF) — в адмінці.
+- Real‑time dashboards для власника.
+
+### Loyalty & CRM (модуль)
+- QR/phone‑based loyalty, points, tiers.
+- Історія клієнта, промо‑кампанії, push/notification hooks.
+
+### UX для персоналу
+- Персоналізація екрану баристи (фон, шорткати, бейджі) — optional, з контролем мережі.
+- Peak mode: один тап вимикає фони/анімації.
+- Мінімум полів, максимум швидких дій.
+
+---
+
+## Вертикалі (модульний підхід)
+- **HoReCa Pack:** KDS, CDS, Loyalty, Delivery, Shift Management.
+- **Florist Pack (опціонально):** recipes/BOM для букетів, perishables alerts, event calendar, delivery scheduling, B2B pricing.
+- **Retail Pack (опціонально):** barcode scanning, returns, layaway.
+
+(Включи в промпт цей текст як «Резюме» і вкажи, що Florist можна додати як модуль без розмивання продукту.)
+
+---
+
+## Архітектура (високий рівень) — включити як ARCHITECTURE.md
+- **Frontend:** Next.js (PWA), design‑system package, component library, service worker.
+- **BFF/CMS:** Strapi — auth, admin UI, feature flags, content (themes, templates), webhooks.
+- **API:** REST/GraphQL (Strapi) + internal microservices endpoints.
+- **DB:** PostgreSQL — multi‑tenant schema (tenant_id), transactional integrity.
+- **Event Bus:** Redis Streams / Kafka — OrderCreated → InventoryAdjusted → Analytics.
+- **Analytics Warehouse:** ClickHouse / BigQuery для OLAP.
+- **Integrations:** payment gateways, fiscal registrars (UA), delivery aggregators, accounting systems.
+- **Infra:** k8s, CI/CD, backups, monitoring (Prometheus/Grafana), Sentry.
+
+Включи в ARCHITECTURE.md повний опис DB‑схеми, API‑контракти (Auth, Orders, Inventory, Multi‑site, Themes, Events), event types, sequence flows (order → inventory → KDS → analytics), та приклади payloads.
+
+---
+
+## DB‑схема (основні таблиці) — включити в MD
+- tenants, locations, users, devices
+- products, ingredients, recipes (BOM)
+- orders, order_items, payments
+- inventory_transactions
+- shifts, shift_transactions
+- audit_logs
+- loyalty_accounts, customers
+- themes, theme_deployments
+- events (event bus log)
+
+Додай приклади полів для кожної таблиці.
+
+---
+
+## API‑контракти (включити приклади) — включити в MD
+- POST /api/auth/login — body {email, password, location_id, device_id} → {token, user, tenant, settings}
+- POST /api/orders — body {location_id, user_id, items: [{product_id, qty, modifiers}], payment} → {order_id, status}
+- GET /api/locations/:id/inventory → [{ingredient_id, stock_qty, reorder_point}]
+- POST /api/inventory/adjust — body {ingredient_id, change, reason, order_id?}
+- POST /api/tenants/:id/deploy-theme — body {theme_id, locations: [ids]}
+
+Додай приклади event payloads: OrderCreated, InventoryAdjusted, ShiftClosed, LoyaltyUpdated.
+
+---
+
+## Design system — детально (включити як частину MD)
+1. **Tokens file** (JSON/YAML): color.*, spacing.*, radius.*, elevation.*, font.*, motion.*.
+2. **Компоненти (повний список з props)**:
+   - Atoms: Button, Icon, Text, Input, Avatar, Badge, Tooltip, Modal.
+   - Molecules: ProductCard, ModifierPicker, QuantityControl, PriceTag, QuickActionGrid.
+   - Organisms: POSPanel, OrderSummary, KDSPanel, InventoryRow, ShiftReportPanel.
+   - Templates/Pages: POSPage, AdminDashboard, OnboardingWizard, MultiSiteManager.
+3. **Rules:** no inline styles, all styles via tokens; components accept theme overrides; accessibility props.
+4. **Theming:** light glass / dark glass variants; single accent color per tenant; ability deploy theme to locations.
+
+---
+
+## UI‑стиль: iOS 26 Liquid Glass — конкретні вказівки
+- Скляні поверхні: background surface rgba(255,255,255,0.6) + blur 20px + subtle border.
+- Мінімальна палітра: neutral greys + one accent color.
+- Типографіка: system font stack, чіткі ієрархії (h1..h6, body, caption).
+- Motion: короткі, ненав’язливі анімації; опція «reduce motion».
+- Контраст: кнопки primary — solid accent; secondary — outline; critical — red sparingly.
+
+---
+
+## Нефункціональні вимоги
+- Performance: TTFB < 200ms для основних екранів; PWA offline support.
+- Scalability: multi‑tenant, горизонтальне масштабування сервісів.
+- Reliability: SLA для enterprise клієнтів; backups RPO/RTO визначити.
+- Observability: metrics, logs, traces.
+
+---
+
+## QA, тестування, релізи
+- Unit tests для кожного компонента; visual regression tests (Chromatic).
+- E2E тестування POS flows (Cypress).
+- Canary releases для мережевих клієнтів.
+- Security audit, penetration testing перед enterprise релізом.
+
+---
+
+## Roadmap і покроковий план (6 місяців) — включити як timeline в MD
+**Week 0–6 (MVP ядро)**  
+- Design tokens + design‑system package (atoms → molecules).  
+- POS core (Next.js PWA): product grid, order summary, offline queue.  
+- Inventory basic + BOM.  
+- Auth, tenant/location/user model.  
+- Onboarding wizard + CSV import.  
+
+**Week 7–12 (HoReCa Pack)**  
+- KDS, CDS.  
+- Shift & audit.  
+- Delivery MVP (takeaway + scheduled pickup).  
+- Loyalty MVP (QR/phone).  
+- Admin dashboard (sales, low stock alerts).
+
+**Week 13–18 (Stabilize & Scale)**  
+- Multi‑location features, central menu deploy.  
+- Advanced analytics, exports.  
+- Payment gateways, fiscal registrar (UA) integration.  
+- White‑label themes.
+
+**Week 19–26 (Commercialization)**  
+- Performance & security hardening.  
+- SLA, enterprise onboarding.  
+- Partner channels, marketing push.
+
+---
+
+## Deliverables (що має отримати команда)
+1. **ARCHITECTURE.md** — повний MD файл з DB‑схемою, API‑контрактами, event flows, infra.
+2. **DESIGN_SYSTEM package** — tokens.json, компонентна бібліотека з docs і storybook.
+3. **FRONTEND repo (Next.js)** — PWA, POS screens, components, tests.
+4. **BFF/CMS (Strapi)** — tenant management, feature flags, admin UI.
+5. **DB migrations** — PostgreSQL schema + seed data.
+6. **CI/CD pipelines** — build, test, deploy.
+7. **E2E тест‑сценарії** — POS flows.
+8. **Onboarding checklist** — для пілотних кав’ярень.
+9. **Roadmap + timeline** — тижневі задачі і відповідальні.
+
+---
+
+## Acceptance criteria (як перевіряти)
+- Design system: зміна token → зміна UI у всіх компонентах (перевірити 5 ключових екранів).
+- POS: пробити замовлення offline → синхронізуватися при reconnect.
+- Inventory: створити продукт з BOM → продати → stock зменшився коректно.
+- KDS: замовлення з POS з’являється в KDS миттєво.
+- Multi‑location: змінити ціну в адмінці → зміни відобразились у всіх локаціях.
+- Security: RBAC працює; audit logs зберігають всі дії.
+
+---
+
+## Ролі та відповідальності (рекомендація)
+- Product Owner: визначає пріоритети, спілкується з клієнтами.
+- Tech Lead / Architect: ARCHITECTURE.md, API, infra.
+- Frontend Lead: design system, Next.js, PWA.
+- Backend Lead: Strapi, PostgreSQL, event bus.
+- QA Lead: тестування, E2E.
+- DevOps: CI/CD, k8s, monitoring.
+- Designer: UI kit, Liquid Glass themes, accessibility.
+
+---
+
+## Додаткові вказівки для виконавця (щоб нічого не загубилось)
+- Всі UI‑елементи — у design‑system; ніяких ad‑hoc компонентів в проектах.
+- Всі стилі — через tokens; ніяких CSS‑overrides inline.
+- Кожен компонент має storybook story і visual snapshot.
+- Кожен API має приклади запитів/відповідей у ARCHITECTURE.md.
+- Включити checklist для пілоту (5 кав’ярень): onboarding steps, training script, support SLA.
+
+---
+
+## Підсумок (вставити як частину промпту)
+Включи цей блок «Резюме» (нижче) у початок технічного завдання, щоб команда розуміла модульний підхід:
+
+### Резюме
+Додавати флористику в ту саму платформу **можна**, і це не обов’язково зробить продукт «кашею», якщо підходити модульно. Ключ — **одне легке ядро** (POS + інвентар + аналітика + мульти‑точки) і вертикальні **модулі‑шаблони** (HoReCa, Florist, Retail). Так ти збережеш простоту для баристи і одночасно отримаєш можливість швидко продавати додаткові рішення іншим нішам.
+
+---
+
+Сформуй, будь ласка, **один текст‑промпт** (весь вміст вище) у вигляді єдиного повідомлення, яке я можу скопіювати і вставити в таск‑систему або передати команді. Промпт має бути структурований, з чіткими заголовками, пунктами та чеклістами, готовий до виконання. Не додавай нічого зайвого поза цим текстом.

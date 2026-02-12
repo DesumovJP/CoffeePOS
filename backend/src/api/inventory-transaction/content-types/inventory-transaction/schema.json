@@ -1,0 +1,59 @@
+{
+  "kind": "collectionType",
+  "collectionName": "inventory_transactions",
+  "info": {
+    "singularName": "inventory-transaction",
+    "pluralName": "inventory-transactions",
+    "displayName": "Inventory Transaction",
+    "description": "Stock movement records for ingredients"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "type": {
+      "type": "enumeration",
+      "enum": ["sale", "supply", "writeoff", "adjustment"],
+      "required": true
+    },
+    "ingredient": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::ingredient.ingredient"
+    },
+    "product": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::product.product"
+    },
+    "quantity": {
+      "type": "decimal",
+      "required": true
+    },
+    "previousQty": {
+      "type": "decimal",
+      "default": 0
+    },
+    "newQty": {
+      "type": "decimal",
+      "default": 0
+    },
+    "reference": {
+      "type": "string",
+      "maxLength": 100
+    },
+    "performedBy": {
+      "type": "string",
+      "maxLength": 200
+    },
+    "shift": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::shift.shift"
+    },
+    "notes": {
+      "type": "text",
+      "maxLength": 500
+    }
+  }
+}

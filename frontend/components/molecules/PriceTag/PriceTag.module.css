@@ -1,0 +1,55 @@
+/**
+ * PriceTag Component Styles
+ */
+
+.priceTag {
+  display: inline-flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-1-5);
+}
+
+/* Alignment */
+.align-left { justify-content: flex-start; }
+.align-center { justify-content: center; }
+.align-right { justify-content: flex-end; }
+
+/* Size adjustments */
+.size-sm { gap: var(--space-1); }
+.size-lg { gap: var(--space-2); }
+.size-xl { gap: var(--space-2); }
+
+/* Current price */
+.currentPrice {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Original price (strikethrough) */
+.originalPrice {
+  text-decoration: line-through;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Discount badge */
+.discountBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-0-5) var(--space-1-5);
+  font-size: 0.625rem;
+  font-weight: var(--font-semibold);
+  background-color: var(--color-error);
+  color: white;
+  border-radius: var(--radius-sm);
+}
+
+.size-lg .discountBadge,
+.size-xl .discountBadge {
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-xs);
+}
+
+/* Has discount - row layout */
+.hasDiscount {
+  flex-direction: row;
+  align-items: center;
+}

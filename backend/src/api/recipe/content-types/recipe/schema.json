@@ -1,0 +1,55 @@
+{
+  "kind": "collectionType",
+  "collectionName": "recipes",
+  "info": {
+    "singularName": "recipe",
+    "pluralName": "recipes",
+    "displayName": "Recipe",
+    "description": "Product recipes linking products to ingredients by size"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "product": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::product.product"
+    },
+    "sizeId": {
+      "type": "string",
+      "required": true,
+      "maxLength": 50
+    },
+    "sizeName": {
+      "type": "string",
+      "required": true,
+      "maxLength": 100
+    },
+    "sizeVolume": {
+      "type": "string",
+      "maxLength": 50
+    },
+    "price": {
+      "type": "decimal",
+      "required": true,
+      "min": 0
+    },
+    "costPrice": {
+      "type": "decimal",
+      "default": 0,
+      "min": 0
+    },
+    "isDefault": {
+      "type": "boolean",
+      "default": false
+    },
+    "ingredients": {
+      "type": "json"
+    },
+    "preparationNotes": {
+      "type": "text",
+      "maxLength": 1000
+    }
+  }
+}

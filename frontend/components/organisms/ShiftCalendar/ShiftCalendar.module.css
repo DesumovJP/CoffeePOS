@@ -1,0 +1,307 @@
+/**
+ * ShiftCalendar Component Styles
+ *
+ * Glass container, warm cells
+ */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  background: var(--glass-bg-elevated);
+  backdrop-filter: blur(var(--blur-md));
+  -webkit-backdrop-filter: blur(var(--blur-md));
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--glass-border);
+  padding: var(--space-4);
+  position: relative;
+  box-shadow: var(--shadow-card);
+}
+
+/* ============================================
+   HEADER
+   ============================================ */
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.navigation {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.weekTitle {
+  flex: 1;
+  text-align: center;
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* ============================================
+   CALENDAR GRID
+   ============================================ */
+
+.calendar {
+  display: grid;
+  grid-template-columns: 80px repeat(7, 1fr);
+  gap: 1px;
+  background: var(--glass-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+/* Time column header */
+.timeHeader {
+  background: var(--bg-tertiary);
+  padding: var(--space-3);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+/* Day headers */
+.dayHeader {
+  background: var(--bg-tertiary);
+  padding: var(--space-3);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.dayHeader.today {
+  background: var(--color-brand);
+}
+
+.dayHeader.today * {
+  color: var(--text-inverse) !important;
+}
+
+.dayHeader.weekend {
+  background: var(--bg-secondary);
+}
+
+/* Time slots */
+.timeSlot {
+  background: var(--bg-tertiary);
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-1);
+}
+
+/* Cells */
+.cell {
+  background: var(--bg-primary);
+  padding: var(--space-2);
+  min-height: 80px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.cell:hover {
+  background: var(--glass-bg-subtle);
+}
+
+.todayCell {
+  background: var(--color-brand-bg);
+}
+
+.todayCell:hover {
+  background: var(--color-brand-subtle);
+}
+
+.weekendCell {
+  background: var(--bg-secondary);
+}
+
+.weekendCell:hover {
+  background: var(--bg-tertiary);
+}
+
+/* Empty slot indicator */
+.emptySlot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  opacity: 0;
+  transition: opacity var(--duration-fast) var(--ease-default);
+  color: var(--text-tertiary);
+}
+
+.cell:hover .emptySlot {
+  opacity: 0.5;
+}
+
+/* ============================================
+   SHIFT ITEM
+   ============================================ */
+
+.shift {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-2);
+  background: var(--shift-color, var(--color-brand));
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  transition:
+    transform var(--duration-fast) var(--ease-spring),
+    box-shadow var(--duration-fast) var(--ease-default);
+  text-align: left;
+  width: 100%;
+}
+
+.shift:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.shift:active {
+  transform: translateY(0);
+}
+
+.shiftEmployee {
+  font-size: 0.75rem;
+  font-weight: var(--font-semibold);
+  color: white;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.shiftTime {
+  font-size: 0.625rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* ============================================
+   LEGEND
+   ============================================ */
+
+.legend {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--glass-border);
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.legendColor {
+  width: 12px;
+  height: 12px;
+  border-radius: var(--radius-sm);
+}
+
+/* ============================================
+   LOADING
+   ============================================ */
+
+.loading {
+  position: absolute;
+  inset: 0;
+  background: rgba(250, 250, 248, 0.85);
+  backdrop-filter: blur(var(--blur-sm));
+  -webkit-backdrop-filter: blur(var(--blur-sm));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-xl);
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 1024px) {
+  .calendar {
+    grid-template-columns: 60px repeat(7, 1fr);
+  }
+
+  .timeSlot {
+    padding: var(--space-2);
+  }
+
+  .cell {
+    min-height: 60px;
+    padding: var(--space-1);
+  }
+
+  .shift {
+    padding: var(--space-1);
+  }
+
+  .shiftTime {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .weekTitle {
+    order: -1;
+  }
+
+  .calendar {
+    grid-template-columns: 50px repeat(7, 1fr);
+    font-size: 0.875rem;
+  }
+
+  .dayHeader {
+    padding: var(--space-2);
+  }
+
+  .timeSlot {
+    padding: var(--space-1);
+  }
+
+  .cell {
+    min-height: 50px;
+  }
+
+  .legend {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: var(--space-2);
+  }
+
+  .calendar {
+    grid-template-columns: 40px repeat(7, 1fr);
+  }
+
+  .shiftEmployee {
+    font-size: 0.625rem;
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "kind": "collectionType",
+  "collectionName": "ingredient_categories",
+  "info": {
+    "singularName": "ingredient-category",
+    "pluralName": "ingredient-categories",
+    "displayName": "Ingredient Category",
+    "description": "Categories for organizing ingredients"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true,
+      "maxLength": 100
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "name"
+    },
+    "sortOrder": {
+      "type": "integer",
+      "default": 0
+    },
+    "isActive": {
+      "type": "boolean",
+      "default": true
+    },
+    "ingredients": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::ingredient.ingredient",
+      "mappedBy": "category"
+    }
+  }
+}

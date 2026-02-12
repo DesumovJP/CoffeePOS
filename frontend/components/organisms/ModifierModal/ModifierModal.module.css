@@ -1,0 +1,262 @@
+/**
+ * ModifierModal Component Styles
+ *
+ * Glass options, warm selections
+ */
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* ============================================
+   PRODUCT HEADER
+   ============================================ */
+
+.productHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--blur-sm));
+  -webkit-backdrop-filter: blur(var(--blur-sm));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+}
+
+.productImage {
+  width: 72px;
+  height: 72px;
+  border-radius: var(--radius-lg);
+  background: var(--bg-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.productImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.productInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ============================================
+   MODIFIER GROUPS
+   ============================================ */
+
+.modifierGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.groupHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+/* ============================================
+   SIZE OPTIONS (radio-like)
+   ============================================ */
+
+.sizeOptions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: var(--space-2);
+}
+
+.sizeOption {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  background: var(--glass-bg);
+  border: 2px solid transparent;
+  border-radius: var(--radius-xl);
+  cursor: pointer;
+  transition:
+    background-color var(--duration-fast) var(--ease-default),
+    border-color var(--duration-fast) var(--ease-default),
+    transform var(--duration-fast) var(--ease-spring);
+}
+
+.sizeOption:hover {
+  background: var(--glass-bg-elevated);
+}
+
+.sizeOption:active {
+  transform: scale(0.98);
+}
+
+.sizeOption.selected {
+  background: var(--color-brand-subtle);
+  border-color: var(--color-brand);
+}
+
+.sizeOption:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+/* ============================================
+   ADDON OPTIONS (checkbox-like)
+   ============================================ */
+
+.addonOptions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.addonOption {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: var(--glass-bg);
+  border: 2px solid transparent;
+  border-radius: var(--radius-xl);
+  cursor: pointer;
+  transition:
+    background-color var(--duration-fast) var(--ease-default),
+    border-color var(--duration-fast) var(--ease-default);
+}
+
+.addonOption:hover {
+  background: var(--glass-bg-elevated);
+}
+
+.addonOption.selected {
+  background: var(--color-brand-subtle);
+  border-color: var(--color-brand);
+}
+
+.addonOption:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+.addonCheckbox {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--glass-border-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition:
+    background-color var(--duration-fast) var(--ease-default),
+    border-color var(--duration-fast) var(--ease-default);
+}
+
+.addonOption.selected .addonCheckbox {
+  background: var(--color-brand);
+  border-color: var(--color-brand);
+}
+
+.addonInfo {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* ============================================
+   QUANTITY SECTION
+   ============================================ */
+
+.quantitySection {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  padding: var(--space-3);
+}
+
+/* ============================================
+   NOTES SECTION
+   ============================================ */
+
+.notesSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.notesTextarea {
+  width: 100%;
+  min-height: 80px;
+  padding: var(--space-3);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: var(--text-primary);
+  background: var(--glass-bg-elevated);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  resize: vertical;
+  transition:
+    border-color var(--duration-fast) var(--ease-default),
+    box-shadow var(--duration-fast) var(--ease-default);
+}
+
+.notesTextarea::placeholder {
+  color: var(--text-disabled);
+}
+
+.notesTextarea:focus {
+  outline: none;
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 3px var(--color-brand-subtle);
+}
+
+/* ============================================
+   TOTAL PREVIEW
+   ============================================ */
+
+.totalPreview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--blur-sm));
+  -webkit-backdrop-filter: blur(var(--blur-sm));
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--glass-border);
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 480px) {
+  .productHeader {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .sizeOptions {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .addonInfo {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-1);
+  }
+}

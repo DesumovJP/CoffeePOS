@@ -1,0 +1,179 @@
+/**
+ * OrderItem Component Styles
+ *
+ * Clean list item with warm borders, glass controls
+ */
+
+.item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+}
+
+.item + .item {
+  border-top: 1px solid var(--glass-border);
+}
+
+/* Compact mode */
+.compact {
+  padding: var(--space-2) 0;
+  gap: var(--space-2);
+}
+
+/* ============================================
+   IMAGE
+   ============================================ */
+
+.imageWrap {
+  position: relative;
+  flex-shrink: 0;
+  width: 72px;
+  height: 72px;
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--radius-lg);
+}
+
+.imagePlaceholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-lg);
+  color: var(--text-disabled);
+}
+
+.qtyBadge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 6px;
+  background: var(--color-accent);
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: var(--font-bold);
+  color: white;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 2px 6px rgba(44, 44, 46, 0.2);
+}
+
+/* ============================================
+   CONTENT
+   ============================================ */
+
+.content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.name {
+  font-size: 0.9375rem;
+  font-weight: var(--font-medium);
+  color: var(--text-primary);
+  line-height: 1.3;
+}
+
+.meta {
+  font-size: 0.8125rem;
+  color: var(--text-tertiary);
+  line-height: 1.3;
+}
+
+.notes {
+  font-style: italic;
+}
+
+/* ============================================
+   RIGHT SECTION (price + controls)
+   ============================================ */
+
+.right {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-1);
+}
+
+.price {
+  font-size: 1rem;
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Inline quantity controls */
+.controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.controlBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all var(--duration-fast) var(--ease-default);
+}
+
+.controlBtn:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-color: var(--glass-border-strong);
+}
+
+.controlBtn:active {
+  transform: scale(0.9);
+}
+
+.controlBtn.danger:hover {
+  color: var(--color-error);
+  background: var(--color-error-bg);
+  border-color: var(--color-error);
+}
+
+/* ============================================
+   COMPACT MODE
+   ============================================ */
+
+.compact .imageWrap {
+  width: 36px;
+  height: 36px;
+}
+
+.compact .qtyBadge {
+  min-width: 16px;
+  height: 16px;
+  font-size: 0.5625rem;
+}
+
+.compact .name {
+  font-size: 0.75rem;
+}
+
+.compact .price {
+  font-size: 0.75rem;
+}

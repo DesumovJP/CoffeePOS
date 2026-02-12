@@ -1,0 +1,140 @@
+.tableWrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+/* Header */
+.table thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--blur-md));
+  -webkit-backdrop-filter: blur(var(--blur-md));
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.table th {
+  padding: var(--space-2) var(--space-3);
+  text-align: left;
+  font-weight: 500;
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+/* Rows */
+.table tbody tr {
+  border-bottom: 1px solid var(--glass-border);
+  transition: background var(--duration-fast) var(--ease-out);
+}
+
+.table tbody tr:last-child {
+  border-bottom: none;
+}
+
+/* Zebra striping */
+.table tbody tr:nth-child(even) {
+  background: var(--glass-bg-subtle);
+}
+
+.table tbody tr:hover {
+  background: var(--color-accent-subtle);
+}
+
+.table tbody tr.clickable {
+  cursor: pointer;
+}
+
+/* Cells */
+.table td {
+  padding: var(--space-3) var(--space-3);
+  vertical-align: middle;
+}
+
+/* Alignment */
+.left {
+  text-align: left;
+}
+
+.center {
+  text-align: center;
+}
+
+.right {
+  text-align: right;
+}
+
+/* Empty state */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-12) var(--space-6);
+  text-align: center;
+}
+
+/* Loading state */
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-12) var(--space-6);
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--glass-border);
+  border-top-color: var(--color-accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive */
+.hideOnMobile {
+  /* Hidden by default on mobile, shown on tablet+ */
+}
+
+.hideOnTablet {
+  /* Hidden on tablet and below */
+}
+
+@media (max-width: 768px) {
+  .hideOnMobile {
+    display: none;
+  }
+
+  .table th,
+  .table td {
+    padding: var(--space-2) var(--space-3);
+  }
+}
+
+@media (max-width: 1024px) {
+  .hideOnTablet {
+    display: none;
+  }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .table td { padding: var(--space-3) var(--space-3); }
+}

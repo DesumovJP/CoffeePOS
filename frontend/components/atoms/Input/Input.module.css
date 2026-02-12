@@ -1,0 +1,244 @@
+/**
+ * Input Component Styles
+ *
+ * Glass-first input design
+ */
+
+/* ============================================
+   WRAPPER
+   ============================================ */
+
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1-5);
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+/* ============================================
+   LABEL
+   ============================================ */
+
+.label {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+/* ============================================
+   INPUT WRAPPER
+   ============================================ */
+
+.inputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border-radius: var(--radius-lg);
+  transition:
+    border-color var(--duration-fast) var(--ease-default),
+    box-shadow var(--duration-fast) var(--ease-default),
+    background-color var(--duration-fast) var(--ease-default);
+}
+
+/* ============================================
+   SIZE VARIANTS
+   ============================================ */
+
+.size-sm {
+  height: 2rem;
+  padding: 0 var(--space-3);
+  font-size: var(--text-sm);
+}
+
+.size-md {
+  height: 2.5rem;
+  padding: 0 var(--space-3);
+  font-size: var(--text-base);
+}
+
+.size-lg {
+  height: 3rem;
+  padding: 0 var(--space-4);
+  font-size: var(--text-base);
+}
+
+/* ============================================
+   STYLE VARIANTS
+   ============================================ */
+
+/* Default — glass-like */
+.variant-default {
+  background: var(--glass-bg-elevated);
+  border: 1px solid var(--glass-border);
+}
+
+.variant-default:hover:not(.disabled):not(.error) {
+  border-color: var(--glass-border-strong);
+}
+
+.variant-default:focus-within:not(.disabled) {
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-focus);
+}
+
+/* Filled */
+.variant-filled {
+  background-color: var(--bg-tertiary);
+  border: 1px solid transparent;
+}
+
+.variant-filled:hover:not(.disabled):not(.error) {
+  background-color: var(--bg-secondary);
+}
+
+.variant-filled:focus-within:not(.disabled) {
+  background-color: var(--bg-primary);
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-focus);
+}
+
+/* Glass */
+.variant-glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--blur-glass));
+  -webkit-backdrop-filter: blur(var(--blur-glass));
+  border: 1px solid var(--glass-border);
+}
+
+.variant-glass:hover:not(.disabled):not(.error) {
+  border-color: var(--glass-border-strong);
+}
+
+.variant-glass:focus-within:not(.disabled) {
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-focus);
+}
+
+/* ============================================
+   INPUT ELEMENT
+   ============================================ */
+
+.input {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: var(--font-sans);
+  font-size: inherit;
+  color: var(--text-primary);
+}
+
+.input::placeholder {
+  color: var(--text-disabled);
+}
+
+.input:disabled {
+  cursor: not-allowed;
+}
+
+/* ============================================
+   ICONS
+   ============================================ */
+
+.iconLeft,
+.iconRight {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--text-tertiary);
+}
+
+.iconLeft {
+  margin-right: var(--space-2);
+}
+
+.iconRight {
+  margin-left: var(--space-2);
+}
+
+.iconLeft svg,
+.iconRight svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.size-sm .iconLeft svg,
+.size-sm .iconRight svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* Icon padding adjustments */
+.hasIconLeft.size-sm { padding-left: var(--space-2); }
+.hasIconRight.size-sm { padding-right: var(--space-2); }
+.hasIconLeft.size-md { padding-left: var(--space-2-5); }
+.hasIconRight.size-md { padding-right: var(--space-2-5); }
+.hasIconLeft.size-lg { padding-left: var(--space-3); }
+.hasIconRight.size-lg { padding-right: var(--space-3); }
+
+/* ============================================
+   STATES
+   ============================================ */
+
+/* Error */
+.error {
+  border-color: var(--color-error) !important;
+}
+
+.error:focus-within {
+  box-shadow: 0 0 0 3px var(--color-error-bg) !important;
+}
+
+/* Success */
+.success {
+  border-color: var(--color-success) !important;
+}
+
+.success:focus-within {
+  box-shadow: 0 0 0 3px var(--color-success-bg) !important;
+}
+
+/* Disabled */
+.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ============================================
+   HELPER TEXT
+   ============================================ */
+
+.helper {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+.helperError {
+  color: var(--color-error);
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (hover: none) and (pointer: coarse) {
+  .size-sm {
+    height: 2.25rem;
+  }
+
+  .size-md {
+    height: 2.75rem;
+  }
+
+  .size-lg {
+    height: 3.25rem;
+  }
+}

@@ -1,0 +1,114 @@
+/**
+ * Avatar Component Styles
+ */
+
+.avatar {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  background-color: var(--bg-tertiary);
+  color: white;
+  font-weight: var(--font-semibold);
+  user-select: none;
+}
+
+/* Size variants */
+.size-xs {
+  width: 1.5rem;
+  height: 1.5rem;
+  font-size: 0.5rem;
+}
+
+.size-sm {
+  width: 2rem;
+  height: 2rem;
+  font-size: 0.625rem;
+}
+
+.size-md {
+  width: 2.5rem;
+  height: 2.5rem;
+  font-size: 0.75rem;
+}
+
+.size-lg {
+  width: 3rem;
+  height: 3rem;
+  font-size: 0.875rem;
+}
+
+.size-xl {
+  width: 4rem;
+  height: 4rem;
+  font-size: 1.125rem;
+}
+
+.size-2xl {
+  width: 5rem;
+  height: 5rem;
+  font-size: 1.5rem;
+}
+
+/* Shape variants */
+.shape-circle {
+  border-radius: var(--radius-full);
+}
+
+.shape-square {
+  border-radius: var(--radius-md);
+}
+
+/* Image */
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Fallback initials */
+.fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Status indicator */
+.status {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 25%;
+  height: 25%;
+  min-width: 8px;
+  min-height: 8px;
+  border-radius: var(--radius-full);
+  border: 2px solid var(--bg-primary);
+}
+
+.size-xs .status,
+.size-sm .status {
+  border-width: 1.5px;
+}
+
+.status-online {
+  background-color: var(--color-success);
+}
+
+.status-offline {
+  background-color: var(--text-disabled);
+}
+
+.status-busy {
+  background-color: var(--color-error);
+}
+
+.status-away {
+  background-color: var(--color-warning);
+}

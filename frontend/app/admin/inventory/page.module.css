@@ -1,0 +1,75 @@
+/**
+ * Inventory Page Styles
+ * Uses shared components: StatsGrid, FilterTabs, DataTable
+ */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding: var(--space-5);
+  height: 100%;
+  overflow-y: auto;
+}
+
+/* Toolbar - FilterTabs left, Search right (20% width) */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.toolbar > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.toolbar > :nth-child(2) {
+  flex: 0 0 20%;
+  min-width: 180px;
+  max-width: 280px;
+}
+
+/* Ingredient name with badge */
+.ingredientName {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+/* Action buttons */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  justify-content: flex-end;
+}
+
+/* Low stock row highlight */
+.lowStockRow {
+  background: var(--color-warning-bg);
+}
+
+.lowStockRow:hover {
+  background: var(--color-warning-bg);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .page {
+    padding: var(--space-4);
+    gap: var(--space-4);
+  }
+
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .toolbar > :first-child,
+  .toolbar > :nth-child(2) {
+    max-width: none;
+    flex: initial;
+  }
+}

@@ -1,0 +1,225 @@
+/**
+ * SupplyAccordion Component Styles
+ *
+ * Glass accordion with warm expanded state
+ */
+
+.accordion {
+  background: var(--glass-bg-elevated);
+  backdrop-filter: blur(var(--blur-sm));
+  -webkit-backdrop-filter: blur(var(--blur-sm));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  transition: all var(--duration-normal) var(--ease-out);
+}
+
+.accordion:hover {
+  border-color: var(--glass-border-strong);
+}
+
+.accordion.expanded {
+  border-color: var(--color-success);
+  background: var(--bg-primary);
+}
+
+/* Header */
+.accordionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.accordionHeader:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.accordionLeft {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.supplierBadge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-lg);
+  color: var(--text-secondary);
+  transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.accordion.expanded .supplierBadge {
+  background: var(--color-success);
+  color: white;
+}
+
+.accordionMeta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.metaRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.metaDot {
+  width: 3px;
+  height: 3px;
+  background: var(--text-tertiary);
+  border-radius: var(--radius-full);
+}
+
+.itemsPreview {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.accordionRight {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.accordionChevron {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  transition: transform var(--duration-normal) var(--ease-out);
+}
+
+.accordionChevron.rotated {
+  transform: rotate(180deg);
+}
+
+/* Content */
+.accordionContent {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--duration-normal) var(--ease-out);
+}
+
+.accordion.expanded .accordionContent {
+  grid-template-rows: 1fr;
+}
+
+.accordionBody {
+  overflow: hidden;
+}
+
+.accordion.expanded .accordionBody {
+  padding: 0 var(--space-4) var(--space-4);
+}
+
+/* Table */
+.tableWrapper {
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--glass-border);
+}
+
+.tableHeader {
+  display: grid;
+  grid-template-columns: 1fr 56px 80px 72px;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.tableHeader span {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.tableHeader span:nth-child(n+2) {
+  text-align: right;
+}
+
+/* Items */
+.itemsList {
+  display: flex;
+  flex-direction: column;
+}
+
+.itemRow {
+  display: grid;
+  grid-template-columns: 1fr 56px 80px 72px;
+  gap: var(--space-2);
+  align-items: center;
+  padding: var(--space-2-5) 0;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.itemRow:last-child {
+  border-bottom: none;
+}
+
+.qtyCol,
+.priceCol,
+.sumCol {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Footer */
+.footer {
+  margin-top: var(--space-2);
+  padding: var(--space-3);
+  background: var(--glass-bg);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.footerMeta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.footerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .accordionHeader {
+    padding: var(--space-3);
+  }
+
+  .accordion.expanded .accordionBody {
+    padding: 0 var(--space-3) var(--space-3);
+  }
+
+  .supplierBadge {
+    width: 32px;
+    height: 32px;
+  }
+}

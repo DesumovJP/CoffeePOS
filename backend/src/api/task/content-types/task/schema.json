@@ -1,0 +1,56 @@
+{
+  "kind": "collectionType",
+  "collectionName": "tasks",
+  "info": {
+    "singularName": "task",
+    "pluralName": "tasks",
+    "displayName": "Task",
+    "description": "Daily tasks and assignments for cafe workers"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true,
+      "maxLength": 255
+    },
+    "description": {
+      "type": "text",
+      "maxLength": 2000
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": ["todo", "in_progress", "done"],
+      "default": "todo",
+      "required": true
+    },
+    "priority": {
+      "type": "enumeration",
+      "enum": ["low", "medium", "high"],
+      "default": "medium",
+      "required": true
+    },
+    "assignedTo": {
+      "type": "string",
+      "maxLength": 200
+    },
+    "dueDate": {
+      "type": "date"
+    },
+    "type": {
+      "type": "enumeration",
+      "enum": ["daily", "task"],
+      "default": "task",
+      "required": true
+    },
+    "completedAt": {
+      "type": "datetime"
+    },
+    "completedBy": {
+      "type": "string",
+      "maxLength": 200
+    }
+  }
+}

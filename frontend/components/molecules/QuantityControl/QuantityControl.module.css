@@ -1,0 +1,45 @@
+/**
+ * QuantityControl Component Styles
+ */
+
+.control {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+/* Size variants */
+.size-sm {
+  gap: var(--space-0-5);
+}
+
+.size-md {
+  gap: var(--space-1);
+}
+
+.size-lg {
+  gap: var(--space-2);
+}
+
+/* Value display */
+.value {
+  min-width: 2em;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  user-select: none;
+  font-weight: var(--font-medium);
+}
+
+.size-sm .value {
+  min-width: 1.75em;
+}
+
+.size-lg .value {
+  min-width: 2.5em;
+}
+
+/* Disabled state */
+.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}

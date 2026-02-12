@@ -1,0 +1,83 @@
+{
+  "kind": "collectionType",
+  "collectionName": "payments",
+  "info": {
+    "singularName": "payment",
+    "pluralName": "payments",
+    "displayName": "Payment",
+    "description": "Order payments"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "order": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::order.order",
+      "inversedBy": "payment"
+    },
+    "method": {
+      "type": "enumeration",
+      "enum": ["cash", "card", "qr", "online", "other"],
+      "required": true
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": ["pending", "completed", "failed", "refunded", "partial_refund"],
+      "default": "pending",
+      "required": true
+    },
+    "amount": {
+      "type": "decimal",
+      "required": true,
+      "min": 0
+    },
+    "receivedAmount": {
+      "type": "decimal",
+      "min": 0
+    },
+    "changeAmount": {
+      "type": "decimal",
+      "min": 0,
+      "default": 0
+    },
+    "tipAmount": {
+      "type": "decimal",
+      "min": 0,
+      "default": 0
+    },
+    "transactionId": {
+      "type": "string",
+      "maxLength": 100
+    },
+    "cardLastFour": {
+      "type": "string",
+      "maxLength": 4
+    },
+    "cardBrand": {
+      "type": "string",
+      "maxLength": 50
+    },
+    "receiptNumber": {
+      "type": "string",
+      "maxLength": 50
+    },
+    "processedAt": {
+      "type": "datetime"
+    },
+    "processedBy": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user"
+    },
+    "refundReason": {
+      "type": "text",
+      "maxLength": 500
+    },
+    "metadata": {
+      "type": "json"
+    }
+  }
+}

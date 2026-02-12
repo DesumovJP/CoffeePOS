@@ -1,0 +1,195 @@
+/**
+ * Text Component Styles
+ *
+ * Typography styles using design tokens
+ */
+
+/* ============================================
+   BASE
+   ============================================ */
+
+.text {
+  font-family: var(--font-sans);
+  margin: 0;
+}
+
+/* ============================================
+   VARIANT STYLES
+   ============================================ */
+
+/* Display */
+.variant-displayLarge {
+  font-size: var(--text-6xl);
+  line-height: 1.1;
+  font-weight: var(--font-bold);
+  letter-spacing: -0.025em;
+}
+
+.variant-displayMedium {
+  font-size: var(--text-5xl);
+  line-height: 1.15;
+  font-weight: var(--font-bold);
+  letter-spacing: -0.025em;
+}
+
+.variant-displaySmall {
+  font-size: var(--text-4xl);
+  line-height: 1.2;
+  font-weight: var(--font-semibold);
+  letter-spacing: -0.02em;
+}
+
+/* Headings */
+.variant-h1 {
+  font-size: var(--text-4xl);
+  line-height: 1.2;
+  font-weight: var(--font-bold);
+  letter-spacing: -0.02em;
+}
+
+.variant-h2 {
+  font-size: var(--text-3xl);
+  line-height: 1.25;
+  font-weight: var(--font-semibold);
+  letter-spacing: -0.015em;
+}
+
+.variant-h3 {
+  font-size: var(--text-2xl);
+  line-height: 1.3;
+  font-weight: var(--font-semibold);
+  letter-spacing: -0.01em;
+}
+
+.variant-h4 {
+  font-size: var(--text-xl);
+  line-height: 1.35;
+  font-weight: var(--font-semibold);
+}
+
+.variant-h5 {
+  font-size: var(--text-lg);
+  line-height: 1.4;
+  font-weight: var(--font-semibold);
+}
+
+.variant-h6 {
+  font-size: var(--text-base);
+  line-height: 1.5;
+  font-weight: var(--font-semibold);
+}
+
+/* Body */
+.variant-bodyLarge {
+  font-size: var(--text-lg);
+  line-height: 1.6;
+  font-weight: var(--font-normal);
+}
+
+.variant-bodyMedium {
+  font-size: var(--text-base);
+  line-height: 1.6;
+  font-weight: var(--font-normal);
+}
+
+.variant-bodySmall {
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  font-weight: var(--font-normal);
+}
+
+/* Labels */
+.variant-labelLarge {
+  font-size: var(--text-sm);
+  line-height: 1.4;
+  font-weight: var(--font-medium);
+  letter-spacing: 0.01em;
+}
+
+.variant-labelMedium {
+  font-size: var(--text-xs);
+  line-height: 1.4;
+  font-weight: var(--font-medium);
+  letter-spacing: 0.02em;
+}
+
+.variant-labelSmall {
+  font-size: 0.6875rem;
+  line-height: 1.4;
+  font-weight: var(--font-medium);
+  letter-spacing: 0.02em;
+}
+
+/* Caption */
+.variant-caption {
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  font-weight: var(--font-normal);
+  letter-spacing: 0.01em;
+}
+
+/* Overline */
+.variant-overline {
+  font-size: 0.6875rem;
+  line-height: 1.5;
+  font-weight: var(--font-semibold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ============================================
+   COLOR VARIANTS
+   ============================================ */
+
+.color-primary { color: var(--text-primary); }
+.color-secondary { color: var(--text-secondary); }
+.color-tertiary { color: var(--text-tertiary); }
+.color-disabled { color: var(--text-disabled); }
+.color-inverse { color: var(--text-inverse); }
+.color-accent { color: var(--color-accent); }
+.color-success { color: var(--color-success); }
+.color-warning { color: var(--color-warning); }
+.color-error { color: var(--color-error); }
+.color-info { color: var(--color-info); }
+.color-inherit { color: inherit; }
+
+/* ============================================
+   ALIGNMENT
+   ============================================ */
+
+.align-left { text-align: left; }
+.align-center { text-align: center; }
+.align-right { text-align: right; }
+
+/* ============================================
+   WEIGHT OVERRIDES
+   ============================================ */
+
+.weight-thin { font-weight: var(--font-thin); }
+.weight-extralight { font-weight: var(--font-extralight); }
+.weight-light { font-weight: var(--font-light); }
+.weight-normal { font-weight: var(--font-normal); }
+.weight-medium { font-weight: var(--font-medium); }
+.weight-semibold { font-weight: var(--font-semibold); }
+.weight-bold { font-weight: var(--font-bold); }
+.weight-extrabold { font-weight: var(--font-extrabold); }
+.weight-black { font-weight: var(--font-black); }
+
+/* ============================================
+   TRUNCATION
+   ============================================ */
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lineClamp {
+  display: -webkit-box;
+  -webkit-line-clamp: var(--line-clamp, 2);
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Responsive typography is now handled by fluid clamp() tokens in globals.css */

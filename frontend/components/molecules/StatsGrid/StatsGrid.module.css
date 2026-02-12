@@ -1,0 +1,244 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-4);
+}
+
+/* Fixed column variants */
+.cols2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.cols3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.cols4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+/* Card styling */
+.card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  position: relative;
+}
+
+.card.highlight {
+  border-color: var(--color-warning);
+}
+
+/* Icon wrapper */
+.iconWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-lg);
+  background: var(--glass-bg);
+  color: var(--color-accent);
+  flex-shrink: 0;
+}
+
+.iconWrapper.accent {
+  background: var(--color-accent-subtle);
+  color: var(--color-accent);
+}
+
+.iconWrapper.success {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.iconWrapper.warning {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+
+.iconWrapper.error {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+}
+
+.iconWrapper.info {
+  background: var(--color-info-bg);
+  color: var(--color-info);
+}
+
+/* Content */
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.value {
+  line-height: 1.2;
+}
+
+.label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Trend indicator */
+.trend {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+
+.trend.up {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.trend.down {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+}
+
+/* ============================================
+   Bar variant — compact single-row stats strip
+   ============================================ */
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.barItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 1;
+  padding: var(--space-2) var(--space-3);
+  min-width: 0;
+}
+
+.barDivider {
+  border-right: 1px solid var(--glass-border);
+}
+
+.barIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  background: var(--glass-bg);
+  color: var(--color-accent);
+  flex-shrink: 0;
+}
+
+.barIcon.accent {
+  background: var(--color-accent-subtle);
+  color: var(--color-accent);
+}
+
+.barIcon.success {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.barIcon.warning {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+
+.barIcon.error {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+}
+
+.barIcon.info {
+  background: var(--color-info-bg);
+  color: var(--color-info);
+}
+
+.barValue {
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .cols4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .cols3,
+  .cols4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .iconWrapper {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+@media (max-width: 480px) {
+  .grid,
+  .cols2,
+  .cols3,
+  .cols4 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Bar variant responsive */
+@media (max-width: 768px) {
+  .bar {
+    flex-wrap: wrap;
+  }
+
+  .barItem {
+    flex: 1 1 calc(50% - 1px);
+    min-width: 0;
+  }
+
+  .barDivider {
+    border-right: none;
+  }
+
+  .barItem:nth-child(odd) {
+    border-right: 1px solid var(--glass-border);
+  }
+
+  .barItem:nth-child(-n+2) {
+    border-bottom: 1px solid var(--glass-border);
+  }
+}
+
+@media (max-width: 400px) {
+  .barItem {
+    flex: 1 1 100%;
+  }
+
+  .barItem:nth-child(odd) {
+    border-right: none;
+  }
+
+  .barItem:not(:last-child) {
+    border-bottom: 1px solid var(--glass-border);
+  }
+
+  .barItem:nth-child(-n+2) {
+    border-bottom: 1px solid var(--glass-border);
+  }
+}

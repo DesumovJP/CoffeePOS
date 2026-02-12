@@ -1,0 +1,48 @@
+{
+  "kind": "collectionType",
+  "collectionName": "modifiers",
+  "info": {
+    "singularName": "modifier",
+    "pluralName": "modifiers",
+    "displayName": "Modifier",
+    "description": "Product modifiers (e.g., Small, Medium, Large, Extra shot)"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true,
+      "maxLength": 100
+    },
+    "displayName": {
+      "type": "string",
+      "maxLength": 100
+    },
+    "price": {
+      "type": "decimal",
+      "default": 0,
+      "min": 0
+    },
+    "sortOrder": {
+      "type": "integer",
+      "default": 0
+    },
+    "isDefault": {
+      "type": "boolean",
+      "default": false
+    },
+    "isActive": {
+      "type": "boolean",
+      "default": true
+    },
+    "modifierGroup": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::modifier-group.modifier-group",
+      "inversedBy": "modifiers"
+    }
+  }
+}

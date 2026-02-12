@@ -1,0 +1,82 @@
+{
+  "kind": "collectionType",
+  "collectionName": "shifts",
+  "info": {
+    "singularName": "shift",
+    "pluralName": "shifts",
+    "displayName": "Shift",
+    "description": "Barista work shifts with cash tracking"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "openedAt": {
+      "type": "datetime",
+      "required": true
+    },
+    "closedAt": {
+      "type": "datetime"
+    },
+    "openedBy": {
+      "type": "string",
+      "required": true,
+      "maxLength": 200
+    },
+    "closedBy": {
+      "type": "string",
+      "maxLength": 200
+    },
+    "openingCash": {
+      "type": "decimal",
+      "required": true,
+      "default": 0,
+      "min": 0
+    },
+    "closingCash": {
+      "type": "decimal",
+      "default": 0,
+      "min": 0
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": ["open", "closed"],
+      "default": "open",
+      "required": true
+    },
+    "cashSales": {
+      "type": "decimal",
+      "default": 0,
+      "min": 0
+    },
+    "cardSales": {
+      "type": "decimal",
+      "default": 0,
+      "min": 0
+    },
+    "totalSales": {
+      "type": "decimal",
+      "default": 0,
+      "min": 0
+    },
+    "ordersCount": {
+      "type": "integer",
+      "default": 0,
+      "min": 0
+    },
+    "writeOffsTotal": {
+      "type": "decimal",
+      "default": 0,
+      "min": 0
+    },
+    "suppliesTotal": {
+      "type": "decimal",
+      "default": 0,
+      "min": 0
+    },
+    "notes": {
+      "type": "text",
+      "maxLength": 1000
+    }
+  }
+}
