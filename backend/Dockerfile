@@ -24,7 +24,4 @@ COPY --from=base /app/database ./database
 
 EXPOSE 1337
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:1337/_health', (r) => { if (r.statusCode !== 200) process.exit(1); }).on('error', () => process.exit(1))"
-
 CMD ["npm", "run", "start"]
