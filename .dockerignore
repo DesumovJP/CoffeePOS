@@ -1,0 +1,15 @@
+frontend/
+.git
+.claude
+*.md
+develop-prompt.txt
+backend/node_modules
+backend/.tmp
+backend/.cache
+backend/build
+backend/dist
+backend/.env
+backend/.strapi
+backend/coverage
+**/*.log
+**/.DS_Store
