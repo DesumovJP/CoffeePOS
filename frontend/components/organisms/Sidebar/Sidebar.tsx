@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * ParadisePOS - Sidebar Component
+ * CoffeePOS - Sidebar Component
  *
  * Main navigation sidebar for the application
  */
@@ -73,7 +73,7 @@ export const Sidebar = forwardRef<HTMLElement, SidebarProps>(
       collapsed = false,
       activeItemId,
       showBrand = true,
-      brandName = 'ParadisePOS',
+      brandName = 'CoffeePOS',
       onNavigate,
       onToggleCollapse,
       onLogout,
@@ -189,29 +189,43 @@ export const Sidebar = forwardRef<HTMLElement, SidebarProps>(
 
           {/* User */}
           {user && (
-            <button
-              type="button"
-              className={styles.user}
-              onClick={onUserClick}
-              title={collapsed ? user.name : undefined}
-            >
-              <Avatar
-                src={user.avatar}
-                fallback={user.name}
-                size={collapsed ? 'sm' : 'md'}
-                status="online"
-              />
-              {!collapsed && (
-                <div className={styles.userInfo}>
-                  <Text variant="labelMedium" color="primary" truncate>
-                    {user.name}
-                  </Text>
-                  <Text variant="caption" color="tertiary" truncate>
-                    {user.role}
-                  </Text>
-                </div>
+            <div className={styles.userSection}>
+              <button
+                type="button"
+                className={styles.user}
+                onClick={onUserClick}
+                title={collapsed ? user.name : undefined}
+              >
+                <Avatar
+                  src={user.avatar}
+                  fallback={user.name}
+                  size={collapsed ? 'sm' : 'md'}
+                  status="online"
+                />
+                {!collapsed && (
+                  <div className={styles.userInfo}>
+                    <Text variant="labelMedium" color="primary" truncate>
+                      {user.name}
+                    </Text>
+                    <Text variant="caption" color="tertiary" truncate>
+                      {user.role}
+                    </Text>
+                  </div>
+                )}
+              </button>
+              {onLogout && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  iconOnly
+                  onClick={onLogout}
+                  aria-label="Вийти"
+                  title="Вийти"
+                >
+                  <Icon name="logout" size="sm" />
+                </Button>
               )}
-            </button>
+            </div>
           )}
         </div>
       </aside>

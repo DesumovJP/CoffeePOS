@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * ParadisePOS Design System - Badge Component
+ * CoffeePOS Design System - Badge Component
  *
  * Status indicator, count display, or label
  */

@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * ParadisePOS Design System - Avatar Component
+ * CoffeePOS Design System - Avatar Component
  *
  * User/entity representation with image or initials fallback
  */

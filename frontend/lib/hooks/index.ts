@@ -1,5 +1,5 @@
 /**
- * ParadisePOS - Hooks
+ * CoffeePOS - Hooks
  *
  * Central export for all custom hooks
  */
@@ -15,3 +15,4 @@ export * from './useRecipes';
 export * from './useOrders';
 export * from './useTables';
 export * from './useTasks';
+export * from './useKeyboardShortcuts';

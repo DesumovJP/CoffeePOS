@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * ParadisePOS - MockBanner
+ * CoffeePOS - MockBanner
  *
  * Visible warning banner shown when running in mock API mode
  */

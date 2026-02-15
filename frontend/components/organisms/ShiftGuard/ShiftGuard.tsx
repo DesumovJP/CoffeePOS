@@ -1,14 +1,14 @@
 'use client';
 
 /**
- * ParadisePOS - ShiftGuard Component
+ * CoffeePOS - ShiftGuard Component
  *
  * Wraps POS page to require an open shift before accepting orders
  */
 
 import { useState, useEffect, type ReactNode } from 'react';
 import { useShiftStore } from '@/lib/store';
-import { Text, Button, Icon } from '@/components/atoms';
+import { Text, Button, Icon, Input } from '@/components/atoms';
 import styles from './ShiftGuard.module.css';
 
 interface ShiftGuardProps {
@@ -67,10 +67,10 @@ export function ShiftGuard({ children }: ShiftGuardProps) {
 
           <div className={styles.form}>
             <div className={styles.field}>
-              <Text variant="labelMedium" weight="medium">Ім&apos;я баристи</Text>
-              <input
+              <Input
+                label="Ім'я баристи"
                 type="text"
-                className={styles.input}
+                fullWidth
                 placeholder="Введіть ім'я..."
                 value={baristaName}
                 onChange={(e) => setBaristaName(e.target.value)}
@@ -79,10 +79,10 @@ export function ShiftGuard({ children }: ShiftGuardProps) {
             </div>
 
             <div className={styles.field}>
-              <Text variant="labelMedium" weight="medium">Готівка в касі (₴)</Text>
-              <input
+              <Input
+                label="Готівка в касі (₴)"
                 type="number"
-                className={styles.input}
+                fullWidth
                 placeholder="0"
                 value={openingCash}
                 onChange={(e) => setOpeningCash(e.target.value)}

@@ -62,7 +62,7 @@ export function DataTable<T>({
 }: DataTableProps<T>) {
   if (loading) {
     return (
-      <GlassCard padding="none" className={className}>
+      <GlassCard padding="none" className={`${styles.fillCard} ${className || ''}`}>
         <div className={styles.loading}>
           <div className={styles.spinner} />
           <Text variant="bodySmall" color="secondary">
@@ -75,7 +75,7 @@ export function DataTable<T>({
 
   if (data.length === 0 && emptyState) {
     return (
-      <GlassCard padding="none" className={className}>
+      <GlassCard padding="none" className={`${styles.fillCard} ${className || ''}`}>
         <div className={styles.empty}>
           <Icon name={emptyState.icon} size="xl" color="tertiary" />
           <Text variant="bodyMedium" color="secondary">

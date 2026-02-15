@@ -1,5 +1,5 @@
 /**
- * ParadisePOS - Mock Inventory Transactions API (inventory-transactions.ts module)
+ * CoffeePOS - Mock Inventory Transactions API (inventory-transactions.ts module)
  */
 
 import type { ApiResponse } from '@/lib/api/client';

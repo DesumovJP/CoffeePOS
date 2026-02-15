@@ -199,6 +199,16 @@
   .cols4 {
     grid-template-columns: 1fr;
   }
+
+  .iconWrapper {
+    width: 36px;
+    height: 36px;
+  }
+
+  .trend {
+    position: static;
+    margin-top: var(--space-1);
+  }
 }
 
 /* Bar variant responsive */

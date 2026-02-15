@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * ParadisePOS Design System - Theme Provider
+ * CoffeePOS Design System - Theme Provider
  *
  * Provides theme context and CSS variable injection
  * Handles light/dark mode, accent colors, and accessibility preferences

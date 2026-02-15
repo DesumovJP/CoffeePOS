@@ -1,5 +1,5 @@
 /**
- * ParadisePOS Design System - Typography Tokens
+ * CoffeePOS Design System - Typography Tokens
  *
  * System font stack optimized for iOS-like appearance
  * All typography scales defined here for consistency

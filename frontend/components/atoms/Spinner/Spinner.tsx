@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * ParadisePOS Design System - Spinner Component
+ * CoffeePOS Design System - Spinner Component
  *
  * Loading indicator with multiple sizes
  */

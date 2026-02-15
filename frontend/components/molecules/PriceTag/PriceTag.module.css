@@ -35,10 +35,10 @@
   display: inline-flex;
   align-items: center;
   padding: var(--space-0-5) var(--space-1-5);
-  font-size: 0.625rem;
+  font-size: var(--text-2xs);
   font-weight: var(--font-semibold);
   background-color: var(--color-error);
-  color: white;
+  color: var(--text-inverse);
   border-radius: var(--radius-sm);
 }
 

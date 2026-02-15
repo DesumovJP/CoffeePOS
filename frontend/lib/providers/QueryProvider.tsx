@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * ParadisePOS - Query Provider
+ * CoffeePOS - Query Provider
  *
  * TanStack Query provider for data fetching
  */

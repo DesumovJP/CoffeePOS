@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * ParadisePOS - Ingredients Hooks
+ * CoffeePOS - Ingredients Hooks
  *
  * React Query hooks for ingredients and inventory data
  */

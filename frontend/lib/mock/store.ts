@@ -1,5 +1,5 @@
 /**
- * ParadisePOS - MockStore Singleton
+ * CoffeePOS - MockStore Singleton
  *
  * In-memory database for mock API mode
  */

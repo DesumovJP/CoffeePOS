@@ -1,12 +1,12 @@
 'use client';
 
 /**
- * ParadisePOS - POS Interface
+ * CoffeePOS - POS Interface
  *
  * Main point of sale interface
  */
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
 import {
   ProductGrid,
   OrderSummary,
@@ -20,13 +20,14 @@ import {
   type ProductForModifier,
   type ModifierModalResult,
 } from '@/components';
+import { Icon, Text } from '@/components/atoms';
 import {
   useOrderStore,
   selectCurrentOrder,
   selectIsPaymentModalOpen,
   useShiftStore,
 } from '@/lib/store';
-import { useProducts, useActiveCategories } from '@/lib/hooks';
+import { useProducts, useActiveCategories, useRecipes, useKeyboardShortcuts, type ShortcutConfig } from '@/lib/hooks';
 import type { Product as ApiProduct } from '@/lib/api';
 import { ordersApi } from '@/lib/api';
 import { ShiftGuard } from '@/components/organisms/ShiftGuard';
@@ -108,7 +109,11 @@ const mockProducts: ProductGridProduct[] = [
 /**
  * Transform API product to ProductGrid format
  */
-function transformApiProduct(product: ApiProduct): ProductGridProduct {
+function transformApiProduct(
+  product: ApiProduct,
+  recipesMap: Map<number, Array<{ id: string; name: string; price: number; isDefault?: boolean }>>,
+): ProductGridProduct {
+  const sizes = recipesMap.get(product.id);
   return {
     id: String(product.id),
     name: product.name,
@@ -119,6 +124,7 @@ function transformApiProduct(product: ApiProduct): ProductGridProduct {
     stockQuantity: product.trackInventory ? product.stockQuantity : undefined,
     lowStockThreshold: product.trackInventory ? product.lowStockThreshold : undefined,
     hasModifiers: (product.modifierGroups?.length || 0) > 0,
+    sizes: sizes && sizes.length > 1 ? sizes : undefined,
   };
 }
 
@@ -163,14 +169,34 @@ export default function POSPage() {
   // API Data
   const { data: apiProducts, isLoading: productsLoading, error: productsError } = useProducts({ isActive: true });
   const { data: apiCategories, isLoading: categoriesLoading, error: categoriesError } = useActiveCategories();
+  const { data: apiRecipes } = useRecipes();
+
+  // Build recipes map: productId → sizes array
+  const recipesMap = useMemo(() => {
+    const map = new Map<number, Array<{ id: string; name: string; price: number; isDefault?: boolean }>>();
+    if (apiRecipes) {
+      for (const recipe of apiRecipes) {
+        if (!recipe.product) continue;
+        const productId = recipe.product.id;
+        if (!map.has(productId)) map.set(productId, []);
+        map.get(productId)!.push({
+          id: recipe.sizeId,
+          name: recipe.sizeName,
+          price: recipe.price,
+          isDefault: recipe.isDefault || undefined,
+        });
+      }
+    }
+    return map;
+  }, [apiRecipes]);
 
   // Transform API data or use mock data as fallback
   const products: ProductGridProduct[] = useMemo(() => {
     if (apiProducts && apiProducts.length > 0) {
-      return apiProducts.map(transformApiProduct);
+      return apiProducts.map((p) => transformApiProduct(p, recipesMap));
     }
     return mockProducts;
-  }, [apiProducts]);
+  }, [apiProducts, recipesMap]);
 
   const categories: Category[] = useMemo(() => {
     if (apiCategories && apiCategories.length > 0) {
@@ -210,6 +236,9 @@ export default function POSPage() {
   // Modifier modal state
   const [modifierModalOpen, setModifierModalOpen] = useState(false);
   const [selectedProductForModifier, setSelectedProductForModifier] = useState<ProductForModifier | null>(null);
+
+  // Keyboard shortcuts tooltip
+  const [showShortcuts, setShowShortcuts] = useState(false);
 
   // Transform store items to OrderSummary format
   const orderItems: OrderItemData[] = useMemo(() => {
@@ -339,6 +368,67 @@ export default function POSPage() {
   // Loading state
   const isLoading = productsLoading || categoriesLoading;
 
+  // Keyboard shortcuts
+  const shortcuts: ShortcutConfig[] = useMemo(() => [
+    {
+      key: 'Enter',
+      action: () => {
+        if (orderItems.length > 0 && !isPaymentModalOpen) {
+          openPaymentModal();
+        }
+      },
+      description: 'Відкрити оплату',
+    },
+    {
+      key: 'F12',
+      action: () => {
+        if (orderItems.length > 0 && !isPaymentModalOpen) {
+          openPaymentModal();
+        }
+      },
+      description: 'Відкрити оплату',
+    },
+    {
+      key: 'Escape',
+      action: () => {
+        if (isPaymentModalOpen) {
+          closePaymentModal();
+        } else if (modifierModalOpen) {
+          setModifierModalOpen(false);
+          setSelectedProductForModifier(null);
+        } else if (searchQuery) {
+          setSearchQuery('');
+        } else if (showShortcuts) {
+          setShowShortcuts(false);
+        }
+      },
+      description: 'Закрити модальне вікно / Очистити пошук',
+    },
+    {
+      key: 'F1',
+      action: () => {
+        const searchInput = document.querySelector<HTMLInputElement>('input[type="search"]');
+        if (searchInput) {
+          searchInput.focus();
+        }
+      },
+      description: 'Фокус на пошук',
+    },
+    {
+      key: 'Delete',
+      action: () => {
+        if (orderItems.length > 0 && !isPaymentModalOpen) {
+          if (window.confirm('Очистити кошик?')) {
+            clearOrder();
+          }
+        }
+      },
+      description: 'Очистити кошик',
+    },
+  ], [orderItems.length, isPaymentModalOpen, modifierModalOpen, searchQuery, openPaymentModal, closePaymentModal, clearOrder, showShortcuts]);
+
+  useKeyboardShortcuts(shortcuts);
+
   return (
     <ShiftGuard>
       <div className={styles.layout}>
@@ -355,6 +445,46 @@ export default function POSPage() {
               onCategoryChange={setSelectedCategory}
               onSearchChange={setSearchQuery}
               loading={isLoading}
+              headerExtra={
+                <div className={styles.shortcutsIndicator}>
+                  <button
+                    type="button"
+                    className={styles.shortcutsButton}
+                    onClick={() => setShowShortcuts((v) => !v)}
+                    title="Гарячі клавіші"
+                    aria-label="Показати гарячі клавіші"
+                  >
+                    <Icon name="settings" size="sm" color="secondary" />
+                  </button>
+                  {showShortcuts && (
+                    <div className={styles.shortcutsTooltip}>
+                      <Text variant="labelMedium" weight="semibold">Гарячі клавіші</Text>
+                      <div className={styles.shortcutsList}>
+                        <div className={styles.shortcutItem}>
+                          <kbd className={styles.kbd}>Enter</kbd>
+                          <Text variant="bodySmall" color="secondary">Відкрити оплату</Text>
+                        </div>
+                        <div className={styles.shortcutItem}>
+                          <kbd className={styles.kbd}>F12</kbd>
+                          <Text variant="bodySmall" color="secondary">Відкрити оплату</Text>
+                        </div>
+                        <div className={styles.shortcutItem}>
+                          <kbd className={styles.kbd}>Esc</kbd>
+                          <Text variant="bodySmall" color="secondary">Закрити / Очистити</Text>
+                        </div>
+                        <div className={styles.shortcutItem}>
+                          <kbd className={styles.kbd}>F1</kbd>
+                          <Text variant="bodySmall" color="secondary">Фокус на пошук</Text>
+                        </div>
+                        <div className={styles.shortcutItem}>
+                          <kbd className={styles.kbd}>Del</kbd>
+                          <Text variant="bodySmall" color="secondary">Очистити кошик</Text>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              }
             />
           </div>
 
@@ -379,6 +509,7 @@ export default function POSPage() {
           total={getTotal()}
           onPaymentComplete={handlePaymentComplete}
           processing={isProcessingPayment}
+          onPrintReceipt={() => window.print()}
         />
 
         {/* Modifier Modal */}

@@ -1,5 +1,5 @@
 /**
- * ParadisePOS Design System - Color Tokens
+ * CoffeePOS Design System - Color Tokens
  * iOS 26 Liquid Glass inspired palette
  *
  * Usage: Import and use via CSS variables or directly in styled-components

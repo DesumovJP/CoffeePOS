@@ -1,5 +1,5 @@
 /**
- * ParadisePOS - Mock Ingredients, IngredientCategories, InventoryTransactions API
+ * CoffeePOS - Mock Ingredients, IngredientCategories, InventoryTransactions API
  */
 
 import type { ApiResponse } from '@/lib/api/client';

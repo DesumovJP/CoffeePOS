@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * ParadisePOS - OrderSummary Component
+ * CoffeePOS - OrderSummary Component
  *
  * Order/cart panel with items, totals, and checkout actions
  */

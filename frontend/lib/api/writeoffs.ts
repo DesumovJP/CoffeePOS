@@ -1,5 +1,5 @@
 /**
- * ParadisePOS - Write-offs API
+ * CoffeePOS - Write-offs API
  */
 
 import { apiClient, type ApiResponse } from './client';

@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * ParadisePOS - NotificationCenter Component
+ * CoffeePOS - NotificationCenter Component
  *
  * Dropdown notification panel with bell icon
  */

@@ -244,19 +244,51 @@
    RESPONSIVE
    ============================================ */
 
+@media (max-width: 768px) {
+  .sizeOptions {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  }
+
+  .notesTextarea {
+    min-height: 64px;
+  }
+}
+
 @media (max-width: 480px) {
   .productHeader {
     flex-direction: column;
     text-align: center;
   }
 
+  .productImage {
+    width: 56px;
+    height: 56px;
+  }
+
   .sizeOptions {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .sizeOption {
+    padding: var(--space-2-5);
+  }
+
+  .addonOption {
+    padding: var(--space-2-5);
+  }
+
+  .addonCheckbox {
+    width: 28px;
+    height: 28px;
   }
 
   .addonInfo {
     flex-direction: column;
     align-items: flex-start;
     gap: var(--space-1);
+  }
+
+  .totalPreview {
+    padding: var(--space-3);
   }
 }

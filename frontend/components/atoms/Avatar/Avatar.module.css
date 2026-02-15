@@ -10,7 +10,7 @@
   flex-shrink: 0;
   overflow: hidden;
   background-color: var(--bg-tertiary);
-  color: white;
+  color: var(--text-inverse);
   font-weight: var(--font-semibold);
   user-select: none;
 }

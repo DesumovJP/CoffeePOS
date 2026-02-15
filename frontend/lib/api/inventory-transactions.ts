@@ -1,5 +1,5 @@
 /**
- * ParadisePOS - Inventory Transactions API
+ * CoffeePOS - Inventory Transactions API
  */
 
 import { apiClient, type ApiResponse } from './client';

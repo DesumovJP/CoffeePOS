@@ -1,5 +1,5 @@
 /**
- * ParadisePOS - Tasks API
+ * CoffeePOS - Tasks API
  */
 
 import { apiClient, type ApiResponse } from './client';

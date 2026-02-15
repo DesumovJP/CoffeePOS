@@ -1,0 +1,236 @@
+/**
+ * ModifierGroupFormModal Component Styles
+ */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* ============================================
+   ERROR BANNER
+   ============================================ */
+
+.errorBanner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: var(--color-error-bg);
+  border: 1px solid var(--color-error);
+  border-radius: var(--radius-lg);
+}
+
+/* ============================================
+   FIELD
+   ============================================ */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1-5);
+  flex: 1;
+  min-width: 0;
+}
+
+.label {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-primary);
+}
+
+.row {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+}
+
+/* ============================================
+   SELECT
+   ============================================ */
+
+.select {
+  width: 100%;
+  height: 2.5rem;
+  padding: 0 var(--space-3);
+  background: var(--glass-bg-elevated);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  color: var(--text-primary);
+  outline: none;
+  cursor: pointer;
+  appearance: auto;
+  transition:
+    border-color var(--duration-fast) var(--ease-default),
+    box-shadow var(--duration-fast) var(--ease-default);
+}
+
+.select:hover {
+  border-color: var(--glass-border-strong);
+}
+
+.select:focus {
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-focus);
+}
+
+/* ============================================
+   CHECKBOX
+   ============================================ */
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  cursor: pointer;
+  padding-top: var(--space-1);
+}
+
+.checkbox {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-accent);
+  cursor: pointer;
+}
+
+/* ============================================
+   SECTION (Modifiers)
+   ============================================ */
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--glass-border);
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* ============================================
+   MODIFIER LIST
+   ============================================ */
+
+.modifierList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.modifierHeader {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  padding: 0 var(--space-1);
+}
+
+.modNameHeader {
+  flex: 1;
+  min-width: 0;
+}
+
+.modPriceHeader {
+  width: 100px;
+  flex-shrink: 0;
+}
+
+.modDefaultHeader {
+  width: 60px;
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.modRemoveHeader {
+  width: 28px;
+  flex-shrink: 0;
+}
+
+.modifierRow {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.modifierRow > div:first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.modPriceInput {
+  width: 100px !important;
+  flex-shrink: 0;
+}
+
+.modDefaultCheck {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.removeButton {
+  flex-shrink: 0;
+}
+
+/* ============================================
+   ADD BUTTON (dashed)
+   ============================================ */
+
+.addButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-2-5) var(--space-4);
+  border: 2px dashed var(--glass-border-strong);
+  border-radius: var(--radius-lg);
+  background: transparent;
+  cursor: pointer;
+  transition:
+    border-color var(--duration-fast) var(--ease-default),
+    background-color var(--duration-fast) var(--ease-default);
+}
+
+.addButton:hover {
+  border-color: var(--color-accent);
+  background: var(--color-accent-subtle);
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 640px) {
+  .row {
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .modifierHeader {
+    display: none;
+  }
+
+  .modifierRow {
+    flex-wrap: wrap;
+  }
+
+  .modifierRow > div:first-child {
+    flex: 1 1 100%;
+  }
+
+  .modPriceInput {
+    flex: 1 1 auto !important;
+    width: auto !important;
+  }
+}

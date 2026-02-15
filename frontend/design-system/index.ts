@@ -1,5 +1,5 @@
 /**
- * ParadisePOS Design System
+ * CoffeePOS Design System
  *
  * Central export for the entire design system
  *

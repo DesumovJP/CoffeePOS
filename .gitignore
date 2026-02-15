@@ -11,3 +11,11 @@ Desktop.ini
 
 # OS
 .DS_Store
+
+# Claude Code
+.claude/
+
+# Environment
+.env
+.env.local
+.env.*.local

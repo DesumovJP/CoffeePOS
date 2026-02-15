@@ -1,5 +1,5 @@
 /**
- * ParadisePOS Design System - Providers
+ * CoffeePOS Design System - Providers
  *
  * Export all context providers
  */

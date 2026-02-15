@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * ParadisePOS - ShiftCalendar Component
+ * CoffeePOS - ShiftCalendar Component
  *
  * Weekly calendar view for managing employee shifts
  */

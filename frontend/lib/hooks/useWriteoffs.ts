@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * ParadisePOS - Write-offs Hooks
+ * CoffeePOS - Write-offs Hooks
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';

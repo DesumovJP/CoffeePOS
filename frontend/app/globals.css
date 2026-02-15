@@ -1,5 +1,5 @@
 /**
- * ParadisePOS - Global Styles
+ * CoffeePOS - Global Styles
  *
  * iOS 26 Liquid Glass Design System
  * All styles use CSS variables from design tokens
@@ -116,6 +116,7 @@
   --font-mono: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
 
   /* Fluid typography: mobile → desktop via clamp() */
+  --text-2xs: 0.625rem;
   --text-xs: 0.75rem;
   --text-sm: 0.875rem;
   --text-base: 1rem;
@@ -371,6 +372,13 @@
   outline-offset: 2px;
 }
 
+/* Inputs handle focus via their own wrapper :focus-within */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
+}
+
 
 /* ============================================
    GRID SYSTEM
@@ -470,6 +478,19 @@ img, picture, video, canvas, svg {
 input, button, textarea, select {
   font: inherit;
   color: inherit;
+}
+
+/* Remove number input spinners globally */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield !important;
+  appearance: textfield !important;
 }
 
 button {

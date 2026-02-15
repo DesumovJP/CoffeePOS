@@ -1,5 +1,5 @@
 /**
- * ParadisePOS - Shift Store (Zustand)
+ * CoffeePOS - Shift Store (Zustand)
  *
  * Global state management for shift lifecycle
  */

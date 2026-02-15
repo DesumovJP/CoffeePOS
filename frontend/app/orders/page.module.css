@@ -5,21 +5,16 @@
  */
 
 .page {
-  display: grid;
-  grid-template-columns: repeat(var(--grid-columns), 1fr);
-  column-gap: var(--grid-gutter);
-  row-gap: var(--space-4);
-  grid-template-rows: auto 1fr;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
   padding: var(--grid-margin);
   padding-top: var(--space-4);
+  width: 100%;
   height: 100%;
   overflow-y: auto;
-  max-width: var(--grid-max-width);
+  max-width: 56rem;
   margin-inline: auto;
-}
-
-.page > * {
-  grid-column: 1 / -1;
 }
 
 /* ============================================
@@ -63,7 +58,8 @@
 .headerStats {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-3);
   padding: var(--space-2) var(--space-4);
   background: var(--glass-bg-elevated);
   backdrop-filter: blur(var(--blur-lg));
@@ -93,6 +89,8 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
+  flex: 1;
+  min-height: 0;
 }
 
 .emptyState {
@@ -103,6 +101,7 @@
   gap: var(--space-4);
   text-align: center;
   padding: var(--space-12) var(--space-4);
+  flex: 1;
 }
 
 /* ============================================
@@ -182,6 +181,20 @@
 }
 
 @media (max-width: 480px) {
+  .page {
+    padding: var(--space-3);
+    gap: var(--space-3);
+  }
+
+  .headerStats {
+    border-radius: var(--radius-lg);
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .statDivider {
+    display: none;
+  }
+
   .dateGroupHeader {
     flex-direction: column;
     align-items: flex-start;

@@ -1,5 +1,5 @@
 /**
- * ParadisePOS - API Client
+ * CoffeePOS - API Client
  *
  * Centralized API client for Strapi backend communication
  */

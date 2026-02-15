@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * ParadisePOS - CategoryTabs Component
+ * CoffeePOS - CategoryTabs Component
  *
  * Horizontal scrollable category tabs
  * Used for product category navigation

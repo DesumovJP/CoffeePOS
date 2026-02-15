@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * ParadisePOS Design System - Icon Component
+ * CoffeePOS Design System - Icon Component
  *
  * SVG icon system with consistent sizing and colors
  * Uses inline SVG for flexibility and performance

@@ -1,5 +1,5 @@
 /**
- * ParadisePOS - Supplies API
+ * CoffeePOS - Supplies API
  */
 
 import { apiClient, type ApiResponse } from './client';

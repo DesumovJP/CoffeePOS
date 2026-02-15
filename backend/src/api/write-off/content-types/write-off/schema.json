@@ -36,6 +36,11 @@
       "type": "relation",
       "relation": "manyToOne",
       "target": "api::shift.shift"
+    },
+    "cafe": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::cafe.cafe"
     }
   }
 }

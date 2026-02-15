@@ -1,0 +1,208 @@
+/**
+ * ReceiptTemplate Component Styles
+ *
+ * Styled for both on-screen display and print output.
+ * Uses monospace font and fixed-width formatting for receipt look.
+ */
+
+/* ============================================
+   WRAPPER
+   ============================================ */
+
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+}
+
+/* ============================================
+   RECEIPT
+   ============================================ */
+
+.receipt {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  padding: var(--space-4);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  max-width: 320px;
+  margin: 0 auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ============================================
+   HEADER
+   ============================================ */
+
+.receiptHeader {
+  text-align: center;
+}
+
+.cafeName {
+  font-weight: bold;
+  font-size: 15px;
+  margin: 4px 0;
+}
+
+.cafeAddress {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.separator {
+  text-align: center;
+  color: var(--text-tertiary);
+  letter-spacing: -1px;
+}
+
+.divider {
+  text-align: center;
+  color: var(--text-tertiary);
+  letter-spacing: -1px;
+  margin: 6px 0;
+}
+
+/* ============================================
+   LINES
+   ============================================ */
+
+.receiptLine {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.totalLine {
+  font-weight: bold;
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+/* ============================================
+   ITEMS
+   ============================================ */
+
+.orderInfo {
+  padding: 4px 0;
+}
+
+.itemsSection {
+  padding: 4px 0;
+}
+
+.receiptItem {
+  margin-bottom: 4px;
+}
+
+.itemName {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.modifierLine {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.noteLine {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-style: italic;
+}
+
+/* ============================================
+   TOTALS & PAYMENT
+   ============================================ */
+
+.totalsSection {
+  padding: 4px 0;
+}
+
+.paymentSection {
+  padding: 4px 0;
+}
+
+/* ============================================
+   FOOTER
+   ============================================ */
+
+.receiptFooter {
+  text-align: center;
+  padding-top: 4px;
+}
+
+.thankYou {
+  font-size: 14px;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+
+@media print {
+  /* Hide everything except the receipt */
+  body * {
+    visibility: hidden !important;
+  }
+
+  .wrapper,
+  .wrapper * {
+    visibility: visible !important;
+  }
+
+  .wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 0;
+    margin: 0;
+  }
+
+  /* Hide print button when printing */
+  .actions {
+    display: none !important;
+  }
+
+  .receipt {
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    background: white;
+    color: black;
+    max-width: 80mm;
+    padding: 4mm;
+    font-size: 11px;
+    margin: 0;
+  }
+
+  .cafeName {
+    font-size: 13px;
+  }
+
+  .separator,
+  .divider {
+    color: var(--text-primary);
+  }
+
+  .modifierLine,
+  .noteLine {
+    color: var(--text-secondary);
+  }
+}

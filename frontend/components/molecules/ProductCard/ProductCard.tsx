@@ -1,13 +1,13 @@
 'use client';
 
 /**
- * ParadisePOS - ProductCard Component
+ * CoffeePOS - ProductCard Component
  *
  * Displays a product in the POS grid
  * Supports quick add, out of stock state, and modifiers indicator
  */
 
-import { forwardRef, type HTMLAttributes } from 'react';
+import { forwardRef, memo, type HTMLAttributes } from 'react';
 import { Text, Badge, Icon, GlassCard } from '@/components/atoms';
 import styles from './ProductCard.module.css';
 
@@ -62,7 +62,7 @@ function formatPrice(price: number, currency: string): string {
 // COMPONENT
 // ============================================
 
-export const ProductCard = forwardRef<HTMLButtonElement, ProductCardProps>(
+export const ProductCard = memo(forwardRef<HTMLButtonElement, ProductCardProps>(
   (
     {
       product,
@@ -171,16 +171,20 @@ export const ProductCard = forwardRef<HTMLButtonElement, ProductCardProps>(
               {formatPrice(product.price, currency)}
             </Text>
 
-            {showStock && product.stockQuantity !== undefined && !isOutOfStock && (
+            {product.sizes && product.sizes.length > 1 ? (
+              <Text variant="caption" color="tertiary" className={styles.sizesHint}>
+                {product.sizes.map((s) => s.name).join(' · ')}
+              </Text>
+            ) : showStock && product.stockQuantity !== undefined && !isOutOfStock ? (
               <Text variant="caption" color="tertiary">
                 {product.stockQuantity} шт
               </Text>
-            )}
+            ) : null}
           </div>
         </div>
       </button>
     );
   }
-);
+));
 
 ProductCard.displayName = 'ProductCard';

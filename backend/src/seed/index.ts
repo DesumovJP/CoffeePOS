@@ -1,10 +1,10 @@
 /**
- * ParadisePOS - Database Seeder
+ * CoffeePOS - Database Seeder
  *
  * Run with: npm run seed
  */
 
-import { categories, modifierGroups, modifiers, products, ingredientCategories, ingredients, recipes, cafeTables } from './data';
+import { cafes, categories, modifierGroups, modifiers, products, ingredientCategories, ingredients, recipes, cafeTables } from './data';
 
 interface StrapiContext {
   strapi: {
@@ -45,6 +45,17 @@ export default async function seed({ strapi }: StrapiContext) {
     await strapi.db.query('api::ingredient-category.ingredient-category').deleteMany({ where: {} });
     await strapi.db.query('api::cafe-table.cafe-table').deleteMany({ where: {} });
     await strapi.db.query('api::category.category').deleteMany({ where: {} });
+    await strapi.db.query('api::cafe.cafe').deleteMany({ where: {} });
+
+    // Seed cafes
+    strapi.log.info('Seeding cafes...');
+    const cafeMap: Record<string, number> = {};
+
+    for (const cafe of cafes) {
+      const created = await strapi.db.query('api::cafe.cafe').create({ data: cafe });
+      cafeMap[cafe.name] = created.id;
+      strapi.log.info(`  ✓ Created cafe: ${cafe.name}`);
+    }
 
     // Seed cafe tables
     strapi.log.info('Seeding cafe tables...');
@@ -186,6 +197,7 @@ export default async function seed({ strapi }: StrapiContext) {
     strapi.log.info(`  ✓ Created ${recipeCount} recipes`);
 
     strapi.log.info('✅ Database seed completed successfully!');
+    strapi.log.info(`   - ${cafes.length} cafes`);
     strapi.log.info(`   - ${categories.length} categories`);
     strapi.log.info(`   - ${modifierGroups.length} modifier groups`);
     strapi.log.info(`   - ${Object.values(modifiers).flat().length} modifiers`);
@@ -197,6 +209,58 @@ export default async function seed({ strapi }: StrapiContext) {
 
   } catch (error) {
     strapi.log.error('❌ Seed failed:');
+    console.error(error);
+    throw error;
+  }
+}
+
+const defaultUsers = [
+  { username: 'owner', email: 'owner@coffeepos.com', password: 'CoffeePOS2026!' },
+  { username: 'manager', email: 'manager@coffeepos.com', password: 'CoffeePOS2026!' },
+  { username: 'barista', email: 'barista@coffeepos.com', password: 'CoffeePOS2026!' },
+];
+
+export async function seedUsers({ strapi }: { strapi: any }) {
+  strapi.log.info('Seeding default users...');
+
+  try {
+    // Find the default "Authenticated" role
+    const authenticatedRole = await strapi.query('plugin::users-permissions.role').findOne({
+      where: { type: 'authenticated' },
+    });
+
+    if (!authenticatedRole) {
+      strapi.log.error('Authenticated role not found. Users & Permissions plugin may not be initialized yet.');
+      return;
+    }
+
+    for (const user of defaultUsers) {
+      // Check if user already exists
+      const existing = await strapi.query('plugin::users-permissions.user').findOne({
+        where: { email: user.email },
+      });
+
+      if (existing) {
+        strapi.log.info(`  User ${user.username} already exists, skipping.`);
+        continue;
+      }
+
+      await strapi.service('plugin::users-permissions.user').add({
+        username: user.username,
+        email: user.email,
+        password: user.password,
+        confirmed: true,
+        blocked: false,
+        role: authenticatedRole.id,
+        provider: 'local',
+      });
+
+      strapi.log.info(`  Created user: ${user.username} (${user.email})`);
+    }
+
+    strapi.log.info('Users seeded successfully!');
+  } catch (error) {
+    strapi.log.error('User seed failed:');
     console.error(error);
     throw error;
   }

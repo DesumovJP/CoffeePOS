@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * ParadisePOS - Profile Page
+ * CoffeePOS - Profile Page
  *
  * Personal info + shift schedule with hours calculation
  */
@@ -146,6 +146,7 @@ function ShiftsTab() {
     {
       key: 'date',
       header: 'Дата',
+      width: '110px',
       render: (shift) => (
         <Text variant="bodyMedium" weight="medium">
           {new Date(shift.openedAt).toLocaleDateString('uk-UA')}
@@ -169,6 +170,7 @@ function ShiftsTab() {
     {
       key: 'duration',
       header: 'Тривалість',
+      width: '100px',
       render: (shift) => (
         <Text variant="labelMedium" weight="semibold">
           {calculateDuration(shift.openedAt, shift.closedAt)}
@@ -178,6 +180,7 @@ function ShiftsTab() {
     {
       key: 'status',
       header: 'Статус',
+      width: '100px',
       render: (shift) => (
         <Badge variant={shift.status === 'open' ? 'success' : 'default'} size="sm">
           {shift.status === 'open' ? 'Активна' : 'Закрита'}
@@ -187,6 +190,7 @@ function ShiftsTab() {
     {
       key: 'orders',
       header: 'Замовлень',
+      width: '100px',
       hideOnMobile: true,
       align: 'right',
       render: (shift) => (
@@ -196,6 +200,7 @@ function ShiftsTab() {
     {
       key: 'sales',
       header: 'Продажі',
+      width: '100px',
       align: 'right',
       render: (shift) => (
         <Text variant="labelMedium" weight="semibold">₴{(shift.totalSales || 0).toFixed(0)}</Text>

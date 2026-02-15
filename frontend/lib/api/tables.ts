@@ -1,5 +1,5 @@
 /**
- * ParadisePOS - Tables API
+ * CoffeePOS - Tables API
  *
  * API methods for cafe table management
  */
@@ -56,5 +56,12 @@ export const tablesApi = {
    */
   async update(id: number, data: Partial<CafeTableInput>): Promise<ApiResponse<CafeTable>> {
     return apiClient.put<CafeTable>(`/cafe-tables/${id}`, { data });
+  },
+
+  /**
+   * Delete a table
+   */
+  async delete(id: number): Promise<ApiResponse<CafeTable>> {
+    return apiClient.delete<CafeTable>(`/cafe-tables/${id}`);
   },
 };

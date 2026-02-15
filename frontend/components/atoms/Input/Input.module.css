@@ -134,6 +134,11 @@
   color: var(--text-primary);
 }
 
+.input:focus,
+.input:focus-visible {
+  outline: none;
+}
+
 .input::placeholder {
   color: var(--text-disabled);
 }

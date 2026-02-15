@@ -88,7 +88,7 @@
   background: rgba(44, 44, 46, 0.85);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  color: white;
+  color: var(--text-inverse);
   border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow:
     0 2px 8px rgba(0, 0, 0, 0.12),
@@ -135,7 +135,7 @@
   background: rgba(255, 59, 48, 0.88);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  color: white;
+  color: var(--text-inverse);
   border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow:
     0 2px 8px rgba(255, 59, 48, 0.2),
@@ -155,7 +155,7 @@
   background: rgba(48, 179, 80, 0.88);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  color: white;
+  color: var(--text-inverse);
   border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow:
     0 2px 8px rgba(48, 179, 80, 0.2),

@@ -1,11 +1,12 @@
 'use client';
 
 /**
- * ParadisePOS - Products Admin Page
+ * CoffeePOS - Products Admin Page
  *
- * Unified product management with five tabs:
+ * Unified product management with six tabs:
  * - Готова продукція (Ready-made products)
  * - Рецепти напоїв (Drink recipes)
+ * - Категорії (Categories)
  * - Інгредієнти (Ingredients)
  * - Поставки (Supplies)
  * - Списання (Write-offs)
@@ -14,7 +15,15 @@
 import { useState, useMemo, useCallback } from 'react';
 import { Text, Icon, Badge, Button, Modal } from '@/components/atoms';
 import { SearchInput, CategoryTabs, type Category } from '@/components/molecules';
-import { DataTable, type Column, SuppliesPanel, WriteoffsPanel } from '@/components/organisms';
+import {
+  DataTable,
+  type Column,
+  SuppliesPanel,
+  WriteoffsPanel,
+  ProductFormModal,
+  CategoryFormModal,
+  IngredientFormModal,
+} from '@/components/organisms';
 import {
   useProducts,
   useCategories,
@@ -23,15 +32,26 @@ import {
   useRecipesByProduct,
   useSupplies,
   useWriteoffs,
+  useDeleteProduct,
+  useDeleteCategory,
+  useDeleteIngredient,
 } from '@/lib/hooks';
-import type { Product, Ingredient, IngredientUnit, ApiRecipe } from '@/lib/api';
+import { useQueryClient } from '@tanstack/react-query';
+import { productKeys, categoryKeys, ingredientKeys } from '@/lib/hooks';
+import type {
+  Product,
+  Category as ApiCategory,
+  Ingredient,
+  IngredientUnit,
+  ApiRecipe,
+} from '@/lib/api';
 import styles from './page.module.css';
 
 // ============================================
 // TYPES
 // ============================================
 
-type ViewMode = 'products' | 'recipes' | 'ingredients' | 'supplies' | 'writeoffs';
+type ViewMode = 'products' | 'recipes' | 'categories' | 'ingredients' | 'supplies' | 'writeoffs';
 type CategoryFilter = 'all' | string;
 
 interface UnifiedProduct {
@@ -234,27 +254,29 @@ function ProductModal({ product, ingredients, onClose }: ProductModalProps) {
                 Рецепт {selectedRecipe?.sizeVolume && `(${selectedRecipe.sizeVolume})`}
               </Text>
 
-              <table className={styles.recipeTable}>
-                <thead>
-                  <tr>
-                    <th>Інгредієнт</th>
-                    <th>Кількість</th>
-                    <th className={styles.alignRight}>Вартість</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recipeIngredients.map((item, idx) => {
-                    const cost = item.amount * item.costPerUnit;
-                    return (
-                      <tr key={idx}>
-                        <td><Text variant="bodySmall">{item.name}</Text></td>
-                        <td><Text variant="bodySmall" color="secondary">{item.amount} {item.unit}</Text></td>
-                        <td className={styles.alignRight}><Text variant="bodySmall">₴{cost.toFixed(2)}</Text></td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+              <div className={styles.recipeTableWrapper}>
+                <table className={styles.recipeTable}>
+                  <thead>
+                    <tr>
+                      <th>Інгредієнт</th>
+                      <th>Кількість</th>
+                      <th className={styles.alignRight}>Вартість</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {recipeIngredients.map((item, idx) => {
+                      const cost = item.amount * item.costPerUnit;
+                      return (
+                        <tr key={idx}>
+                          <td><Text variant="bodySmall">{item.name}</Text></td>
+                          <td><Text variant="bodySmall" color="secondary">{item.amount} {item.unit}</Text></td>
+                          <td className={styles.alignRight}><Text variant="bodySmall">₴{cost.toFixed(2)}</Text></td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
 
               <div className={styles.recipeTotal}>
                 <Text variant="labelMedium" weight="semibold">Загальна собівартість</Text>
@@ -262,6 +284,46 @@ function ProductModal({ product, ingredients, onClose }: ProductModalProps) {
               </div>
             </div>
           )}
+    </Modal>
+  );
+}
+
+// ============================================
+// DELETE CONFIRM MODAL
+// ============================================
+
+interface DeleteConfirmModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  title: string;
+  description: string;
+  isDeleting: boolean;
+}
+
+function DeleteConfirmModal({ isOpen, onClose, onConfirm, title, description, isDeleting }: DeleteConfirmModalProps) {
+  const footer = (
+    <div className={styles.deleteFooter}>
+      <Button variant="ghost" onClick={onClose} disabled={isDeleting}>
+        Скасувати
+      </Button>
+      <Button variant="danger" onClick={onConfirm} loading={isDeleting}>
+        Видалити
+      </Button>
+    </div>
+  );
+
+  return (
+    <Modal
+      open={isOpen}
+      onClose={onClose}
+      title={title}
+      icon="delete"
+      variant="error"
+      size="sm"
+      footer={footer}
+    >
+      <Text variant="bodyMedium" color="secondary">{description}</Text>
     </Modal>
   );
 }
@@ -276,6 +338,22 @@ export default function ProductsAdminPage() {
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all');
   const [selectedProduct, setSelectedProduct] = useState<UnifiedProduct | null>(null);
 
+  // CRUD modal states
+  const [productModal, setProductModal] = useState<{ isOpen: boolean; product: Product | null }>({ isOpen: false, product: null });
+  const [categoryModal, setCategoryModal] = useState<{ isOpen: boolean; category: ApiCategory | null }>({ isOpen: false, category: null });
+  const [ingredientModal, setIngredientModal] = useState<{ isOpen: boolean; ingredient: Ingredient | null }>({ isOpen: false, ingredient: null });
+
+  // Delete confirmation state
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    isOpen: boolean;
+    type: 'product' | 'category' | 'ingredient';
+    id: number;
+    name: string;
+  } | null>(null);
+
+  // React Query
+  const queryClient = useQueryClient();
+
   // API data
   const { data: apiProducts, isLoading: productsLoading } = useProducts();
   const { data: apiCategories } = useCategories();
@@ -283,6 +361,11 @@ export default function ProductsAdminPage() {
   const { data: apiIngredientCategories } = useIngredientCategories();
   const { data: suppliesData } = useSupplies({});
   const { data: writeoffsData } = useWriteoffs({});
+
+  // Delete mutations
+  const deleteProductMutation = useDeleteProduct();
+  const deleteCategoryMutation = useDeleteCategory();
+  const deleteIngredientMutation = useDeleteIngredient();
 
   // Transform products to unified format
   const allProducts = useMemo(() => {
@@ -295,6 +378,7 @@ export default function ProductsAdminPage() {
   const recipes = useMemo(() => allProducts.filter((p) => p.type === 'recipe'), [allProducts]);
 
   const ingredientsList = apiIngredients || [];
+  const categoriesList = apiCategories || [];
 
   const activeSuppliesCount = (suppliesData || []).filter((s) => ['ordered', 'shipped'].includes(s.status)).length;
 
@@ -302,6 +386,7 @@ export default function ProductsAdminPage() {
   const viewCategories: Category[] = [
     { id: 'products', name: 'Готова продукція', count: products.length },
     { id: 'recipes', name: 'Рецепти напоїв', count: recipes.length },
+    { id: 'categories', name: 'Категорії', count: categoriesList.length },
     { id: 'ingredients', name: 'Інгредієнти', count: ingredientsList.length },
     { id: 'supplies', name: 'Поставки', count: activeSuppliesCount },
     { id: 'writeoffs', name: 'Списання', count: (writeoffsData || []).length },
@@ -327,6 +412,10 @@ export default function ProductsAdminPage() {
         ...ingCats,
         { id: 'low-stock', name: 'Мало', count: lowStockCount },
       ];
+    }
+
+    if (viewMode === 'categories') {
+      return []; // No sub-categories for categories view
     }
 
     const currentItems = viewMode === 'products' ? products : recipes;
@@ -366,6 +455,113 @@ export default function ProductsAdminPage() {
     return result;
   }, [ingredientsList, search, categoryFilter]);
 
+  const filteredCategories = useMemo(() => {
+    if (!search.trim()) return categoriesList;
+    const query = search.toLowerCase();
+    return categoriesList.filter((cat) =>
+      cat.name.toLowerCase().includes(query) ||
+      cat.description?.toLowerCase().includes(query)
+    );
+  }, [categoriesList, search]);
+
+  // ============================================
+  // CRUD HANDLERS
+  // ============================================
+
+  // Find the original Product object by UnifiedProduct id
+  const findOriginalProduct = useCallback(
+    (id: number): Product | null => {
+      return apiProducts?.find((p) => p.id === id) || null;
+    },
+    [apiProducts]
+  );
+
+  // Product CRUD
+  const handleCreateProduct = useCallback(() => {
+    setProductModal({ isOpen: true, product: null });
+  }, []);
+
+  const handleEditProduct = useCallback(
+    (productId: number) => {
+      const original = findOriginalProduct(productId);
+      if (original) {
+        setProductModal({ isOpen: true, product: original });
+      }
+    },
+    [findOriginalProduct]
+  );
+
+  const handleDeleteProduct = useCallback((id: number, name: string) => {
+    setDeleteConfirm({ isOpen: true, type: 'product', id, name });
+  }, []);
+
+  const handleProductSuccess = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: productKeys.lists() });
+  }, [queryClient]);
+
+  // Category CRUD
+  const handleCreateCategory = useCallback(() => {
+    setCategoryModal({ isOpen: true, category: null });
+  }, []);
+
+  const handleEditCategory = useCallback(
+    (category: ApiCategory) => {
+      setCategoryModal({ isOpen: true, category });
+    },
+    []
+  );
+
+  const handleDeleteCategory = useCallback((id: number, name: string) => {
+    setDeleteConfirm({ isOpen: true, type: 'category', id, name });
+  }, []);
+
+  const handleCategorySuccess = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: categoryKeys.lists() });
+    queryClient.invalidateQueries({ queryKey: categoryKeys.active() });
+  }, [queryClient]);
+
+  // Ingredient CRUD
+  const handleCreateIngredient = useCallback(() => {
+    setIngredientModal({ isOpen: true, ingredient: null });
+  }, []);
+
+  const handleEditIngredient = useCallback(
+    (ingredient: Ingredient) => {
+      setIngredientModal({ isOpen: true, ingredient });
+    },
+    []
+  );
+
+  const handleDeleteIngredient = useCallback((id: number, name: string) => {
+    setDeleteConfirm({ isOpen: true, type: 'ingredient', id, name });
+  }, []);
+
+  const handleIngredientSuccess = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ingredientKeys.lists() });
+  }, [queryClient]);
+
+  // Delete confirmation handler
+  const handleConfirmDelete = useCallback(async () => {
+    if (!deleteConfirm) return;
+
+    try {
+      if (deleteConfirm.type === 'product') {
+        await deleteProductMutation.mutateAsync(deleteConfirm.id);
+      } else if (deleteConfirm.type === 'category') {
+        await deleteCategoryMutation.mutateAsync(deleteConfirm.id);
+      } else if (deleteConfirm.type === 'ingredient') {
+        await deleteIngredientMutation.mutateAsync(deleteConfirm.id);
+      }
+      setDeleteConfirm(null);
+    } catch {
+      // Error is handled by mutation
+    }
+  }, [deleteConfirm, deleteProductMutation, deleteCategoryMutation, deleteIngredientMutation]);
+
+  // ============================================
+  // COLUMNS
+  // ============================================
+
   // Product/Recipe columns
   const productColumns: Column<UnifiedProduct>[] = useMemo(() => {
     const cols: Column<UnifiedProduct>[] = [
@@ -385,6 +581,7 @@ export default function ProductsAdminPage() {
       cols.push({
         key: 'stock',
         header: 'Залишок',
+        width: '110px',
         hideOnMobile: true,
         render: (product) => {
           const isOutOfStock = (product.quantity || 0) <= 0;
@@ -400,6 +597,8 @@ export default function ProductsAdminPage() {
       key: 'price',
       header: 'Ціна',
       align: 'right',
+      width: '120px',
+      hideOnMobile: true,
       render: (product) => (
         <div>
           <Text variant="labelMedium" weight="semibold">₴{product.price.toFixed(0)}</Text>
@@ -408,8 +607,145 @@ export default function ProductsAdminPage() {
       ),
     });
 
+    cols.push({
+      key: 'status',
+      header: 'Статус',
+      width: '110px',
+      hideOnMobile: true,
+      hideOnTablet: true,
+      render: (product) => (
+        <Badge variant={product.isActive ? 'success' : 'default'} size="sm">
+          {product.isActive ? 'Активний' : 'Неактивний'}
+        </Badge>
+      ),
+    });
+
+    cols.push({
+      key: 'actions',
+      header: 'Дії',
+      align: 'right',
+      width: '90px',
+      render: (product) => (
+        <div className={styles.actions}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleEditProduct(product.id);
+            }}
+          >
+            <Icon name="edit" size="sm" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDeleteProduct(product.id, product.name);
+            }}
+          >
+            <Icon name="delete" size="sm" />
+          </Button>
+        </div>
+      ),
+    });
+
     return cols;
-  }, [viewMode]);
+  }, [viewMode, handleEditProduct, handleDeleteProduct]);
+
+  // Category columns
+  const categoryColumns: Column<ApiCategory>[] = useMemo(() => [
+    {
+      key: 'name',
+      header: 'Назва',
+      render: (cat) => (
+        <div className={styles.itemName}>
+          {cat.icon && <span className={styles.categoryIcon}>{cat.icon}</span>}
+          <Text variant="bodyMedium" weight="medium">{cat.name}</Text>
+        </div>
+      ),
+    },
+    {
+      key: 'description',
+      header: 'Опис',
+      hideOnMobile: true,
+      render: (cat) => (
+        <Text variant="bodySmall" color="secondary">
+          {cat.description || '—'}
+        </Text>
+      ),
+    },
+    {
+      key: 'color',
+      header: 'Колір',
+      width: '120px',
+      hideOnMobile: true,
+      hideOnTablet: true,
+      render: (cat) => (
+        <div className={styles.colorCell}>
+          {cat.color && (
+            <span
+              className={styles.colorSwatch}
+              style={{ backgroundColor: cat.color }}
+            />
+          )}
+          <Text variant="bodySmall" color="secondary">{cat.color || '—'}</Text>
+        </div>
+      ),
+    },
+    {
+      key: 'sortOrder',
+      header: 'Порядок',
+      width: '90px',
+      hideOnMobile: true,
+      hideOnTablet: true,
+      render: (cat) => (
+        <Text variant="bodySmall" color="secondary">{cat.sortOrder}</Text>
+      ),
+    },
+    {
+      key: 'status',
+      header: 'Статус',
+      width: '110px',
+      hideOnMobile: true,
+      render: (cat) => (
+        <Badge variant={cat.isActive ? 'success' : 'default'} size="sm">
+          {cat.isActive ? 'Активна' : 'Неактивна'}
+        </Badge>
+      ),
+    },
+    {
+      key: 'actions',
+      header: 'Дії',
+      align: 'right',
+      width: '90px',
+      render: (cat) => (
+        <div className={styles.actions}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleEditCategory(cat);
+            }}
+          >
+            <Icon name="edit" size="sm" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDeleteCategory(cat.id, cat.name);
+            }}
+          >
+            <Icon name="delete" size="sm" />
+          </Button>
+        </div>
+      ),
+    },
+  ], [handleEditCategory, handleDeleteCategory]);
 
   // Ingredient columns
   const ingredientColumns: Column<Ingredient>[] = useMemo(() => [
@@ -429,6 +765,7 @@ export default function ProductsAdminPage() {
     {
       key: 'category',
       header: 'Категорія',
+      width: '130px',
       hideOnMobile: true,
       render: (ingredient) => (
         <Text variant="bodySmall" color="secondary">{ingredient.category?.name || '—'}</Text>
@@ -437,6 +774,7 @@ export default function ProductsAdminPage() {
     {
       key: 'quantity',
       header: 'Залишок',
+      width: '110px',
       render: (ingredient) => {
         const isLowStock = ingredient.quantity <= ingredient.minQuantity;
         return (
@@ -449,6 +787,7 @@ export default function ProductsAdminPage() {
     {
       key: 'minQuantity',
       header: 'Мін. запас',
+      width: '100px',
       hideOnMobile: true,
       hideOnTablet: true,
       render: (ingredient) => (
@@ -460,6 +799,7 @@ export default function ProductsAdminPage() {
     {
       key: 'costPerUnit',
       header: 'Ціна/од.',
+      width: '110px',
       hideOnMobile: true,
       render: (ingredient) => (
         <Text variant="bodySmall">₴{ingredient.costPerUnit.toFixed(2)}/{UNIT_LABELS[ingredient.unit]}</Text>
@@ -468,6 +808,7 @@ export default function ProductsAdminPage() {
     {
       key: 'supplier',
       header: 'Постачальник',
+      width: '140px',
       hideOnMobile: true,
       hideOnTablet: true,
       render: (ingredient) => (
@@ -478,18 +819,33 @@ export default function ProductsAdminPage() {
       key: 'actions',
       header: 'Дії',
       align: 'right',
+      width: '90px',
       render: (ingredient) => (
         <div className={styles.actions}>
-          <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); }}>
-            <Icon name="plus" size="sm" />
-          </Button>
-          <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); }}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleEditIngredient(ingredient);
+            }}
+          >
             <Icon name="edit" size="sm" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDeleteIngredient(ingredient.id, ingredient.name);
+            }}
+          >
+            <Icon name="delete" size="sm" />
           </Button>
         </div>
       ),
     },
-  ], []);
+  ], [handleEditIngredient, handleDeleteIngredient]);
 
   const getIngredientRowClassName = useCallback((ingredient: Ingredient) => {
     return ingredient.quantity <= ingredient.minQuantity ? styles.lowStockRow : '';
@@ -500,6 +856,24 @@ export default function ProductsAdminPage() {
   }, []);
 
   const isLoading = viewMode === 'ingredients' ? ingredientsLoading : productsLoading;
+
+  // ============================================
+  // Add button label based on view
+  // ============================================
+
+  const addButtonConfig = useMemo(() => {
+    switch (viewMode) {
+      case 'products':
+      case 'recipes':
+        return { label: 'Додати продукт', handler: handleCreateProduct };
+      case 'categories':
+        return { label: 'Додати категорію', handler: handleCreateCategory };
+      case 'ingredients':
+        return { label: 'Додати інгредієнт', handler: handleCreateIngredient };
+      default:
+        return null;
+    }
+  }, [viewMode, handleCreateProduct, handleCreateCategory, handleCreateIngredient]);
 
   return (
     <div className={styles.page}>
@@ -522,23 +896,40 @@ export default function ProductsAdminPage() {
         <>
           {/* Toolbar */}
           <div className={styles.toolbar}>
-            <CategoryTabs
-              categories={categories}
-              value={categoryFilter === 'all' ? null : categoryFilter}
-              showAll={true}
-              allLabel="Всі"
-              onChange={(id) => setCategoryFilter(id || 'all')}
-            />
-            <SearchInput
-              value={search}
-              onChange={setSearch}
-              placeholder={
-                viewMode === 'products' ? 'Пошук продукції...' :
-                viewMode === 'recipes' ? 'Пошук рецептів...' :
-                'Пошук інгредієнтів...'
-              }
-              variant="glass"
-            />
+            {viewMode !== 'categories' ? (
+              <CategoryTabs
+                categories={categories}
+                value={categoryFilter === 'all' ? null : categoryFilter}
+                showAll={true}
+                allLabel="Всі"
+                onChange={(id) => setCategoryFilter(id || 'all')}
+              />
+            ) : (
+              <div />
+            )}
+            <div className={styles.toolbarRight}>
+              <SearchInput
+                value={search}
+                onChange={setSearch}
+                placeholder={
+                  viewMode === 'products' ? 'Пошук продукції...' :
+                  viewMode === 'recipes' ? 'Пошук рецептів...' :
+                  viewMode === 'categories' ? 'Пошук категорій...' :
+                  'Пошук інгредієнтів...'
+                }
+                variant="glass"
+              />
+              {addButtonConfig && (
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={addButtonConfig.handler}
+                  iconLeft={<Icon name="plus" size="sm" />}
+                >
+                  {addButtonConfig.label}
+                </Button>
+              )}
+            </div>
           </div>
 
           {/* Data Table - different based on view mode */}
@@ -547,6 +938,13 @@ export default function ProductsAdminPage() {
               <Icon name="clock" size="2xl" color="tertiary" />
               <Text variant="bodyLarge" color="secondary">Завантаження...</Text>
             </div>
+          ) : viewMode === 'categories' ? (
+            <DataTable
+              columns={categoryColumns}
+              data={filteredCategories}
+              getRowKey={(cat) => String(cat.id)}
+              emptyState={{ icon: 'search', title: 'Категорії не знайдено' }}
+            />
           ) : viewMode === 'ingredients' ? (
             <DataTable
               columns={ingredientColumns}
@@ -577,6 +975,50 @@ export default function ProductsAdminPage() {
             />
           )}
         </>
+      )}
+
+      {/* CRUD Modals */}
+      <ProductFormModal
+        isOpen={productModal.isOpen}
+        onClose={() => setProductModal({ isOpen: false, product: null })}
+        product={productModal.product}
+        categories={categoriesList}
+        onSuccess={handleProductSuccess}
+      />
+
+      <CategoryFormModal
+        isOpen={categoryModal.isOpen}
+        onClose={() => setCategoryModal({ isOpen: false, category: null })}
+        category={categoryModal.category}
+        onSuccess={handleCategorySuccess}
+      />
+
+      <IngredientFormModal
+        isOpen={ingredientModal.isOpen}
+        onClose={() => setIngredientModal({ isOpen: false, ingredient: null })}
+        ingredient={ingredientModal.ingredient}
+        categories={apiIngredientCategories || []}
+        onSuccess={handleIngredientSuccess}
+      />
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm && (
+        <DeleteConfirmModal
+          isOpen={deleteConfirm.isOpen}
+          onClose={() => setDeleteConfirm(null)}
+          onConfirm={handleConfirmDelete}
+          title={`Видалити ${
+            deleteConfirm.type === 'product' ? 'продукт' :
+            deleteConfirm.type === 'category' ? 'категорію' :
+            'інгредієнт'
+          }?`}
+          description={`Ви впевнені, що хочете видалити "${deleteConfirm.name}"? Цю дію неможливо скасувати.`}
+          isDeleting={
+            deleteProductMutation.isPending ||
+            deleteCategoryMutation.isPending ||
+            deleteIngredientMutation.isPending
+          }
+        />
       )}
     </div>
   );

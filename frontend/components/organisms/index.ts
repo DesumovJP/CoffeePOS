@@ -1,5 +1,5 @@
 /**
- * ParadisePOS Design System - Organisms
+ * CoffeePOS Design System - Organisms
  *
  * Complex components composed of molecules and atoms
  */
@@ -16,3 +16,11 @@ export * from './NotificationCenter';
 export * from './DataTable';
 export * from './SuppliesPanel';
 export * from './WriteoffsPanel';
+export * from './RecipeFormModal';
+export * from './ModifierGroupFormModal';
+export * from './TableFormModal';
+export * from './ProductFormModal';
+export * from './CategoryFormModal';
+export * from './IngredientFormModal';
+export * from './ReceiptTemplate';
+export * from './ErrorBoundary';

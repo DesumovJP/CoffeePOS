@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * ParadisePOS - ShiftCloseModal Component
+ * CoffeePOS - ShiftCloseModal Component
  *
  * Modal for closing the current shift with summary
  */
@@ -9,7 +9,7 @@
 import { useState } from 'react';
 import { useShiftStore } from '@/lib/store';
 import { Modal } from '@/components/atoms';
-import { Text, Button, Icon } from '@/components/atoms';
+import { Text, Button, Icon, Input } from '@/components/atoms';
 import styles from './ShiftCloseModal.module.css';
 
 interface ShiftCloseModalProps {
@@ -90,10 +90,10 @@ export function ShiftCloseModal({ isOpen, onClose }: ShiftCloseModalProps) {
         {/* Form */}
         <div className={styles.form}>
           <div className={styles.field}>
-            <Text variant="labelMedium" weight="medium">Ім&apos;я (хто закриває)</Text>
-            <input
+            <Input
+              label="Ім'я (хто закриває)"
               type="text"
-              className={styles.input}
+              fullWidth
               placeholder="Введіть ім'я..."
               value={closedBy}
               onChange={(e) => setClosedBy(e.target.value)}
@@ -101,10 +101,10 @@ export function ShiftCloseModal({ isOpen, onClose }: ShiftCloseModalProps) {
           </div>
 
           <div className={styles.field}>
-            <Text variant="labelMedium" weight="medium">Фактична готівка в касі (₴)</Text>
-            <input
+            <Input
+              label="Фактична готівка в касі (₴)"
               type="number"
-              className={styles.input}
+              fullWidth
               placeholder="0"
               value={closingCash}
               onChange={(e) => setClosingCash(e.target.value)}

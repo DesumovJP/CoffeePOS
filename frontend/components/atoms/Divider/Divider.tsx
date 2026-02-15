@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * ParadisePOS Design System - Divider Component
+ * CoffeePOS Design System - Divider Component
  *
  * Visual separator between content sections
  */

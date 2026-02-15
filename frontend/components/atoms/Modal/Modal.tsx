@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * ParadisePOS Design System - Modal Component
+ * CoffeePOS Design System - Modal Component
  *
  * Unified accessible modal dialog with animations, icons, variants
  */

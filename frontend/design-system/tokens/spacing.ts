@@ -1,5 +1,5 @@
 /**
- * ParadisePOS Design System - Spacing Tokens
+ * CoffeePOS Design System - Spacing Tokens
  *
  * Consistent spacing scale based on 4px base unit
  * Used for margin, padding, gap, and positioning

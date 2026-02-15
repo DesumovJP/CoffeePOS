@@ -1,18 +1,22 @@
 'use client';
 
 /**
- * ParadisePOS - Tables Management Page
+ * CoffeePOS - Tables Management Page
  *
  * Visual table management for cafes and restaurants
+ * Includes CRUD operations: create, edit, delete tables
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import { Text, Button, Icon, Badge } from '@/components';
 import { Modal } from '@/components/atoms';
 import { CategoryTabs, type Category } from '@/components/molecules';
-import { useTables, useActiveOrders } from '@/lib/hooks';
+import { TableFormModal } from '@/components/organisms';
+import { useTables, useActiveOrders, useDeleteTable } from '@/lib/hooks';
 import type { CafeTable, Order } from '@/lib/api';
+import { useQueryClient } from '@tanstack/react-query';
+import { tableKeys } from '@/lib/hooks/useTables';
 import styles from './page.module.css';
 
 // ============================================
@@ -25,6 +29,9 @@ interface TableWithStatus {
   id: number;
   number: number;
   seats: number;
+  zone?: string;
+  isActive: boolean;
+  sortOrder: number;
   status: TableStatus;
   orderTotal?: number;
   customerName?: string;
@@ -46,6 +53,9 @@ function deriveTableStatus(table: CafeTable, activeOrders: Order[]): TableWithSt
       id: table.id,
       number: table.number,
       seats: table.seats,
+      zone: table.zone,
+      isActive: table.isActive,
+      sortOrder: table.sortOrder,
       status,
       orderTotal: tableOrder.total,
       customerName: tableOrder.customerName,
@@ -57,6 +67,9 @@ function deriveTableStatus(table: CafeTable, activeOrders: Order[]): TableWithSt
     id: table.id,
     number: table.number,
     seats: table.seats,
+    zone: table.zone,
+    isActive: table.isActive,
+    sortOrder: table.sortOrder,
     status: 'free',
   };
 }
@@ -90,8 +103,15 @@ export default function TablesPage() {
   const [selectedTable, setSelectedTable] = useState<TableWithStatus | null>(null);
   const [filterStatus, setFilterStatus] = useState<TableStatus | 'all'>('all');
 
-  const { data: tables, isLoading: tablesLoading } = useTables({ isActive: true });
+  // CRUD state
+  const [formOpen, setFormOpen] = useState(false);
+  const [editingTable, setEditingTable] = useState<CafeTable | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+
+  const queryClient = useQueryClient();
+  const { data: tables, isLoading: tablesLoading } = useTables();
   const { data: activeOrders } = useActiveOrders();
+  const deleteTable = useDeleteTable();
 
   // Merge static tables with dynamic order status
   const tablesWithStatus = useMemo((): TableWithStatus[] => {
@@ -113,6 +133,51 @@ export default function TablesPage() {
       { id: 'occupied', name: 'Зайняті', count: occupiedCount },
     ];
   }, [tablesWithStatus]);
+
+  // CRUD handlers
+  const handleCreateTable = useCallback(() => {
+    setEditingTable(null);
+    setFormOpen(true);
+  }, []);
+
+  // Listen for AppShell "Додати стіл" action button
+  useEffect(() => {
+    const handler = () => handleCreateTable();
+    window.addEventListener('appshell:action', handler);
+    return () => window.removeEventListener('appshell:action', handler);
+  }, [handleCreateTable]);
+
+  const handleEditTable = useCallback((tableWithStatus: TableWithStatus) => {
+    // Build a CafeTable-like object from TableWithStatus for the form
+    const cafeTable: CafeTable = {
+      id: tableWithStatus.id,
+      documentId: '',
+      number: tableWithStatus.number,
+      seats: tableWithStatus.seats,
+      zone: tableWithStatus.zone,
+      isActive: tableWithStatus.isActive,
+      sortOrder: tableWithStatus.sortOrder,
+      createdAt: '',
+      updatedAt: '',
+    };
+    setEditingTable(cafeTable);
+    setFormOpen(true);
+    setSelectedTable(null);
+  }, []);
+
+  const handleDeleteTable = useCallback(async (id: number) => {
+    try {
+      await deleteTable.mutateAsync(id);
+      setDeleteConfirmId(null);
+      setSelectedTable(null);
+    } catch {
+      // Error handling is done by React Query
+    }
+  }, [deleteTable]);
+
+  const handleFormSuccess = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: tableKeys.lists() });
+  }, [queryClient]);
 
   return (
     <div className={styles.page}>
@@ -143,47 +208,78 @@ export default function TablesPage() {
         ) : (
           filteredTables.map((table) => {
             const statusInfo = getStatusInfo(table.status);
+            const isOccupied = table.status === 'occupied' || table.status === 'waiting';
             return (
               <div
                 key={table.id}
-                className={`${styles.tableCard} ${styles[table.status]} ${selectedTable?.id === table.id ? styles.selected : ''}`}
+                className={`${styles.tableCard} ${styles[table.status]} ${!table.isActive ? styles.inactive : ''} ${selectedTable?.id === table.id ? styles.selected : ''}`}
                 onClick={() => setSelectedTable(table)}
               >
+                {/* Header: number + zone + seats */}
                 <div className={styles.tableHeader}>
-                  <Text variant="h4" weight="bold">#{table.number}</Text>
+                  <div className={styles.tableId}>
+                    <Text variant="h4" weight="bold">#{table.number}</Text>
+                    {table.zone && (
+                      <Text variant="caption" color="tertiary">{table.zone}</Text>
+                    )}
+                  </div>
                   <div className={styles.tableSeats}>
                     <Icon name="users" size="xs" color="tertiary" />
-                    <Text variant="caption" color="tertiary">{table.seats}</Text>
+                    <Text variant="labelSmall" color="tertiary">{table.seats}</Text>
                   </div>
                 </div>
 
+                {/* Status row */}
                 <div className={styles.tableStatus}>
                   <div className={`${styles.statusDot} ${styles[table.status]}`} />
                   <Text variant="labelSmall" color="secondary">{statusInfo.label}</Text>
+                  {!table.isActive && (
+                    <Badge variant="warning" size="sm">Неактивний</Badge>
+                  )}
                 </div>
 
-                {table.status === 'occupied' || table.status === 'waiting' ? (
-                  <div className={styles.tableInfo}>
-                    {table.customerName && (
-                      <Text variant="caption" color="tertiary">{table.customerName}</Text>
-                    )}
-                    <Text variant="labelLarge" weight="semibold" color="accent">
-                      ₴{table.orderTotal}
-                    </Text>
-                    {table.occupiedSince && (
-                      <Text variant="caption" color="tertiary">
-                        {formatDuration(table.occupiedSince)}
+                {/* Footer: order info or actions */}
+                <div className={styles.tableFooter}>
+                  {isOccupied ? (
+                    <div className={styles.orderInfo}>
+                      <Text variant="h4" weight="bold" color="accent">
+                        ₴{table.orderTotal}
                       </Text>
-                    )}
-                  </div>
-                ) : (
-                  <div className={styles.tableInfo}>
-                    <Button variant="ghost" size="xs" className={styles.quickAction}>
-                      <Icon name="plus" size="xs" />
-                      Нове замовлення
-                    </Button>
-                  </div>
-                )}
+                      <div className={styles.orderMeta}>
+                        {table.occupiedSince && (
+                          <div className={styles.orderMetaItem}>
+                            <Icon name="clock" size="xs" color="tertiary" />
+                            <Text variant="caption" color="tertiary">
+                              {formatDuration(table.occupiedSince)}
+                            </Text>
+                          </div>
+                        )}
+                        {table.customerName && (
+                          <Text variant="caption" color="tertiary">{table.customerName}</Text>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className={styles.cardActions}>
+                      <Button
+                        variant="ghost"
+                        size="xs"
+                        className={styles.quickAction}
+                        onClick={(e) => { e.stopPropagation(); handleEditTable(table); }}
+                      >
+                        <Icon name="edit" size="xs" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="xs"
+                        className={styles.quickAction}
+                        onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(table.id); }}
+                      >
+                        <Icon name="close" size="xs" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
               </div>
             );
           })
@@ -195,7 +291,7 @@ export default function TablesPage() {
         isOpen={!!selectedTable}
         onClose={() => setSelectedTable(null)}
         title={selectedTable ? `Стіл #${selectedTable.number}` : ''}
-        subtitle={selectedTable ? `${selectedTable.seats} місць` : ''}
+        subtitle={selectedTable ? `${selectedTable.seats} місць${selectedTable.zone ? ` \u2022 ${selectedTable.zone}` : ''}` : ''}
         icon="store"
         size="sm"
       >
@@ -259,17 +355,84 @@ export default function TablesPage() {
               )}
 
               {selectedTable.status === 'free' && (
-                <Link href="/pos" className={styles.fullWidth}>
-                  <Button variant="primary" size="lg" fullWidth>
-                    <Icon name="plus" size="sm" />
-                    Нове замовлення
-                  </Button>
-                </Link>
+                <>
+                  <Link href="/pos" className={styles.fullWidth}>
+                    <Button variant="primary" size="lg" fullWidth>
+                      <Icon name="plus" size="sm" />
+                      Нове замовлення
+                    </Button>
+                  </Link>
+                  <div className={styles.modalActionsRow}>
+                    <Button
+                      variant="secondary"
+                      size="md"
+                      fullWidth
+                      onClick={() => handleEditTable(selectedTable)}
+                    >
+                      <Icon name="edit" size="sm" />
+                      Редагувати стіл
+                    </Button>
+                    <Button
+                      variant="danger"
+                      size="md"
+                      fullWidth
+                      onClick={() => {
+                        setSelectedTable(null);
+                        setDeleteConfirmId(selectedTable.id);
+                      }}
+                    >
+                      <Icon name="close" size="sm" />
+                      Видалити
+                    </Button>
+                  </div>
+                </>
               )}
             </div>
           </div>
         )}
       </Modal>
+
+      {/* Table Form Modal (Create / Edit) */}
+      <TableFormModal
+        isOpen={formOpen}
+        onClose={() => {
+          setFormOpen(false);
+          setEditingTable(null);
+        }}
+        table={editingTable}
+        onSuccess={handleFormSuccess}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={deleteConfirmId !== null}
+        onClose={() => setDeleteConfirmId(null)}
+        title="Видалити стіл?"
+        description="Цю дію неможливо скасувати. Стіл буде видалено назавжди."
+        icon="warning"
+        variant="error"
+        size="sm"
+        footer={
+          <>
+            <Button
+              variant="secondary"
+              size="lg"
+              onClick={() => setDeleteConfirmId(null)}
+            >
+              Скасувати
+            </Button>
+            <Button
+              variant="danger"
+              size="lg"
+              loading={deleteTable.isPending}
+              onClick={() => deleteConfirmId && handleDeleteTable(deleteConfirmId)}
+            >
+              <Icon name="close" size="sm" />
+              Видалити
+            </Button>
+          </>
+        }
+      />
     </div>
   );
 }

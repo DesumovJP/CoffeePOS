@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * ParadisePOS Design System - Button Component
+ * CoffeePOS Design System - Button Component
  *
  * Primary interactive element for user actions
  * Supports multiple variants, sizes, and states

@@ -1,5 +1,5 @@
 /**
- * ParadisePOS Design System - Breakpoint Tokens
+ * CoffeePOS Design System - Breakpoint Tokens
  *
  * Responsive breakpoints for mobile-first design
  * Optimized for POS devices: tablets, touch screens, desktop monitors

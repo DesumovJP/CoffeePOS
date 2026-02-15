@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * ParadisePOS - Categories Hooks
+ * CoffeePOS - Categories Hooks
  *
  * React Query hooks for categories data
  */

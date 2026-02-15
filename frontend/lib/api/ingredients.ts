@@ -1,5 +1,5 @@
 /**
- * ParadisePOS - Ingredients API
+ * CoffeePOS - Ingredients API
  *
  * API services for managing ingredients and inventory
  */

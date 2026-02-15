@@ -1,14 +1,14 @@
 'use client';
 
 /**
- * ParadisePOS - SuppliesPanel Component
+ * CoffeePOS - SuppliesPanel Component
  *
  * Supply management panel: create, track, and receive ingredient deliveries.
  * Used as a tab within the Products admin page.
  */
 
 import { useState, useMemo, useCallback } from 'react';
-import { Text, Icon, Badge, Button } from '@/components/atoms';
+import { Text, Icon, Badge, Button, Input } from '@/components/atoms';
 import { Modal } from '@/components/atoms';
 import { SearchInput } from '@/components/molecules';
 import { DataTable, type Column } from '@/components/organisms';
@@ -99,10 +99,10 @@ function CreateSupplyModal({ isOpen, onClose, onSubmit, isSubmitting, ingredient
     <Modal isOpen={isOpen} onClose={onClose} title="Нова поставка" icon="truck" size="lg">
       <div className={styles.modalContent}>
         <div className={styles.field}>
-          <Text variant="labelMedium" weight="medium">Постачальник</Text>
-          <input
+          <Input
+            label="Постачальник"
             type="text"
-            className={styles.input}
+            fullWidth
             placeholder="Назва постачальника..."
             value={supplierName}
             onChange={(e) => setSupplierName(e.target.value)}
@@ -113,7 +113,7 @@ function CreateSupplyModal({ isOpen, onClose, onSubmit, isSubmitting, ingredient
           <Text variant="labelMedium" weight="medium">Додати інгредієнт</Text>
           <div className={styles.addItemRow}>
             <select
-              className={styles.input}
+              className={styles.selectInput}
               value={selectedIngredientId}
               onChange={(e) => setSelectedIngredientId(e.target.value)}
             >
@@ -122,8 +122,9 @@ function CreateSupplyModal({ isOpen, onClose, onSubmit, isSubmitting, ingredient
                 <option key={ing.id} value={ing.id}>{ing.name} ({ing.unit})</option>
               ))}
             </select>
-            <input
+            <Input
               type="number"
+              size="sm"
               className={styles.inputSmall}
               placeholder="К-сть"
               value={itemQuantity}
@@ -131,8 +132,9 @@ function CreateSupplyModal({ isOpen, onClose, onSubmit, isSubmitting, ingredient
               min="0"
               step="0.01"
             />
-            <input
+            <Input
               type="number"
+              size="sm"
               className={styles.inputSmall}
               placeholder="Ціна/од."
               value={itemUnitCost}
@@ -250,10 +252,10 @@ function ReceiveSupplyModal({ isOpen, onClose, supply, onReceive, isReceiving }:
         )}
 
         <div className={styles.field}>
-          <Text variant="labelMedium" weight="medium">Хто приймає</Text>
-          <input
+          <Input
+            label="Хто приймає"
             type="text"
-            className={styles.input}
+            fullWidth
             placeholder="Введіть ім'я..."
             value={receivedBy}
             onChange={(e) => setReceivedBy(e.target.value)}

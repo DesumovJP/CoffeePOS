@@ -1,5 +1,5 @@
 /**
- * ParadisePOS - Production Seed Data
+ * CoffeePOS - Production Seed Data
  *
  * Complete dataset for ingredients, recipes, and products
  */

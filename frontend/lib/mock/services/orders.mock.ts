@@ -1,5 +1,5 @@
 /**
- * ParadisePOS - Mock Orders, OrderItems, Payments API
+ * CoffeePOS - Mock Orders, OrderItems, Payments API
  */
 
 import type { ApiResponse } from '@/lib/api/client';

@@ -1,5 +1,6 @@
 import type { Core } from '@strapi/strapi';
 import seed from './seed';
+import { seedUsers } from './seed';
 
 export default {
   /**
@@ -28,8 +29,11 @@ export default {
       if (categoriesCount === 0) {
         strapi.log.info('Database is empty, running seed...');
         await seed({ strapi } as any);
+        await seedUsers({ strapi });
       } else {
         strapi.log.info(`Database already has ${categoriesCount} categories, skipping seed.`);
+        // Still seed users even if data exists (they check for duplicates)
+        await seedUsers({ strapi });
       }
     }
   },

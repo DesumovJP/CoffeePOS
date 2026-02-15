@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * ParadisePOS - QuantityControl Component
+ * CoffeePOS - QuantityControl Component
  *
  * +/- buttons for quantity adjustment
  * Used in cart and order items

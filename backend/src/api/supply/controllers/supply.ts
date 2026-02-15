@@ -1,4 +1,5 @@
 import { factories } from '@strapi/strapi';
+import { validateRequired, sanitizeString, ValidationError } from '../../../utils/validate';
 
 export default factories.createCoreController('api::supply.supply', ({ strapi }) => ({
   /**
@@ -7,6 +8,18 @@ export default factories.createCoreController('api::supply.supply', ({ strapi })
   async receive(ctx) {
     const { id } = ctx.params;
     const { receivedBy } = ctx.request.body?.data || {};
+
+    try {
+      validateRequired({ receivedBy }, ['receivedBy']);
+      if (typeof receivedBy !== 'string') {
+        throw new ValidationError('receivedBy must be a string', { receivedBy: 'Must be a string' });
+      }
+    } catch (error) {
+      if (error instanceof ValidationError) {
+        return ctx.badRequest(error.message, { details: error.details });
+      }
+      throw error;
+    }
 
     const supply = await strapi.db.query('api::supply.supply').findOne({
       where: { id },
@@ -60,7 +73,7 @@ export default factories.createCoreController('api::supply.supply', ({ strapi })
           previousQty,
           newQty,
           reference: `SUP-${id}`,
-          performedBy: receivedBy,
+          performedBy: sanitizeString(receivedBy),
           shift: currentShift?.id || undefined,
         },
       });
@@ -72,7 +85,7 @@ export default factories.createCoreController('api::supply.supply', ({ strapi })
       data: {
         status: 'received',
         receivedAt: new Date().toISOString(),
-        receivedBy: receivedBy || 'Unknown',
+        receivedBy: sanitizeString(receivedBy),
       },
     });
 

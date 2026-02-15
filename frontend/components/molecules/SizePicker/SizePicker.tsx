@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * ParadisePOS - SizePicker Component
+ * CoffeePOS - SizePicker Component
  *
  * Simple size selection popup for products
  */

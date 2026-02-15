@@ -72,27 +72,6 @@
   gap: var(--space-1-5);
 }
 
-.input {
-  width: 100%;
-  padding: var(--space-3) var(--space-4);
-  background: var(--bg-secondary);
-  border: 1px solid var(--glass-border-strong);
-  border-radius: var(--radius-lg);
-  font-size: var(--text-base);
-  color: var(--text-primary);
-  outline: none;
-  transition: border-color var(--duration-fast) var(--ease-default);
-}
-
-.input:focus {
-  border-color: var(--color-accent);
-  box-shadow: var(--shadow-focus);
-}
-
-.input::placeholder {
-  color: var(--text-disabled);
-}
-
 .warningBanner {
   display: flex;
   align-items: center;

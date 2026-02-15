@@ -1,5 +1,5 @@
 /**
- * ParadisePOS - Recipes API
+ * CoffeePOS - Recipes API
  */
 
 import { apiClient, type ApiResponse } from './client';
@@ -22,6 +22,18 @@ export interface ApiRecipe {
   preparationNotes?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ApiRecipeInput {
+  product?: number;
+  sizeId: string;
+  sizeName: string;
+  sizeVolume?: string;
+  price: number;
+  costPrice?: number;
+  isDefault?: boolean;
+  ingredients: Array<{ ingredientId: number; amount: number }>;
+  preparationNotes?: string;
 }
 
 export interface GetRecipesParams {
@@ -51,5 +63,17 @@ export const recipesApi = {
       'filters[product][id][$eq]': productId,
       'populate': 'product',
     });
+  },
+
+  async create(data: ApiRecipeInput): Promise<ApiResponse<ApiRecipe>> {
+    return apiClient.post<ApiRecipe>('/recipes', { data });
+  },
+
+  async update(id: number, data: Partial<ApiRecipeInput>): Promise<ApiResponse<ApiRecipe>> {
+    return apiClient.put<ApiRecipe>(`/recipes/${id}`, { data });
+  },
+
+  async delete(id: number): Promise<ApiResponse<ApiRecipe>> {
+    return apiClient.delete<ApiRecipe>(`/recipes/${id}`);
   },
 };

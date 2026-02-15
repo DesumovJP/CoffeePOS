@@ -1,5 +1,5 @@
 /**
- * ParadisePOS - Mock Services Barrel Export
+ * CoffeePOS - Mock Services Barrel Export
  *
  * Re-exports all mock services with the same names as real API services
  */

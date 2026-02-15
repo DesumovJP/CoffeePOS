@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * ParadisePOS Design System - GlassCard Component
+ * CoffeePOS Design System - GlassCard Component
  *
  * iOS 26 Liquid Glass style card container
  * Key component for the glass morphism design language

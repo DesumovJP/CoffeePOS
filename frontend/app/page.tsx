@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * ParadisePOS - Landing Page
+ * CoffeePOS - Landing Page
  *
  * Modern, light, and inviting landing page for cafes and coffee shops
  * iOS 26 Liquid Glass design with wow-effect
@@ -74,7 +74,7 @@ export default function LandingPage() {
         <div className={styles.navContent}>
           <div className={styles.logo}>
             <Icon name="coffee" size="lg" color="accent" />
-            <Text variant="h4" weight="semibold">ParadisePOS</Text>
+            <Text variant="h4" weight="semibold">CoffeePOS</Text>
           </div>
           <div className={styles.navLinks}>
             <Link href="#features" className={styles.navLink}>
@@ -147,7 +147,7 @@ export default function LandingPage() {
                   <span className={styles.dot} data-color="yellow" />
                   <span className={styles.dot} data-color="green" />
                 </div>
-                <Text variant="caption" color="tertiary">ParadisePOS</Text>
+                <Text variant="caption" color="tertiary">CoffeePOS</Text>
               </div>
               <div className={styles.mockupContent}>
                 <div className={styles.mockupSidebar}>
@@ -181,7 +181,7 @@ export default function LandingPage() {
             Все що потрібно для вашого бізнесу
           </h2>
           <Text variant="bodyLarge" color="secondary" className={styles.sectionSubtitle}>
-            Від прийому замовлень до аналітики — ParadisePOS охоплює всі аспекти управління закладом
+            Від прийому замовлень до аналітики — CoffeePOS охоплює всі аспекти управління закладом
           </Text>
         </div>
 
@@ -211,7 +211,7 @@ export default function LandingPage() {
           <div className={styles.ctaContent}>
             <Text variant="h2">Готові почати?</Text>
             <Text variant="bodyLarge" color="secondary">
-              Приєднуйтесь до сотень кав'ярень, які вже використовують ParadisePOS
+              Приєднуйтесь до сотень кав'ярень, які вже використовують CoffeePOS
             </Text>
             <div className={styles.ctaButtons}>
               <Link href="/pos">
@@ -235,7 +235,7 @@ export default function LandingPage() {
           <div className={styles.footerBrand}>
             <div className={styles.logo}>
               <Icon name="coffee" size="md" color="accent" />
-              <Text variant="labelLarge" weight="semibold">ParadisePOS</Text>
+              <Text variant="labelLarge" weight="semibold">CoffeePOS</Text>
             </div>
             <Text variant="bodySmall" color="tertiary">
               Сучасна POS-система для HoReCa
@@ -243,7 +243,7 @@ export default function LandingPage() {
           </div>
           <div className={styles.footerLinks}>
             <Text variant="labelSmall" color="tertiary">
-              © 2026 ParadisePOS. Всі права захищено.
+              © 2026 CoffeePOS. Всі права захищено.
             </Text>
           </div>
         </div>

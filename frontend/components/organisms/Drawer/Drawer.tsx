@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * ParadisePOS - Drawer Component
+ * CoffeePOS - Drawer Component
  *
  * Slide-out navigation panel with overlay backdrop
  */
@@ -114,7 +114,7 @@ export function Drawer({
               <Icon name="store" size="lg" color="accent" />
             </div>
             <Text variant="h5" weight="bold" className={styles.brandName}>
-              ParadisePOS
+              CoffeePOS
             </Text>
           </div>
           <Button

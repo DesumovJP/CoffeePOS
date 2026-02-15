@@ -30,6 +30,11 @@
     "sortOrder": {
       "type": "integer",
       "default": 0
+    },
+    "cafe": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::cafe.cafe"
     }
   }
 }

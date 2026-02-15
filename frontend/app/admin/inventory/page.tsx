@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * ParadisePOS - Inventory Page Redirect
+ * CoffeePOS - Inventory Page Redirect
  *
  * Redirects to /admin/products with ingredients tab selected
  */

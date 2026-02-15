@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * ParadisePOS - Orders Hooks
+ * CoffeePOS - Orders Hooks
  *
  * React Query hooks for orders data
  */

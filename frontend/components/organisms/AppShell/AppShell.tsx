@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * ParadisePOS - AppShell Component
+ * CoffeePOS - AppShell Component
  *
  * Desktop: persistent sidebar + content area
  * Tablet: collapsed sidebar (icons only) + content area
@@ -15,6 +15,7 @@ import { Drawer } from '@/components/organisms/Drawer';
 import { NotificationCenter } from '@/components/organisms/NotificationCenter';
 import { Text, Button, Icon, type IconName, MockBanner } from '@/components/atoms';
 import type { NavGroup } from '@/components/organisms/Sidebar';
+import { useAuth } from '@/lib/providers/AuthProvider';
 import { IS_MOCK } from '@/lib/mock/helpers';
 import styles from './AppShell.module.css';
 
@@ -28,6 +29,7 @@ const navigation: NavGroup[] = [
     items: [
       { id: 'pos', label: 'Каса', icon: 'cart', href: '/pos' },
       { id: 'orders', label: 'Замовлення', icon: 'receipt', href: '/orders' },
+      { id: 'kds', label: 'Кухня', icon: 'coffee', href: '/kds' },
       { id: 'tables', label: 'Столи', icon: 'store', href: '/tables' },
       { id: 'tasks', label: 'Завдання', icon: 'check', href: '/tasks' },
     ],
@@ -36,23 +38,23 @@ const navigation: NavGroup[] = [
     id: 'management',
     label: 'Управління',
     items: [
+      { id: 'dashboard', label: 'Дашборд', icon: 'chart', href: '/admin/dashboard' },
       { id: 'products', label: 'Продукція', icon: 'package', href: '/admin/products' },
-      { id: 'reports', label: 'Звіти', icon: 'chart', href: '/admin/reports' },
+      { id: 'reports', label: 'Звіти', icon: 'calendar', href: '/admin/reports' },
     ],
   },
 ];
 
-const user = {
-  name: 'Олена Коваленко',
-  role: 'Бариста',
-};
+// User info is now provided by AuthProvider (see useAuth() below)
 
 // Map routes to nav item IDs
 const routeToNavId: Record<string, string> = {
   '/pos': 'pos',
   '/orders': 'orders',
+  '/kds': 'kds',
   '/tables': 'tables',
   '/tasks': 'tasks',
+  '/admin/dashboard': 'dashboard',
   '/admin/products': 'products',
   '/admin/reports': 'reports',
   '/profile': 'profile',
@@ -71,6 +73,7 @@ interface PageMeta {
 const pageMeta: Record<string, PageMeta> = {
   '/pos': { title: 'Каса' },
   '/orders': { title: 'Замовлення' },
+  '/kds': { title: 'Кухня' },
   '/tables': {
     title: 'Столи',
     action: { label: 'Додати стіл', icon: 'plus' },
@@ -79,6 +82,7 @@ const pageMeta: Record<string, PageMeta> = {
     title: 'Завдання',
     action: { label: 'Нове завдання', icon: 'plus' },
   },
+  '/admin/dashboard': { title: 'Дашборд' },
   '/admin/products': { title: 'Продукція' },
   '/admin/reports': { title: 'Звіти' },
   '/profile': { title: 'Профіль' },
@@ -112,12 +116,27 @@ export interface AppShellProps {
 }
 
 // ============================================
+// AUTH REDIRECT HELPER
+// ============================================
+
+function AuthRedirect() {
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace('/login');
+  }, [router]);
+
+  return null;
+}
+
+// ============================================
 // COMPONENT
 // ============================================
 
 export function AppShell({ children }: AppShellProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const { user: authUser, isAuthenticated, isLoading, logout } = useAuth();
 
   const isDesktop = useMediaQuery('(min-width: 1024px)');
   const isTablet = useMediaQuery('(min-width: 768px)');
@@ -137,13 +156,27 @@ export function AppShell({ children }: AppShellProps) {
     }
   }, [router]);
 
-  // Don't show shell on landing page
-  if (pathname === '/') {
+  // Build user info from auth context
+  const user = authUser
+    ? {
+        name: authUser.username,
+        role: authUser.role?.name || 'Користувач',
+      }
+    : { name: '', role: '' };
+
+  // Don't show shell on landing page or login page
+  if (pathname === '/' || pathname === '/login') {
     return <>{children}</>;
   }
 
+  // Redirect to login if not authenticated (and not loading)
+  if (!isLoading && !isAuthenticated) {
+    // Use effect-based redirect to avoid render-time side effects
+    return <AuthRedirect />;
+  }
+
   // Get page metadata
-  const meta = pageMeta[pathname] || { title: 'ParadisePOS' };
+  const meta = pageMeta[pathname] || { title: 'CoffeePOS' };
 
   // Desktop/Tablet: Sidebar layout
   if (isTablet) {
@@ -157,6 +190,7 @@ export function AppShell({ children }: AppShellProps) {
           onNavigate={handleNavigation}
           onToggleCollapse={isDesktop ? () => setSidebarCollapsed(c => !c) : undefined}
           onUserClick={() => router.push('/profile')}
+          onLogout={logout}
           className={styles.sidebar}
         />
 

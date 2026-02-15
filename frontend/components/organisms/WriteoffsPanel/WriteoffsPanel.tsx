@@ -1,14 +1,14 @@
 'use client';
 
 /**
- * ParadisePOS - WriteoffsPanel Component
+ * CoffeePOS - WriteoffsPanel Component
  *
  * Write-off management panel: track expired, damaged, and other ingredient losses.
  * Used as a tab within the Products admin page.
  */
 
 import { useState, useMemo, useCallback } from 'react';
-import { Text, Icon, Badge, Button } from '@/components/atoms';
+import { Text, Icon, Badge, Button, Input } from '@/components/atoms';
 import { Modal } from '@/components/atoms';
 import { SearchInput } from '@/components/molecules';
 import { DataTable, type Column } from '@/components/organisms';
@@ -110,10 +110,10 @@ function CreateWriteOffModal({ isOpen, onClose, onSubmit, isSubmitting, ingredie
         </div>
 
         <div className={styles.field}>
-          <Text variant="labelMedium" weight="medium">Хто списує</Text>
-          <input
+          <Input
+            label="Хто списує"
             type="text"
-            className={styles.input}
+            fullWidth
             placeholder="Введіть ім'я..."
             value={performedBy}
             onChange={(e) => setPerformedBy(e.target.value)}
@@ -124,7 +124,7 @@ function CreateWriteOffModal({ isOpen, onClose, onSubmit, isSubmitting, ingredie
           <Text variant="labelMedium" weight="medium">Додати позицію</Text>
           <div className={styles.addItemRow}>
             <select
-              className={styles.input}
+              className={styles.selectInput}
               value={selectedIngredientId}
               onChange={(e) => setSelectedIngredientId(e.target.value)}
             >
@@ -135,8 +135,9 @@ function CreateWriteOffModal({ isOpen, onClose, onSubmit, isSubmitting, ingredie
                 </option>
               ))}
             </select>
-            <input
+            <Input
               type="number"
+              size="sm"
               className={styles.inputSmall}
               placeholder="К-сть"
               value={itemQuantity}

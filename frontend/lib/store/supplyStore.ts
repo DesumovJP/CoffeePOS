@@ -1,5 +1,5 @@
 /**
- * ParadisePOS - Supply Store
+ * CoffeePOS - Supply Store
  *
  * Manages supply orders and deliveries
  */

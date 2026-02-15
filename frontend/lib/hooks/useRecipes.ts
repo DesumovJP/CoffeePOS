@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * ParadisePOS - Recipes Hooks
+ * CoffeePOS - Recipes Hooks
  */
 
 import { useQuery } from '@tanstack/react-query';

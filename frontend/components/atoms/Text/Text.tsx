@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * ParadisePOS Design System - Text Component
+ * CoffeePOS Design System - Text Component
  *
  * Typography component with semantic variants
  * All styles from design tokens - no inline styles

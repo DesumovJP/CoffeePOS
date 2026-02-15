@@ -5,20 +5,16 @@
  */
 
 .page {
-  display: grid;
-  grid-template-columns: repeat(var(--grid-columns), 1fr);
-  column-gap: var(--grid-gutter);
-  row-gap: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
   padding: var(--grid-margin);
   padding-top: var(--space-4);
+  width: 100%;
   height: 100%;
   overflow-y: auto;
   max-width: var(--grid-max-width);
   margin-inline: auto;
-}
-
-.page > * {
-  grid-column: 1 / -1;
 }
 
 /* ============================================
@@ -78,6 +74,8 @@
   max-width: 720px;
   margin-inline: auto;
   width: 100%;
+  flex: 1;
+  min-height: 0;
 }
 
 /* ============================================
@@ -101,5 +99,23 @@
 
   .infoGrid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .page {
+    padding: var(--space-2);
+  }
+
+  .profileCard {
+    padding: var(--space-3);
+  }
+
+  .profileHeader {
+    margin-bottom: var(--space-4);
+  }
+
+  .infoField {
+    padding: var(--space-3);
   }
 }

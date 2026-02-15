@@ -1,8 +1,9 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import { ThemeProvider } from '@/design-system/providers';
-import { QueryProvider } from '@/lib/providers';
-import { AppShell } from '@/components';
+import { QueryProvider, AuthProvider } from '@/lib/providers';
+import { AppShell, ErrorBoundary } from '@/components';
+import { ToastProvider } from '@/components/atoms/Toast';
 import './globals.css';
 
 const inter = Inter({
@@ -13,23 +14,23 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: 'ParadisePOS',
-    template: '%s | ParadisePOS',
+    default: 'CoffeePOS',
+    template: '%s | CoffeePOS',
   },
   description: 'Modern POS platform for HoReCa - cafes, restaurants, and coffee shops',
   keywords: ['POS', 'point of sale', 'restaurant', 'cafe', 'HoReCa', 'inventory', 'management'],
-  authors: [{ name: 'ParadisePOS Team' }],
-  creator: 'ParadisePOS',
-  publisher: 'ParadisePOS',
+  authors: [{ name: 'CoffeePOS Team' }],
+  creator: 'CoffeePOS',
+  publisher: 'CoffeePOS',
   robots: {
-    index: true,
-    follow: true,
+    index: false,
+    follow: false,
   },
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'ParadisePOS',
+    title: 'CoffeePOS',
   },
   formatDetection: {
     telephone: false,
@@ -37,8 +38,8 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'uk_UA',
-    siteName: 'ParadisePOS',
-    title: 'ParadisePOS - Modern POS for HoReCa',
+    siteName: 'CoffeePOS',
+    title: 'CoffeePOS - Modern POS for HoReCa',
     description: 'Modern POS platform for HoReCa - cafes, restaurants, and coffee shops',
   },
 };
@@ -86,13 +87,19 @@ export default function RootLayout({
       </head>
       <body>
         <QueryProvider>
-          <ThemeProvider defaultMode="light">
-            <AppShell>
-              <main id="main-content">
-                {children}
-              </main>
-            </AppShell>
-          </ThemeProvider>
+          <AuthProvider>
+            <ThemeProvider defaultMode="light">
+              <ToastProvider>
+                <ErrorBoundary>
+                  <AppShell>
+                    <main id="main-content">
+                      {children}
+                    </main>
+                  </AppShell>
+                </ErrorBoundary>
+              </ToastProvider>
+            </ThemeProvider>
+          </AuthProvider>
         </QueryProvider>
       </body>
     </html>

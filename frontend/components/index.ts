@@ -1,5 +1,5 @@
 /**
- * ParadisePOS Component Library
+ * CoffeePOS Component Library
  *
  * Central export for all components
  */

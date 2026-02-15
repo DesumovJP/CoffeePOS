@@ -179,16 +179,16 @@
 }
 
 .shiftEmployee {
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   font-weight: var(--font-semibold);
-  color: white;
+  color: var(--text-inverse);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .shiftTime {
-  font-size: 0.625rem;
+  font-size: var(--text-2xs);
   color: rgba(255, 255, 255, 0.8);
 }
 
@@ -272,7 +272,7 @@
 
   .calendar {
     grid-template-columns: 50px repeat(7, 1fr);
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
   }
 
   .dayHeader {
@@ -302,6 +302,6 @@
   }
 
   .shiftEmployee {
-    font-size: 0.625rem;
+    font-size: var(--text-2xs);
   }
 }

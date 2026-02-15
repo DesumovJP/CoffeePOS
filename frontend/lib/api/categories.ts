@@ -1,5 +1,5 @@
 /**
- * ParadisePOS - Categories API
+ * CoffeePOS - Categories API
  *
  * API methods for category management
  */

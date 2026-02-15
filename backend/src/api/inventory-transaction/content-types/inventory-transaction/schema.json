@@ -54,6 +54,11 @@
     "notes": {
       "type": "text",
       "maxLength": 500
+    },
+    "cafe": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::cafe.cafe"
     }
   }
 }

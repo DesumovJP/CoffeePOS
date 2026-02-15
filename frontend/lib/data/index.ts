@@ -1,5 +1,5 @@
 /**
- * ParadisePOS - Data Module
+ * CoffeePOS - Data Module
  *
  * Central export for seed data and helpers
  */

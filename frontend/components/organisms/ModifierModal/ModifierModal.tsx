@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * ParadisePOS - ModifierModal Component
+ * CoffeePOS - ModifierModal Component
  *
  * Product modifier selection (sizes, addons, notes)
  */

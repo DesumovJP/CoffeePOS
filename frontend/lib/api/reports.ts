@@ -1,5 +1,5 @@
 /**
- * ParadisePOS - Reports API
+ * CoffeePOS - Reports API
  */
 
 import { apiClient } from './client';
@@ -7,6 +7,25 @@ import { apiClient } from './client';
 // ============================================
 // TYPES
 // ============================================
+
+export interface TopProduct {
+  name: string;
+  quantity: number;
+  revenue: number;
+}
+
+export interface PaymentBreakdown {
+  cash: number;
+  card: number;
+  qr: number;
+  other: number;
+}
+
+export interface OrderTypeBreakdown {
+  dine_in: number;
+  takeaway: number;
+  delivery: number;
+}
 
 export interface DailyReportSummary {
   totalRevenue: number;
@@ -24,6 +43,10 @@ export interface DailyReport {
   writeOffs: any[];
   supplies: any[];
   summary: DailyReportSummary;
+  topProducts: TopProduct[];
+  paymentBreakdown: PaymentBreakdown;
+  orderTypeBreakdown: OrderTypeBreakdown;
+  cancelledCount: number;
 }
 
 export interface MonthlyDayData {
@@ -42,6 +65,8 @@ export interface MonthlyReportSummary {
   avgOrder: number;
   totalShifts: number;
   totalWriteOffs: number;
+  previousMonthRevenue: number;
+  revenueChange: number;
 }
 
 export interface MonthlyReport {
@@ -49,6 +74,42 @@ export interface MonthlyReport {
   month: number;
   days: MonthlyDayData[];
   summary: MonthlyReportSummary;
+}
+
+export interface ProductAnalytics {
+  productId: string;
+  productName: string;
+  quantitySold: number;
+  revenue: number;
+  avgPrice: number;
+}
+
+export interface ProductsReport {
+  from: string;
+  to: string;
+  products: ProductAnalytics[];
+}
+
+export interface XReport {
+  shiftId: string;
+  openedAt: string;
+  openedBy: string;
+  openingCash: number;
+  cashSales: number;
+  cardSales: number;
+  totalSales: number;
+  ordersCount: number;
+  writeOffsTotal: number;
+  suppliesTotal: number;
+  expectedCash: number;
+  duration: number;
+}
+
+export interface ZReport extends XReport {
+  closedAt: string | null;
+  closedBy: string;
+  closingCash: number;
+  cashDifference: number;
 }
 
 // ============================================
@@ -62,5 +123,17 @@ export const reportsApi = {
 
   async getMonthly(year: number, month: number): Promise<{ data: MonthlyReport }> {
     return apiClient.get<MonthlyReport>('/reports/monthly', { year, month });
+  },
+
+  async getProducts(from: string, to: string): Promise<{ data: ProductsReport }> {
+    return apiClient.get<ProductsReport>('/reports/products', { from, to });
+  },
+
+  async getXReport(shiftId: string): Promise<{ data: XReport }> {
+    return apiClient.get<XReport>('/reports/x-report', { shiftId });
+  },
+
+  async getZReport(shiftId: string): Promise<{ data: ZReport }> {
+    return apiClient.get<ZReport>('/reports/z-report', { shiftId });
   },
 };

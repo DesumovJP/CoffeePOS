@@ -1,5 +1,5 @@
 /**
- * ParadisePOS Design System - Molecules
+ * CoffeePOS Design System - Molecules
  *
  * Compound components built from atoms
  */

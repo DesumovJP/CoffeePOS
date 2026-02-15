@@ -1,5 +1,5 @@
 /**
- * ParadisePOS - Mock API Helpers
+ * CoffeePOS - Mock API Helpers
  *
  * Shared utilities for mock services
  */

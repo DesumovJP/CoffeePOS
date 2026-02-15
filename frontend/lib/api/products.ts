@@ -1,5 +1,5 @@
 /**
- * ParadisePOS - Products API
+ * CoffeePOS - Products API
  *
  * API methods for product management
  */

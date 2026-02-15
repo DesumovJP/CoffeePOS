@@ -1,5 +1,5 @@
 /**
- * ParadisePOS - Lib Module
+ * CoffeePOS - Lib Module
  *
  * Central export for utilities, hooks, API, and state management
  */

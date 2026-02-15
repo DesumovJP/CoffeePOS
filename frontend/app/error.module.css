@@ -1,0 +1,216 @@
+/**
+ * Error Page Styles
+ *
+ * Centered glassmorphism card with animated background orbs
+ * Visually consistent with login page and 404 page
+ */
+
+/* ============================================
+   PAGE LAYOUT
+   ============================================ */
+
+.page {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow: hidden;
+}
+
+/* ============================================
+   ANIMATED BACKGROUND
+   ============================================ */
+
+.background {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: var(--bg-secondary);
+  overflow: hidden;
+}
+
+.gradientOrb1 {
+  position: absolute;
+  top: -30%;
+  left: -15%;
+  width: 70%;
+  height: 70%;
+  background: radial-gradient(
+    circle,
+    rgba(239, 68, 68, 0.1) 0%,
+    rgba(239, 68, 68, 0.03) 40%,
+    transparent 70%
+  );
+  border-radius: var(--radius-full);
+  filter: blur(60px);
+  animation: float1 20s ease-in-out infinite;
+}
+
+.gradientOrb2 {
+  position: absolute;
+  bottom: -30%;
+  right: -15%;
+  width: 60%;
+  height: 60%;
+  background: radial-gradient(
+    circle,
+    rgba(79, 70, 229, 0.08) 0%,
+    rgba(79, 70, 229, 0.02) 40%,
+    transparent 70%
+  );
+  border-radius: var(--radius-full);
+  filter: blur(60px);
+  animation: float2 18s ease-in-out infinite;
+}
+
+@keyframes float1 {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(5%, 8%) scale(1.05);
+  }
+  66% {
+    transform: translate(-3%, 4%) scale(0.95);
+  }
+}
+
+@keyframes float2 {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(-5%, -8%) scale(1.05);
+  }
+  66% {
+    transform: translate(3%, -4%) scale(0.95);
+  }
+}
+
+/* ============================================
+   CONTAINER
+   ============================================ */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  width: 100%;
+  max-width: 480px;
+  padding: var(--space-4);
+  z-index: 1;
+}
+
+/* ============================================
+   CARD
+   ============================================ */
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  width: 100%;
+  padding: var(--space-10);
+  background: var(--glass-bg-elevated);
+  backdrop-filter: blur(var(--blur-lg));
+  -webkit-backdrop-filter: blur(var(--blur-lg));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-elevated);
+  text-align: center;
+}
+
+/* ============================================
+   ICON
+   ============================================ */
+
+.icon {
+  font-size: 3rem;
+  line-height: 1;
+}
+
+/* ============================================
+   TITLE
+   ============================================ */
+
+.title {
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+/* ============================================
+   DESCRIPTION
+   ============================================ */
+
+.description {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.5;
+  max-width: 320px;
+  word-break: break-word;
+}
+
+/* ============================================
+   BUTTON
+   ============================================ */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-3) var(--space-6);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-inverse);
+  background: var(--color-accent);
+  border: none;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  margin-top: var(--space-2);
+}
+
+.button:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.button:active {
+  transform: translateY(0);
+}
+
+/* ============================================
+   FOOTER
+   ============================================ */
+
+.footer {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  margin: 0;
+  margin-top: var(--space-2);
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 480px) {
+  .container {
+    padding: var(--space-3);
+    max-width: 100%;
+  }
+
+  .card {
+    padding: var(--space-6);
+  }
+}

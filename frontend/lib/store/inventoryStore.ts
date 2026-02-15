@@ -1,5 +1,5 @@
 /**
- * ParadisePOS - Inventory Store
+ * CoffeePOS - Inventory Store
  *
  * Real-time inventory management with Zustand
  * Handles ingredient tracking, deductions, and supplies

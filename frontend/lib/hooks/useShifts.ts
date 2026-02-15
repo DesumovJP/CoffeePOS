@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * ParadisePOS - Shifts Hooks
+ * CoffeePOS - Shifts Hooks
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';

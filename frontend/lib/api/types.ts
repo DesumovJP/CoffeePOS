@@ -1,5 +1,5 @@
 /**
- * ParadisePOS - API Types
+ * CoffeePOS - API Types
  *
  * TypeScript types matching Strapi content types
  */

@@ -1,5 +1,5 @@
 /**
- * ParadisePOS - Notification Store
+ * CoffeePOS - Notification Store
  *
  * Centralized notification management
  */

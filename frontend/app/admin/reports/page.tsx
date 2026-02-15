@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * ParadisePOS - Reports Page
+ * CoffeePOS - Reports Page
  *
  * Calendar view with month navigation and daily reports
  * Data sourced from backend API via useMonthlyReport / useDailyReport hooks
@@ -14,7 +14,7 @@ import { OrderAccordion, CategoryTabs, type OrderData, type Category } from '@/c
 import { SupplyAccordion, type SupplyAccordionData } from '@/components/molecules';
 import { WriteoffAccordion, type WriteoffAccordionData } from '@/components/molecules';
 import { useMonthlyReport, useDailyReport } from '@/lib/hooks';
-import type { MonthlyDayData, DailyReport } from '@/lib/api';
+import type { MonthlyDayData, DailyReport, TopProduct, PaymentBreakdown } from '@/lib/api';
 import styles from './page.module.css';
 
 // ============================================
@@ -276,6 +276,16 @@ export default function ReportsPage() {
     }));
   }, [dailyReport]);
 
+  // Payment breakdown from daily report
+  const paymentBreakdown = useMemo((): PaymentBreakdown | null => {
+    return dailyReport?.paymentBreakdown || null;
+  }, [dailyReport]);
+
+  // Top products from daily report
+  const dayTopProducts = useMemo((): TopProduct[] => {
+    return dailyReport?.topProducts || [];
+  }, [dailyReport]);
+
   return (
     <div className={styles.page}>
       {/* Calendar Header */}
@@ -383,6 +393,71 @@ export default function ReportsPage() {
       >
         {selectedDayCell && (
           <div className={styles.modalContent}>
+            {/* Payment Breakdown */}
+            {paymentBreakdown && !isDailyLoading && (
+              <div className={styles.paymentBreakdownSection}>
+                <Text variant="labelMedium" weight="semibold" color="secondary">Оплата</Text>
+                <div className={styles.paymentGrid}>
+                  {paymentBreakdown.cash > 0 && (
+                    <div className={styles.paymentItem}>
+                      <div className={styles.paymentItemLabel}>
+                        <Icon name="cash" size="sm" color="success" />
+                        <Text variant="bodySmall" color="secondary">Готівка</Text>
+                      </div>
+                      <Text variant="labelMedium" weight="bold">{'\u20B4'}{paymentBreakdown.cash.toFixed(0)}</Text>
+                    </div>
+                  )}
+                  {paymentBreakdown.card > 0 && (
+                    <div className={styles.paymentItem}>
+                      <div className={styles.paymentItemLabel}>
+                        <Icon name="card" size="sm" color="info" />
+                        <Text variant="bodySmall" color="secondary">Картка</Text>
+                      </div>
+                      <Text variant="labelMedium" weight="bold">{'\u20B4'}{paymentBreakdown.card.toFixed(0)}</Text>
+                    </div>
+                  )}
+                  {paymentBreakdown.qr > 0 && (
+                    <div className={styles.paymentItem}>
+                      <div className={styles.paymentItemLabel}>
+                        <Icon name="qr" size="sm" color="warning" />
+                        <Text variant="bodySmall" color="secondary">QR</Text>
+                      </div>
+                      <Text variant="labelMedium" weight="bold">{'\u20B4'}{paymentBreakdown.qr.toFixed(0)}</Text>
+                    </div>
+                  )}
+                  {paymentBreakdown.other > 0 && (
+                    <div className={styles.paymentItem}>
+                      <div className={styles.paymentItemLabel}>
+                        <Text variant="bodySmall" color="secondary">Інше</Text>
+                      </div>
+                      <Text variant="labelMedium" weight="bold">{'\u20B4'}{paymentBreakdown.other.toFixed(0)}</Text>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Top Products */}
+            {dayTopProducts.length > 0 && !isDailyLoading && (
+              <div className={styles.topProductsSection}>
+                <Text variant="labelMedium" weight="semibold" color="secondary">Топ продукти</Text>
+                <div className={styles.topProductsList}>
+                  {dayTopProducts.slice(0, 5).map((product, idx) => (
+                    <div key={product.name} className={styles.topProductItem}>
+                      <div className={styles.topProductLeft}>
+                        <span className={styles.topProductRank}>{idx + 1}</span>
+                        <Text variant="bodySmall">{product.name}</Text>
+                      </div>
+                      <div className={styles.topProductRight}>
+                        <Text variant="caption" color="tertiary">{product.quantity} шт.</Text>
+                        <Text variant="labelSmall" weight="semibold">{'\u20B4'}{product.revenue.toFixed(0)}</Text>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Shift Cards */}
             <div className={styles.shiftsList}>
               {isDailyLoading ? (

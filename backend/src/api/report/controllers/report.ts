@@ -56,13 +56,53 @@ export default {
     });
 
     // Calculate totals
-    const totalRevenue = orders.reduce((sum: number, o: any) => sum + (parseFloat(o.total) || 0), 0);
-    const cashSales = orders.reduce((sum: number, o: any) => {
+    const completedOrders = orders.filter((o: any) => o.status !== 'cancelled');
+    const cancelledOrders = orders.filter((o: any) => o.status === 'cancelled');
+
+    const totalRevenue = completedOrders.reduce((sum: number, o: any) => sum + (parseFloat(o.total) || 0), 0);
+    const cashSales = completedOrders.reduce((sum: number, o: any) => {
       if (o.payment?.method === 'cash') return sum + (parseFloat(o.total) || 0);
       return sum;
     }, 0);
     const cardSales = totalRevenue - cashSales;
     const writeOffsTotal = writeOffs.reduce((sum: number, w: any) => sum + (parseFloat(w.totalCost) || 0), 0);
+
+    // Top products by quantity sold (aggregate from order items)
+    const productMap: Record<string, { name: string; quantity: number; revenue: number }> = {};
+    for (const order of completedOrders) {
+      if (!order.items) continue;
+      for (const item of order.items) {
+        const key = item.productName || item.name || `product-${item.product}`;
+        if (!productMap[key]) {
+          productMap[key] = { name: key, quantity: 0, revenue: 0 };
+        }
+        productMap[key].quantity += item.quantity || 1;
+        productMap[key].revenue += (item.unitPrice || 0) * (item.quantity || 1);
+      }
+    }
+    const topProducts = Object.values(productMap)
+      .sort((a, b) => b.quantity - a.quantity)
+      .slice(0, 10);
+
+    // Payment breakdown
+    const paymentBreakdown = { cash: 0, card: 0, qr: 0, other: 0 };
+    for (const order of completedOrders) {
+      const total = parseFloat(order.total) || 0;
+      const method = order.payment?.method || 'other';
+      if (method === 'cash') paymentBreakdown.cash += total;
+      else if (method === 'card') paymentBreakdown.card += total;
+      else if (method === 'qr') paymentBreakdown.qr += total;
+      else paymentBreakdown.other += total;
+    }
+
+    // Order type breakdown
+    const orderTypeBreakdown = { dine_in: 0, takeaway: 0, delivery: 0 };
+    for (const order of completedOrders) {
+      const type = order.type || order.orderType || 'dine_in';
+      if (type === 'dine_in' || type === 'dine-in') orderTypeBreakdown.dine_in += 1;
+      else if (type === 'takeaway' || type === 'take-away') orderTypeBreakdown.takeaway += 1;
+      else if (type === 'delivery') orderTypeBreakdown.delivery += 1;
+    }
 
     return {
       data: {
@@ -72,12 +112,16 @@ export default {
         writeOffs,
         summary: {
           totalRevenue,
-          ordersCount: orders.length,
+          ordersCount: completedOrders.length,
           cashSales,
           cardSales,
           writeOffsTotal,
-          avgOrder: orders.length > 0 ? totalRevenue / orders.length : 0,
+          avgOrder: completedOrders.length > 0 ? totalRevenue / completedOrders.length : 0,
         },
+        topProducts,
+        paymentBreakdown,
+        orderTypeBreakdown,
+        cancelledCount: cancelledOrders.length,
       },
     };
   },
@@ -121,6 +165,24 @@ export default {
         createdAt: { $gte: startOfMonth, $lte: endOfMonth },
       },
     });
+
+    // Get previous month orders for comparison
+    const prevM = m === 0 ? 11 : m - 1;
+    const prevY = m === 0 ? y - 1 : y;
+    const startOfPrevMonth = new Date(prevY, prevM, 1).toISOString();
+    const endOfPrevMonth = new Date(prevY, prevM + 1, 0, 23, 59, 59, 999).toISOString();
+
+    const prevMonthOrders = await strapi.db.query('api::order.order').findMany({
+      where: {
+        createdAt: { $gte: startOfPrevMonth, $lte: endOfPrevMonth },
+        status: { $ne: 'cancelled' },
+      },
+    });
+
+    const previousMonthRevenue = prevMonthOrders.reduce(
+      (sum: number, o: any) => sum + (parseFloat(o.total) || 0),
+      0
+    );
 
     // Group by day
     const daysInMonth = new Date(y, m + 1, 0).getDate();
@@ -171,6 +233,11 @@ export default {
     const totalRevenue = orders.reduce((sum: number, o: any) => sum + (parseFloat(o.total) || 0), 0);
     const totalOrders = orders.length;
 
+    // Revenue change percentage
+    const revenueChange = previousMonthRevenue > 0
+      ? ((totalRevenue - previousMonthRevenue) / previousMonthRevenue) * 100
+      : totalRevenue > 0 ? 100 : 0;
+
     return {
       data: {
         year: y,
@@ -182,7 +249,251 @@ export default {
           avgOrder: totalOrders > 0 ? totalRevenue / totalOrders : 0,
           totalShifts: shifts.length,
           totalWriteOffs: writeOffs.reduce((sum: number, w: any) => sum + (parseFloat(w.totalCost) || 0), 0),
+          previousMonthRevenue,
+          revenueChange: Math.round(revenueChange * 100) / 100,
         },
+      },
+    };
+  },
+
+  /**
+   * GET /reports/products?from=YYYY-MM-DD&to=YYYY-MM-DD
+   * Returns product analytics for the given period
+   */
+  async products(ctx) {
+    const { from, to } = ctx.query;
+
+    if (!from || !to) {
+      return ctx.badRequest('from and to query parameters are required (YYYY-MM-DD)');
+    }
+
+    const strapi = (global as any).strapi;
+    const startDate = `${from}T00:00:00.000Z`;
+    const endDate = `${to}T23:59:59.999Z`;
+
+    // Get completed orders with items
+    const orders = await strapi.db.query('api::order.order').findMany({
+      where: {
+        createdAt: { $gte: startDate, $lte: endDate },
+        status: { $ne: 'cancelled' },
+      },
+      populate: ['items'],
+    });
+
+    // Aggregate product data
+    const productMap: Record<string, {
+      productId: string;
+      productName: string;
+      quantitySold: number;
+      revenue: number;
+    }> = {};
+
+    for (const order of orders) {
+      if (!order.items) continue;
+      for (const item of order.items) {
+        const key = String(item.product || item.productName || item.name);
+        if (!productMap[key]) {
+          productMap[key] = {
+            productId: String(item.product || ''),
+            productName: item.productName || item.name || `Товар ${item.product}`,
+            quantitySold: 0,
+            revenue: 0,
+          };
+        }
+        productMap[key].quantitySold += item.quantity || 1;
+        productMap[key].revenue += (item.unitPrice || 0) * (item.quantity || 1);
+      }
+    }
+
+    // Calculate avg price and sort by revenue
+    const products = Object.values(productMap)
+      .map((p) => ({
+        ...p,
+        avgPrice: p.quantitySold > 0 ? p.revenue / p.quantitySold : 0,
+      }))
+      .sort((a, b) => b.revenue - a.revenue);
+
+    return {
+      data: {
+        from,
+        to,
+        products,
+      },
+    };
+  },
+
+  /**
+   * GET /reports/x-report?shiftId=ID
+   * Current shift stats (mid-shift report)
+   */
+  async xReport(ctx) {
+    const { shiftId } = ctx.query;
+
+    if (!shiftId) {
+      return ctx.badRequest('shiftId query parameter is required');
+    }
+
+    const strapi = (global as any).strapi;
+
+    const shift = await strapi.db.query('api::shift.shift').findOne({
+      where: { id: shiftId },
+    });
+
+    if (!shift) {
+      return ctx.notFound('Shift not found');
+    }
+
+    // Get orders for this shift
+    const orders = await strapi.db.query('api::order.order').findMany({
+      where: { shift: shiftId, status: { $ne: 'cancelled' } },
+      populate: ['payment'],
+    });
+
+    const cashSales = orders.reduce((sum: number, o: any) => {
+      if (o.payment?.method === 'cash') return sum + (parseFloat(o.total) || 0);
+      return sum;
+    }, 0);
+    const cardSales = orders.reduce((sum: number, o: any) => {
+      if (o.payment?.method === 'card') return sum + (parseFloat(o.total) || 0);
+      return sum;
+    }, 0);
+    const totalSales = orders.reduce((sum: number, o: any) => sum + (parseFloat(o.total) || 0), 0);
+
+    // Get write-offs for this shift period
+    const writeOffs = await strapi.db.query('api::write-off.write-off').findMany({
+      where: {
+        createdAt: {
+          $gte: shift.openedAt,
+          ...(shift.closedAt ? { $lte: shift.closedAt } : {}),
+        },
+      },
+    });
+    const writeOffsTotal = writeOffs.reduce((sum: number, w: any) => sum + (parseFloat(w.totalCost) || 0), 0);
+
+    // Get supplies for this shift period
+    const supplies = await strapi.db.query('api::supply.supply').findMany({
+      where: {
+        createdAt: {
+          $gte: shift.openedAt,
+          ...(shift.closedAt ? { $lte: shift.closedAt } : {}),
+        },
+      },
+    });
+    const suppliesTotal = supplies.reduce((sum: number, s: any) => sum + (parseFloat(s.totalCost) || 0), 0);
+
+    const openingCash = parseFloat(shift.openingCash) || 0;
+    const expectedCash = openingCash + cashSales;
+
+    // Duration in hours
+    const openedAt = new Date(shift.openedAt);
+    const now = shift.closedAt ? new Date(shift.closedAt) : new Date();
+    const duration = (now.getTime() - openedAt.getTime()) / (1000 * 60 * 60);
+
+    return {
+      data: {
+        shiftId,
+        openedAt: shift.openedAt,
+        openedBy: shift.openedBy || '',
+        openingCash,
+        cashSales,
+        cardSales,
+        totalSales,
+        ordersCount: orders.length,
+        writeOffsTotal,
+        suppliesTotal,
+        expectedCash,
+        duration: Math.round(duration * 100) / 100,
+      },
+    };
+  },
+
+  /**
+   * GET /reports/z-report?shiftId=ID
+   * End-of-shift report (same as X-report plus closing data)
+   */
+  async zReport(ctx) {
+    const { shiftId } = ctx.query;
+
+    if (!shiftId) {
+      return ctx.badRequest('shiftId query parameter is required');
+    }
+
+    const strapi = (global as any).strapi;
+
+    const shift = await strapi.db.query('api::shift.shift').findOne({
+      where: { id: shiftId },
+    });
+
+    if (!shift) {
+      return ctx.notFound('Shift not found');
+    }
+
+    // Get orders for this shift
+    const orders = await strapi.db.query('api::order.order').findMany({
+      where: { shift: shiftId, status: { $ne: 'cancelled' } },
+      populate: ['payment'],
+    });
+
+    const cashSales = orders.reduce((sum: number, o: any) => {
+      if (o.payment?.method === 'cash') return sum + (parseFloat(o.total) || 0);
+      return sum;
+    }, 0);
+    const cardSales = orders.reduce((sum: number, o: any) => {
+      if (o.payment?.method === 'card') return sum + (parseFloat(o.total) || 0);
+      return sum;
+    }, 0);
+    const totalSales = orders.reduce((sum: number, o: any) => sum + (parseFloat(o.total) || 0), 0);
+
+    // Get write-offs for this shift period
+    const writeOffs = await strapi.db.query('api::write-off.write-off').findMany({
+      where: {
+        createdAt: {
+          $gte: shift.openedAt,
+          ...(shift.closedAt ? { $lte: shift.closedAt } : {}),
+        },
+      },
+    });
+    const writeOffsTotal = writeOffs.reduce((sum: number, w: any) => sum + (parseFloat(w.totalCost) || 0), 0);
+
+    // Get supplies for this shift period
+    const supplies = await strapi.db.query('api::supply.supply').findMany({
+      where: {
+        createdAt: {
+          $gte: shift.openedAt,
+          ...(shift.closedAt ? { $lte: shift.closedAt } : {}),
+        },
+      },
+    });
+    const suppliesTotal = supplies.reduce((sum: number, s: any) => sum + (parseFloat(s.totalCost) || 0), 0);
+
+    const openingCash = parseFloat(shift.openingCash) || 0;
+    const closingCash = parseFloat(shift.closingCash) || 0;
+    const expectedCash = openingCash + cashSales;
+    const cashDifference = closingCash - expectedCash;
+
+    // Duration in hours
+    const openedAt = new Date(shift.openedAt);
+    const closedAt = shift.closedAt ? new Date(shift.closedAt) : new Date();
+    const duration = (closedAt.getTime() - openedAt.getTime()) / (1000 * 60 * 60);
+
+    return {
+      data: {
+        shiftId,
+        openedAt: shift.openedAt,
+        openedBy: shift.openedBy || '',
+        openingCash,
+        cashSales,
+        cardSales,
+        totalSales,
+        ordersCount: orders.length,
+        writeOffsTotal,
+        suppliesTotal,
+        expectedCash,
+        duration: Math.round(duration * 100) / 100,
+        closedAt: shift.closedAt || null,
+        closedBy: shift.closedBy || '',
+        closingCash,
+        cashDifference,
       },
     };
   },

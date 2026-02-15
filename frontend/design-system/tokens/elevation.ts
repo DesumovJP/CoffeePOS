@@ -1,5 +1,5 @@
 /**
- * ParadisePOS Design System - Elevation Tokens
+ * CoffeePOS Design System - Elevation Tokens
  *
  * Shadows, blur effects, and z-index scale
  * iOS 26 Liquid Glass elevation system

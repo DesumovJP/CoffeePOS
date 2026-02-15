@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * ParadisePOS - Orders History Page
+ * CoffeePOS - Orders History Page
  *
  * View and manage completed orders with accordion details
  */

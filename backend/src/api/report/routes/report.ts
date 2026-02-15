@@ -5,7 +5,6 @@ export default {
       path: '/reports/daily',
       handler: 'report.daily',
       config: {
-        auth: false,
         policies: [],
       },
     },
@@ -14,7 +13,30 @@ export default {
       path: '/reports/monthly',
       handler: 'report.monthly',
       config: {
-        auth: false,
+        policies: [],
+      },
+    },
+    {
+      method: 'GET',
+      path: '/reports/products',
+      handler: 'report.products',
+      config: {
+        policies: [],
+      },
+    },
+    {
+      method: 'GET',
+      path: '/reports/x-report',
+      handler: 'report.xReport',
+      config: {
+        policies: [],
+      },
+    },
+    {
+      method: 'GET',
+      path: '/reports/z-report',
+      handler: 'report.zReport',
+      config: {
         policies: [],
       },
     },

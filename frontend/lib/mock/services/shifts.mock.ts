@@ -1,5 +1,5 @@
 /**
- * ParadisePOS - Mock Shifts API
+ * CoffeePOS - Mock Shifts API
  */
 
 import type { ApiResponse } from '@/lib/api/client';

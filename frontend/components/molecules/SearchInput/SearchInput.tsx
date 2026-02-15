@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * ParadisePOS - SearchInput Component
+ * CoffeePOS - SearchInput Component
  *
  * Search field with icon and clear button
  */

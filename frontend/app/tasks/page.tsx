@@ -1,13 +1,13 @@
 'use client';
 
 /**
- * ParadisePOS - Tasks (Kanban) Page
+ * CoffeePOS - Tasks (Kanban) Page
  *
  * Kanban board with 3 columns: todo, in_progress, done
  */
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import { Text, Icon, Badge, Button, GlassCard } from '@/components/atoms';
+import { Text, Icon, Badge, Button, GlassCard, Input } from '@/components/atoms';
 import { Modal } from '@/components/atoms';
 import { useTasks, useCreateTask, useUpdateTask, useCompleteTask } from '@/lib/hooks';
 import type { Task, TaskStatus, TaskPriority, TaskType, TaskCreateData } from '@/lib/api';
@@ -81,10 +81,10 @@ function CreateTaskModal({ isOpen, onClose, onSubmit, isSubmitting }: CreateTask
     <Modal isOpen={isOpen} onClose={onClose} title="Нове завдання" icon="check" size="md">
       <div className={styles.modalContent}>
         <div className={styles.field}>
-          <Text variant="labelMedium" weight="medium">Назва</Text>
-          <input
+          <Input
+            label="Назва"
             type="text"
-            className={styles.input}
+            fullWidth
             placeholder="Назва завдання..."
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -130,19 +130,19 @@ function CreateTaskModal({ isOpen, onClose, onSubmit, isSubmitting }: CreateTask
 
         <div className={styles.fieldRow}>
           <div className={styles.field}>
-            <Text variant="labelMedium" weight="medium">Дата виконання</Text>
-            <input
+            <Input
+              label="Дата виконання"
               type="date"
-              className={styles.input}
+              fullWidth
               value={dueDate}
               onChange={(e) => setDueDate(e.target.value)}
             />
           </div>
           <div className={styles.field}>
-            <Text variant="labelMedium" weight="medium">Виконавець</Text>
-            <input
+            <Input
+              label="Виконавець"
               type="text"
-              className={styles.input}
+              fullWidth
               placeholder="Ім'я..."
               value={assignedTo}
               onChange={(e) => setAssignedTo(e.target.value)}
@@ -182,32 +182,48 @@ function TaskCard({ task, onStart, onComplete }: TaskCardProps) {
 
   return (
     <GlassCard className={`${styles.taskCard} ${priorityClass}`}>
-      <div className={styles.taskCardHeader}>
-        <div className={styles.taskTitle}>
-          <Text variant="labelMedium" weight="medium">{task.title}</Text>
-          {task.description && (
-            <Text variant="caption" color="tertiary">{task.description}</Text>
-          )}
-        </div>
-      </div>
-
-      <div className={styles.taskMeta}>
-        <Badge variant={PRIORITY_VARIANTS[task.priority]} size="sm">
-          {PRIORITY_LABELS[task.priority]}
-        </Badge>
-        <Badge variant="default" size="sm">
-          {TYPE_LABELS[task.type]}
-        </Badge>
-        {task.dueDate && (
-          <Text variant="caption" color="tertiary">
-            <Icon name="calendar" size="xs" /> {new Date(task.dueDate).toLocaleDateString('uk-UA')}
+      {/* Body: title + description */}
+      <div className={styles.taskBody}>
+        <Text variant="labelLarge" weight="semibold">{task.title}</Text>
+        {task.description && (
+          <Text variant="bodySmall" color="secondary" className={styles.taskDescription}>
+            {task.description}
           </Text>
         )}
-        {task.assignedTo && (
-          <Text variant="caption" color="secondary">{task.assignedTo}</Text>
+      </div>
+
+      {/* Meta block: tags + info in a grouped panel */}
+      <div className={styles.taskMeta}>
+        <div className={styles.taskTags}>
+          <Badge variant={PRIORITY_VARIANTS[task.priority]} size="sm">
+            {PRIORITY_LABELS[task.priority]}
+          </Badge>
+          <Badge variant="default" size="sm">
+            {TYPE_LABELS[task.type]}
+          </Badge>
+        </div>
+
+        {(task.dueDate || task.assignedTo) && (
+          <div className={styles.taskDetails}>
+            {task.dueDate && (
+              <div className={styles.detailItem}>
+                <Icon name="calendar" size="xs" color="tertiary" />
+                <Text variant="caption" color="tertiary">
+                  {new Date(task.dueDate).toLocaleDateString('uk-UA')}
+                </Text>
+              </div>
+            )}
+            {task.assignedTo && (
+              <div className={styles.detailItem}>
+                <Icon name="user" size="xs" color="tertiary" />
+                <Text variant="caption" color="secondary">{task.assignedTo}</Text>
+              </div>
+            )}
+          </div>
         )}
       </div>
 
+      {/* Actions */}
       {task.status !== 'done' && (
         <div className={styles.taskActions}>
           {task.status === 'todo' && (
@@ -224,11 +240,14 @@ function TaskCard({ task, onStart, onComplete }: TaskCardProps) {
       )}
 
       {task.status === 'done' && task.completedAt && (
-        <Text variant="caption" color="tertiary">
-          Виконано {new Date(task.completedAt).toLocaleString('uk-UA', {
-            day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
-          })}
-        </Text>
+        <div className={styles.taskCompleted}>
+          <Icon name="check" size="xs" color="success" />
+          <Text variant="caption" color="tertiary">
+            {new Date(task.completedAt).toLocaleString('uk-UA', {
+              day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
+            })}
+          </Text>
+        </div>
       )}
     </GlassCard>
   );

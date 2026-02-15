@@ -5,20 +5,16 @@
  */
 
 .page {
-  display: grid;
-  grid-template-columns: repeat(var(--grid-columns), 1fr);
-  column-gap: var(--grid-gutter);
-  row-gap: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
   padding: var(--grid-margin);
   padding-top: var(--space-4);
+  width: 100%;
   min-height: 100%;
   overflow-x: hidden;
   max-width: var(--grid-max-width);
   margin-inline: auto;
-}
-
-.page > * {
-  grid-column: 1 / -1;
 }
 
 /* ============================================
@@ -39,6 +35,14 @@
   gap: var(--space-3);
 }
 
+.toolbarRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
 /* ============================================
    TABLES GRID
    ============================================ */
@@ -52,8 +56,6 @@
 .tableCard {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
-  padding: var(--space-5);
   background: var(--glass-bg-elevated);
   backdrop-filter: blur(var(--blur-lg));
   -webkit-backdrop-filter: blur(var(--blur-lg));
@@ -61,6 +63,7 @@
   border-radius: var(--radius-xl);
   cursor: pointer;
   box-shadow: var(--shadow-card);
+  overflow: hidden;
   transition:
     transform var(--duration-fast) var(--ease-spring),
     box-shadow var(--duration-fast) var(--ease-default),
@@ -78,38 +81,41 @@
 }
 
 /* Status-based left accent */
-.tableCard.free {
-  border-left: 3px solid var(--color-success);
-}
+.tableCard.free { border-left: 3px solid var(--color-success); }
+.tableCard.occupied { border-left: 3px solid var(--color-brand); }
+.tableCard.waiting { border-left: 3px solid var(--color-warning); }
+.tableCard.reserved { border-left: 3px solid var(--text-disabled); }
+.tableCard.inactive { opacity: 0.6; }
 
-.tableCard.occupied {
-  border-left: 3px solid var(--color-brand);
-}
-
-.tableCard.waiting {
-  border-left: 3px solid var(--color-warning);
-}
-
-.tableCard.reserved {
-  border-left: 3px solid var(--text-disabled);
-}
-
+/* Header: number + zone / seats */
 .tableHeader {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  padding: var(--space-4) var(--space-4) 0;
+}
+
+.tableId {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .tableSeats {
   display: flex;
   align-items: center;
   gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-full);
 }
 
+/* Status row */
 .tableStatus {
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
 }
 
 .statusDot {
@@ -117,6 +123,7 @@
   height: 8px;
   border-radius: var(--radius-full);
   background: var(--text-disabled);
+  flex-shrink: 0;
 }
 
 .statusDot.free { background: var(--color-success); }
@@ -132,11 +139,38 @@
   50% { opacity: 0.4; }
 }
 
-.tableInfo {
+/* Footer: order info or actions */
+.tableFooter {
+  margin-top: auto;
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--glass-border);
+  min-height: 3rem;
+}
+
+.orderInfo {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.orderMeta {
   display: flex;
   flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.orderMetaItem {
+  display: flex;
+  align-items: center;
   gap: var(--space-1);
-  min-height: 48px;
+}
+
+.cardActions {
+  display: flex;
+  gap: var(--space-1);
+  align-items: center;
 }
 
 .quickAction {
@@ -189,9 +223,9 @@
 
 /* Loading State */
 .loadingState {
-  grid-column: 1 / -1;
   display: flex;
   flex-direction: column;
+  flex: 1;
   align-items: center;
   justify-content: center;
   gap: var(--space-3);

@@ -1,8 +1,28 @@
 /**
- * ParadisePOS - Seed Data
+ * CoffeePOS - Seed Data
  *
  * Test data for development
  */
+
+export const cafes = [
+  {
+    name: 'Paradise Coffee — Центр',
+    address: 'вул. Хрещатик, 22, Київ',
+    city: 'Київ',
+    phone: '+380441234567',
+    email: 'center@coffeepos.com',
+    workingHours: {
+      mon: { open: '08:00', close: '22:00' },
+      tue: { open: '08:00', close: '22:00' },
+      wed: { open: '08:00', close: '22:00' },
+      thu: { open: '08:00', close: '22:00' },
+      fri: { open: '08:00', close: '23:00' },
+      sat: { open: '09:00', close: '23:00' },
+      sun: { open: '09:00', close: '21:00' },
+    },
+    isActive: true,
+  },
+];
 
 export const categories = [
   {

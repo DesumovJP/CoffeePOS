@@ -1,12 +1,12 @@
 'use client';
 
 /**
- * ParadisePOS - OrderItem Component
+ * CoffeePOS - OrderItem Component
  *
  * Minimal, clean cart line item
  */
 
-import { forwardRef, type HTMLAttributes } from 'react';
+import { forwardRef, memo, type HTMLAttributes } from 'react';
 import { Icon } from '@/components/atoms';
 import styles from './OrderItem.module.css';
 
@@ -58,7 +58,7 @@ function calculateItemTotal(item: OrderItemData): number {
 // COMPONENT
 // ============================================
 
-export const OrderItem = forwardRef<HTMLDivElement, OrderItemProps>(
+export const OrderItem = memo(forwardRef<HTMLDivElement, OrderItemProps>(
   (
     {
       item,
@@ -165,6 +165,6 @@ export const OrderItem = forwardRef<HTMLDivElement, OrderItemProps>(
       </div>
     );
   }
-);
+));
 
 OrderItem.displayName = 'OrderItem';

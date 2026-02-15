@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * ParadisePOS - PriceTag Component
+ * CoffeePOS - PriceTag Component
  *
  * Currency formatted price display
  * Supports discounts and original price

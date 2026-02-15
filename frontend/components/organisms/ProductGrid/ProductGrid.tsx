@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * ParadisePOS - ProductGrid Component
+ * CoffeePOS - ProductGrid Component
  *
  * Displays products in a responsive grid with category filtering
  */
@@ -37,6 +37,8 @@ export interface ProductGridProps extends HTMLAttributes<HTMLDivElement> {
   compact?: boolean;
   /** Show stock quantities */
   showStock?: boolean;
+  /** Extra content rendered in the header row (after search) */
+  headerExtra?: React.ReactNode;
   /** Callback when product is added (with optional size) */
   onProductAdd?: (event: ProductAddEvent) => void;
   /** Callback when category changes */
@@ -60,6 +62,7 @@ export const ProductGrid = forwardRef<HTMLDivElement, ProductGridProps>(
       loading = false,
       compact = false,
       showStock = false,
+      headerExtra,
       onProductAdd,
       onCategoryChange,
       onSearchChange,
@@ -166,6 +169,8 @@ export const ProductGrid = forwardRef<HTMLDivElement, ProductGridProps>(
                 loading={loading}
               />
             </div>
+
+            {headerExtra}
           </div>
         </div>
 

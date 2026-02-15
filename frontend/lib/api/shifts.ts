@@ -1,5 +1,5 @@
 /**
- * ParadisePOS - Shifts API
+ * CoffeePOS - Shifts API
  */
 
 import { apiClient, type ApiResponse } from './client';

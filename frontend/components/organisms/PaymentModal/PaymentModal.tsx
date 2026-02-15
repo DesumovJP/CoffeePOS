@@ -1,12 +1,13 @@
 'use client';
 
 /**
- * ParadisePOS - PaymentModal Component
+ * CoffeePOS - PaymentModal Component
  *
- * Payment method selection and processing
+ * Payment method selection and processing.
+ * After successful payment, shows a success screen with option to print receipt.
  */
 
-import { forwardRef, useState, useMemo, type HTMLAttributes } from 'react';
+import { forwardRef, useState, useEffect, type HTMLAttributes } from 'react';
 import { Text, Button, Icon, GlassCard, Input, Divider, type IconName } from '@/components/atoms';
 import { Modal } from '@/components/atoms/Modal';
 import styles from './PaymentModal.module.css';
@@ -32,6 +33,8 @@ export interface PaymentModalProps extends Omit<HTMLAttributes<HTMLDivElement>, 
   availableMethods?: PaymentMethod[];
   /** Processing state */
   processing?: boolean;
+  /** Callback to print receipt (if provided, shows print button after success) */
+  onPrintReceipt?: () => void;
 }
 
 // ============================================
@@ -68,6 +71,7 @@ export const PaymentModal = forwardRef<HTMLDivElement, PaymentModalProps>(
       onPaymentComplete,
       availableMethods = ['cash', 'card', 'qr'],
       processing = false,
+      onPrintReceipt,
       className,
       ...props
     },
@@ -75,23 +79,44 @@ export const PaymentModal = forwardRef<HTMLDivElement, PaymentModalProps>(
   ) => {
     const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('cash');
     const [cashReceived, setCashReceived] = useState<string>('');
+    const [paymentSuccess, setPaymentSuccess] = useState(false);
+    const [successMethod, setSuccessMethod] = useState<PaymentMethod>('cash');
+    const [successChange, setSuccessChange] = useState(0);
 
     const receivedAmount = parseFloat(cashReceived) || 0;
     const change = receivedAmount - total;
     const canComplete = selectedMethod !== 'cash' || receivedAmount >= total;
 
+    // Reset state when modal closes
+    useEffect(() => {
+      if (!open) {
+        setCashReceived('');
+        setSelectedMethod('cash');
+        setPaymentSuccess(false);
+      }
+    }, [open]);
+
     // Reset state when modal opens
     const handleClose = () => {
       setCashReceived('');
       setSelectedMethod('cash');
+      setPaymentSuccess(false);
       onClose();
     };
 
     const handleComplete = () => {
-      if (selectedMethod === 'cash') {
+      const method = selectedMethod;
+      const received = method === 'cash' ? receivedAmount : undefined;
+      const changeAmount = method === 'cash' ? Math.max(0, receivedAmount - total) : 0;
+
+      setSuccessMethod(method);
+      setSuccessChange(changeAmount);
+      setPaymentSuccess(true);
+
+      if (method === 'cash') {
         onPaymentComplete('cash', receivedAmount);
       } else {
-        onPaymentComplete(selectedMethod);
+        onPaymentComplete(method);
       }
     };
 
@@ -103,6 +128,64 @@ export const PaymentModal = forwardRef<HTMLDivElement, PaymentModalProps>(
       setCashReceived(total.toFixed(2));
     };
 
+    // SUCCESS STATE
+    if (paymentSuccess) {
+      const successFooter = (
+        <>
+          {onPrintReceipt && (
+            <Button variant="secondary" size="lg" onClick={onPrintReceipt}>
+              <Icon name="printer" size="md" />
+              Друкувати чек
+            </Button>
+          )}
+          <Button variant="primary" size="lg" fullWidth onClick={handleClose}>
+            Нове замовлення
+          </Button>
+        </>
+      );
+
+      return (
+        <Modal
+          ref={ref}
+          open={open}
+          onClose={handleClose}
+          title="Оплата завершена"
+          size="md"
+          footer={successFooter}
+          className={className}
+          {...props}
+        >
+          <div className={styles.content}>
+            <div className={styles.successSection}>
+              <div className={styles.successIcon}>
+                <Icon name="success" size="2xl" color="success" />
+              </div>
+              <Text variant="h3" weight="bold" color="success" align="center">
+                Оплачено!
+              </Text>
+              <Text variant="displaySmall" weight="bold" align="center">
+                {formatPrice(total, currency)}
+              </Text>
+              <Text variant="bodyMedium" color="secondary" align="center">
+                {PAYMENT_METHODS[successMethod].label}
+              </Text>
+              {successMethod === 'cash' && successChange > 0 && (
+                <GlassCard intensity="subtle" padding="md" className={`${styles.changeCard} ${styles.positive}`}>
+                  <Text variant="labelMedium" color="success">
+                    Решта
+                  </Text>
+                  <Text variant="h3" color="success" weight="bold">
+                    {formatPrice(successChange, currency)}
+                  </Text>
+                </GlassCard>
+              )}
+            </div>
+          </div>
+        </Modal>
+      );
+    }
+
+    // PAYMENT FORM STATE
     const footer = (
       <>
         <Button variant="secondary" size="lg" onClick={handleClose}>

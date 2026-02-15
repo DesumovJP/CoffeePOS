@@ -67,7 +67,7 @@
 }
 
 .accordion.expanded .orderBadge span {
-  color: white;
+  color: var(--text-inverse);
 }
 
 .accordionMeta {

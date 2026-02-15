@@ -1,5 +1,5 @@
 /**
- * ParadisePOS - Mock WriteOffs API
+ * CoffeePOS - Mock WriteOffs API
  */
 
 import type { ApiResponse } from '@/lib/api/client';

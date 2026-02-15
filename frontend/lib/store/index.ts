@@ -1,5 +1,5 @@
 /**
- * ParadisePOS - State Management
+ * CoffeePOS - State Management
  *
  * Central export for all Zustand stores
  */

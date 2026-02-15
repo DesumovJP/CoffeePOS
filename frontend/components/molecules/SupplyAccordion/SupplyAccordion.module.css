@@ -60,7 +60,7 @@
 
 .accordion.expanded .supplierBadge {
   background: var(--color-success);
-  color: white;
+  color: var(--text-inverse);
 }
 
 .accordionMeta {

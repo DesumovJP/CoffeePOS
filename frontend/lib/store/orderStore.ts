@@ -1,5 +1,5 @@
 /**
- * ParadisePOS - Order Store (Zustand)
+ * CoffeePOS - Order Store (Zustand)
  *
  * Global state management for orders
  */

@@ -1,5 +1,5 @@
 /**
- * ParadisePOS Design System - Border Radius Tokens
+ * CoffeePOS Design System - Border Radius Tokens
  *
  * iOS 26 inspired rounded corners
  * Consistent radius scale for all components

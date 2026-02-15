@@ -1,5 +1,5 @@
 /**
- * ParadisePOS - Mock Recipes API
+ * CoffeePOS - Mock Recipes API
  */
 
 import type { ApiResponse } from '@/lib/api/client';

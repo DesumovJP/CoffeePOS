@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * ParadisePOS - Products Hooks
+ * CoffeePOS - Products Hooks
  *
  * React Query hooks for products data
  */

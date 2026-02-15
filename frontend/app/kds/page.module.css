@@ -1,0 +1,335 @@
+/**
+ * KDS (Kitchen Display System) Page Styles
+ *
+ * Fullscreen kitchen display optimized for readability.
+ * Large text, high-contrast status colors, time-based card tinting.
+ */
+
+/* ============================================
+   PAGE LAYOUT
+   ============================================ */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--bg-secondary);
+}
+
+/* ============================================
+   STATUS BAR
+   ============================================ */
+
+.statusBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2) var(--space-4);
+  flex-shrink: 0;
+}
+
+.clock {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* ============================================
+   CONTENT
+   ============================================ */
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-4);
+  min-height: 0;
+}
+
+.center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  height: 100%;
+  min-height: 300px;
+}
+
+/* ============================================
+   ORDER GRID
+   ============================================ */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-4);
+  align-items: start;
+}
+
+/* ============================================
+   ORDER CARD
+   ============================================ */
+
+.orderCard {
+  display: flex;
+  flex-direction: column;
+  background: var(--glass-bg-elevated);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  transition: background-color var(--duration-normal) var(--ease-default),
+              border-color var(--duration-normal) var(--ease-default);
+}
+
+/* Time-based card tinting */
+.orderCard.warning {
+  border-color: color-mix(in srgb, var(--color-warning) 30%, var(--glass-border));
+}
+
+.orderCard.urgent {
+  border-color: color-mix(in srgb, var(--color-error) 40%, var(--glass-border));
+  animation: urgentPulse 2s ease-in-out infinite;
+}
+
+/* Rush priority */
+.orderCard.rush {
+  border-left: 4px solid var(--color-error);
+}
+
+@keyframes urgentPulse {
+  0%, 100% { box-shadow: var(--shadow-card); }
+  50% { box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-error) 30%, transparent), var(--shadow-card); }
+}
+
+/* ============================================
+   CARD HEADER — distinct "info zone"
+   ============================================ */
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: var(--bg-tertiary);
+}
+
+/* Warning tint on header */
+.orderCard.warning .cardHeader {
+  background: color-mix(in srgb, var(--color-warning) 8%, var(--bg-tertiary));
+}
+
+.orderCard.urgent .cardHeader {
+  background: color-mix(in srgb, var(--color-error) 8%, var(--bg-tertiary));
+}
+
+.cardHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1-5);
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.orderNumber {
+  font-size: var(--text-xl);
+}
+
+/* ============================================
+   TIMER — prominent pill
+   ============================================ */
+
+.timer {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2-5);
+  border-radius: var(--radius-full);
+  font-variant-numeric: tabular-nums;
+  background: var(--glass-bg-elevated);
+  border: 1px solid var(--glass-border);
+}
+
+.timerNormal {
+  color: var(--text-secondary);
+}
+
+.timerWarning {
+  color: var(--color-warning);
+  background: var(--color-warning-bg);
+  border-color: color-mix(in srgb, var(--color-warning) 30%, transparent);
+}
+
+.timerUrgent {
+  color: var(--color-error);
+  background: var(--color-error-bg);
+  border-color: color-mix(in srgb, var(--color-error) 30%, transparent);
+  font-weight: var(--font-bold);
+}
+
+/* ============================================
+   ITEMS LIST
+   ============================================ */
+
+.itemsList {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-2) var(--space-4);
+  flex: 1;
+}
+
+.itemRow {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2-5);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--glass-border) 40%, transparent);
+}
+
+.itemRow:last-child {
+  border-bottom: none;
+}
+
+.itemRow.itemDone {
+  opacity: 0.45;
+}
+
+.itemRow.itemCancelled {
+  opacity: 0.3;
+  text-decoration: line-through;
+}
+
+/* ============================================
+   ITEM CHECKBOX
+   ============================================ */
+
+.itemCheckbox {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  cursor: pointer;
+  margin-top: 1px;
+  transition: background-color var(--duration-fast) var(--ease-default),
+              border-color var(--duration-fast) var(--ease-default);
+}
+
+.itemCheckbox:hover {
+  border-color: var(--color-success);
+  background: color-mix(in srgb, var(--color-success) 10%, transparent);
+}
+
+.itemCheckbox.checked {
+  background: var(--color-success);
+  border-color: var(--color-success);
+  color: var(--text-inverse);
+}
+
+.itemCheckbox:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* ============================================
+   ITEM INFO
+   ============================================ */
+
+.itemInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.itemNameRow {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.strikethrough {
+  text-decoration: line-through;
+}
+
+.itemNote {
+  font-style: italic;
+}
+
+/* ============================================
+   NOTES
+   ============================================ */
+
+.notes {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-2-5) var(--space-3);
+  margin: 0 var(--space-3);
+  background: var(--color-warning-bg);
+  border-radius: var(--radius-md);
+  border: 1px solid color-mix(in srgb, var(--color-warning) 20%, transparent);
+}
+
+/* ============================================
+   CARD FOOTER — bookend with header
+   ============================================ */
+
+.cardFooter {
+  padding: var(--space-3) var(--space-4);
+  background: var(--bg-tertiary);
+  margin-top: auto;
+}
+
+/* Warning tint on footer */
+.orderCard.warning .cardFooter {
+  background: color-mix(in srgb, var(--color-warning) 5%, var(--bg-tertiary));
+}
+
+.orderCard.urgent .cardFooter {
+  background: color-mix(in srgb, var(--color-error) 5%, var(--bg-tertiary));
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (min-width: 1600px) {
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  }
+
+  .orderNumber {
+    font-size: var(--text-2xl);
+  }
+}
+
+@media (max-width: 768px) {
+  .content {
+    padding: var(--space-3);
+  }
+
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: var(--space-3);
+  }
+
+  .itemCheckbox {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+@media (max-width: 480px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}

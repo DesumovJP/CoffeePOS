@@ -1,5 +1,5 @@
 /**
- * ParadisePOS - Orders API
+ * CoffeePOS - Orders API
  *
  * API methods for order management
  */

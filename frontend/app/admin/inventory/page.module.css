@@ -71,5 +71,13 @@
   .toolbar > :nth-child(2) {
     max-width: none;
     flex: initial;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .page {
+    padding: var(--space-3);
+    gap: var(--space-3);
   }
 }

@@ -1,5 +1,5 @@
 /**
- * ParadisePOS Design System - Themes
+ * CoffeePOS Design System - Themes
  *
  * Export theme types and configurations
  */

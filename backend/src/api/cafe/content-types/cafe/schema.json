@@ -1,0 +1,55 @@
+{
+  "kind": "collectionType",
+  "collectionName": "cafes",
+  "info": {
+    "singularName": "cafe",
+    "pluralName": "cafes",
+    "displayName": "Cafe",
+    "description": "Coffee shop location/branch"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true,
+      "maxLength": 200
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "name"
+    },
+    "address": {
+      "type": "text",
+      "maxLength": 500
+    },
+    "city": {
+      "type": "string",
+      "maxLength": 100
+    },
+    "phone": {
+      "type": "string",
+      "maxLength": 20
+    },
+    "email": {
+      "type": "string",
+      "maxLength": 100
+    },
+    "workingHours": {
+      "type": "json"
+    },
+    "isActive": {
+      "type": "boolean",
+      "default": true
+    },
+    "image": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": ["images"]
+    },
+    "settings": {
+      "type": "json"
+    }
+  }
+}

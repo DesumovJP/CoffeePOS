@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * ParadisePOS Design System - Input Component
+ * CoffeePOS Design System - Input Component
  *
  * Text input field with various states and variants
  */

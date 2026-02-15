@@ -1,5 +1,5 @@
 /**
- * ParadisePOS Design System - Motion Tokens
+ * CoffeePOS Design System - Motion Tokens
  *
  * Animation durations, easing functions, and transitions
  * iOS-inspired subtle, responsive animations

@@ -1,4 +1,6 @@
 import { factories } from '@strapi/strapi';
+import { validateRequired, validateNumber, validateArray, validateEnum, ValidationError } from '../../../utils/validate';
+import { canTransition, getTimestampField, getAllowedTransitions } from '../../../utils/order-state-machine';
 
 export default factories.createCoreController('api::order.order', ({ strapi }) => ({
   /**
@@ -7,9 +9,50 @@ export default factories.createCoreController('api::order.order', ({ strapi }) =
   async create(ctx) {
     const { order, items, payment } = ctx.request.body?.data || {};
 
-    if (!order) {
-      return ctx.badRequest('Order data is required');
+    try {
+      if (!order) {
+        throw new ValidationError('Order data is required', { order: 'order is required' });
+      }
+
+      validateRequired(order, ['orderNumber', 'status', 'type']);
+      validateArray(items, 'items', { minLength: 1 });
+      for (const item of items) {
+        validateRequired(item, ['productName']);
+        validateNumber(item.quantity, 'quantity', { min: 1 });
+        validateNumber(item.unitPrice, 'unitPrice', { min: 0 });
+      }
+
+      if (payment) {
+        validateEnum(payment.method, 'payment.method', ['cash', 'card', 'qr', 'online', 'other']);
+        validateNumber(payment.amount, 'payment.amount', { min: 0 });
+      }
+    } catch (error) {
+      if (error instanceof ValidationError) {
+        return ctx.badRequest(error.message, { details: error.details });
+      }
+      throw error;
     }
+
+    // Validate and calculate discounts
+    let subtotal = 0;
+    if (Array.isArray(items)) {
+      subtotal = items.reduce((sum, item) => sum + (item.unitPrice || 0) * (item.quantity || 1), 0);
+    }
+
+    let discountAmount = 0;
+    if (order.discountType === 'percentage' && order.discountValue) {
+      const pct = Math.min(Math.max(0, order.discountValue), 100);
+      discountAmount = subtotal * (pct / 100);
+    } else if (order.discountType === 'fixed' && order.discountValue) {
+      discountAmount = Math.min(Math.max(0, order.discountValue), subtotal);
+    }
+
+    const total = Math.max(0, subtotal - discountAmount);
+
+    // Override with calculated values
+    order.subtotal = subtotal;
+    order.discountAmount = discountAmount;
+    order.total = total;
 
     // Get current open shift
     const currentShift = await strapi.db.query('api::shift.shift').findOne({
@@ -60,7 +103,7 @@ export default factories.createCoreController('api::order.order', ({ strapi }) =
       const shiftService = strapi.service('api::shift.shift');
       await shiftService.addSale(
         currentShift.id,
-        order.total || 0,
+        total,
         payment.method || 'cash'
       );
     }
@@ -72,5 +115,38 @@ export default factories.createCoreController('api::order.order', ({ strapi }) =
     });
 
     return { data: completeOrder };
+  },
+
+  /**
+   * Update order status with state machine validation
+   */
+  async updateStatus(ctx) {
+    const { id } = ctx.params;
+    const { status } = ctx.request.body?.data || {};
+
+    if (!status) return ctx.badRequest('status is required');
+
+    const order = await strapi.db.query('api::order.order').findOne({ where: { id } });
+    if (!order) return ctx.notFound('Order not found');
+
+    if (!canTransition(order.status, status)) {
+      return ctx.badRequest(
+        `Cannot transition from '${order.status}' to '${status}'. Allowed: ${getAllowedTransitions(order.status).join(', ') || 'none'}`
+      );
+    }
+
+    const updateData: Record<string, any> = { status };
+    const timestampField = getTimestampField(status);
+    if (timestampField) {
+      updateData[timestampField] = new Date().toISOString();
+    }
+
+    const updated = await strapi.db.query('api::order.order').update({
+      where: { id },
+      data: updateData,
+      populate: ['items', 'payment', 'shift'],
+    });
+
+    return { data: updated };
   },
 }));

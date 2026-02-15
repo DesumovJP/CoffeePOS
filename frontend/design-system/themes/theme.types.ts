@@ -1,5 +1,5 @@
 /**
- * ParadisePOS Design System - Theme Types
+ * CoffeePOS Design System - Theme Types
  *
  * Type definitions for theming system
  */

@@ -39,7 +39,7 @@
     rgba(139, 94, 60, 0.04) 40%,
     transparent 70%
   );
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   filter: blur(60px);
   animation: float1 20s ease-in-out infinite;
 }
@@ -56,7 +56,7 @@
     rgba(0, 122, 255, 0.03) 40%,
     transparent 70%
   );
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   filter: blur(60px);
   animation: float2 25s ease-in-out infinite;
 }
@@ -73,7 +73,7 @@
     rgba(52, 199, 89, 0.03) 40%,
     transparent 70%
   );
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   filter: blur(60px);
   animation: float3 22s ease-in-out infinite;
 }

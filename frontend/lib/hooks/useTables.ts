@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * ParadisePOS - Tables Hooks
+ * CoffeePOS - Tables Hooks
  *
  * React Query hooks for cafe tables data
  */
@@ -54,6 +54,20 @@ export function useTable(id: number) {
 // ============================================
 
 /**
+ * Hook to create a table
+ */
+export function useCreateTable() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CafeTableInput) => tablesApi.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: tableKeys.lists() });
+    },
+  });
+}
+
+/**
  * Hook to update a table
  */
 export function useUpdateTable() {
@@ -64,6 +78,20 @@ export function useUpdateTable() {
       tablesApi.update(id, data),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: tableKeys.detail(id) });
+      queryClient.invalidateQueries({ queryKey: tableKeys.lists() });
+    },
+  });
+}
+
+/**
+ * Hook to delete a table
+ */
+export function useDeleteTable() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => tablesApi.delete(id),
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: tableKeys.lists() });
     },
   });

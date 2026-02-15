@@ -1,5 +1,5 @@
 /**
- * ParadisePOS - Mock Data Initialization
+ * CoffeePOS - Mock Data Initialization
  *
  * Transforms seed data into Strapi-compatible entity shapes
  */

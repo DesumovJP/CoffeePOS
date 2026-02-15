@@ -1,5 +1,5 @@
 /**
- * ParadisePOS Design System - Design Tokens
+ * CoffeePOS Design System - Design Tokens
  *
  * Central export for all design tokens
  * Import from here to ensure consistency across the application

@@ -1,5 +1,5 @@
 /**
- * ParadisePOS Design System - Atoms
+ * CoffeePOS Design System - Atoms
  *
  * Base building blocks of the UI
  */
@@ -15,3 +15,4 @@ export * from './Badge';
 export * from './Divider';
 export * from './MockBanner';
 export * from './Modal';
+export * from './Toast';
