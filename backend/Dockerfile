@@ -17,6 +17,7 @@ ENV NODE_ENV=production
 COPY --from=base /app/package.json /app/package-lock.json ./
 RUN npm ci --omit=dev
 COPY --from=base /app/dist ./dist
+COPY --from=base /app/dist/config ./config
 COPY --from=base /app/public ./public
 COPY --from=base /app/favicon.png ./favicon.png
 COPY --from=base /app/database ./database
