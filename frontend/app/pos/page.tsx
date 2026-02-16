@@ -29,7 +29,7 @@ import {
 } from '@/lib/store';
 import { useProducts, useActiveCategories, useRecipes, useKeyboardShortcuts, type ShortcutConfig } from '@/lib/hooks';
 import type { Product as ApiProduct } from '@/lib/api';
-import { ordersApi } from '@/lib/api';
+import { ordersApi, productsApi } from '@/lib/api';
 import { ShiftGuard } from '@/components/organisms/ShiftGuard';
 import styles from './page.module.css';
 
@@ -205,15 +205,6 @@ export default function POSPage() {
     return mockCategories;
   }, [apiCategories]);
 
-  // Keep reference to original API products for modifier data
-  const apiProductsMap = useMemo(() => {
-    const map = new Map<string, ApiProduct>();
-    if (apiProducts) {
-      apiProducts.forEach((p) => map.set(String(p.id), p));
-    }
-    return map;
-  }, [apiProducts]);
-
   // Zustand store
   const currentOrder = useOrderStore(selectCurrentOrder);
   const isPaymentModalOpen = useOrderStore(selectIsPaymentModalOpen);
@@ -263,17 +254,22 @@ export default function POSPage() {
   }, [currentOrder]);
 
   // Handlers
-  const handleProductAdd = useCallback((event: ProductAddEvent) => {
+  const handleProductAdd = useCallback(async (event: ProductAddEvent) => {
     const { product, size } = event;
 
     // Check if product has modifiers (not sizes)
     if (product.hasModifiers) {
-      // Try to get full API product data
-      const apiProduct = apiProductsMap.get(product.id);
-      if (apiProduct && apiProduct.modifierGroups && apiProduct.modifierGroups.length > 0) {
-        setSelectedProductForModifier(transformToModifierProduct(apiProduct));
-        setModifierModalOpen(true);
-        return;
+      // Fetch product with modifiers on-demand
+      try {
+        const response = await productsApi.getById(Number(product.id));
+        const apiProduct = response.data;
+        if (apiProduct && apiProduct.modifierGroups && apiProduct.modifierGroups.length > 0) {
+          setSelectedProductForModifier(transformToModifierProduct(apiProduct));
+          setModifierModalOpen(true);
+          return;
+        }
+      } catch {
+        // Fallback: add without modifiers
       }
     }
 
@@ -288,7 +284,7 @@ export default function POSPage() {
       name: itemName,
       price: itemPrice,
     });
-  }, [addItem, apiProductsMap]);
+  }, [addItem]);
 
   const handleModifierComplete = useCallback((result: ModifierModalResult) => {
     addItem({

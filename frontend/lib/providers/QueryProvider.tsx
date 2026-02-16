@@ -19,10 +19,10 @@ export function QueryProvider({ children }: QueryProviderProps) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            // Stale time: 30 seconds
-            staleTime: 30 * 1000,
-            // Cache time: 5 minutes
-            gcTime: 5 * 60 * 1000,
+            // Stale time: 5 minutes (menu rarely changes during shift)
+            staleTime: 5 * 60 * 1000,
+            // Cache time: 30 minutes
+            gcTime: 30 * 60 * 1000,
             // Retry failed requests 2 times
             retry: 2,
             // Don't refetch on window focus for POS
