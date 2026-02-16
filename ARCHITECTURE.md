@@ -1,6 +1,6 @@
 # CoffeePOS — Architecture
 
-> Last updated: 2026-02-15
+> Last updated: 2026-02-16
 
 ## System Overview
 
@@ -13,17 +13,21 @@
 │  │  13 pages │ ~50 components │ Atomic Design              │  │
 │  └──────────────────────┬─────────────────────────────────┘  │
 │      Vercel             │ HTTPS + JWT Bearer                  │
+│  coffee-pos-ten.vercel.app                                    │
 └─────────────────────────┼────────────────────────────────────┘
                           │
 ┌─────────────────────────┼────────────────────────────────────┐
 │  Strapi 5.34 (Railway)  │                                     │
-│  Rate Limit → Auth → 17 Content Types + Custom Controllers    │
+│  coffeepos-production-c0e1.up.railway.app                     │
+│  Auth → 17 Content Types + Custom Controllers                 │
 │  Orders(FSM) │ Shifts │ Reports │ Inventory │ Tasks           │
-│  ┌────────────┼──────────────────────────────────────────┐   │
+│  ┌────────────────────────────────────────────────────────┐   │
 │  │  PostgreSQL (Railway addon)                            │   │
 │  └────────────────────────────────────────────────────────┘   │
 │  ┌────────────────────────────────────────────────────────┐   │
-│  │  DigitalOcean Spaces (media/images)                    │   │
+│  │  DigitalOcean Spaces (S3-compatible media storage)     │   │
+│  │  Bucket: mymediastorage / Root: coffeepos/             │   │
+│  │  https://mymediastorage.fra1.digitaloceanspaces.com    │   │
 │  └────────────────────────────────────────────────────────┘   │
 └───────────────────────────────────────────────────────────────┘
 ```
@@ -40,10 +44,20 @@
 | Styling | CSS Modules + Tailwind v4 | — |
 | Backend | Strapi | 5.34.0 |
 | Database | PostgreSQL | 17 |
-| Media Storage | DigitalOcean Spaces | — |
+| Media Storage | DigitalOcean Spaces (@strapi/provider-upload-aws-s3) | — |
 | Language | TypeScript | 5.x |
-| Backend Deploy | Railway (Docker) | — |
+| Backend Deploy | Railway (Docker, multi-stage) | — |
 | Frontend Deploy | Vercel | — |
+
+## Production URLs
+
+| Service | URL |
+|---|---|
+| Frontend | https://coffee-pos-ten.vercel.app |
+| Backend API | https://coffeepos-production-c0e1.up.railway.app |
+| Strapi Admin | https://coffeepos-production-c0e1.up.railway.app/admin |
+| Health Check | https://coffeepos-production-c0e1.up.railway.app/_health |
+| Media (DO Spaces) | https://mymediastorage.fra1.digitaloceanspaces.com/coffeepos/ |
 
 ## Database Schema (17 Content Types)
 
@@ -146,13 +160,58 @@ ACTIVE → tracks: sales, write-offs, supplies
 CLOSE  → records closingCash, calculates difference
 ```
 
+## Deployment
+
+### Backend (Railway)
+
+- **Builder**: Docker (multi-stage, `backend/Dockerfile`)
+- **Base**: `node:20-alpine`
+- **Build**: `npm ci` → `strapi build` → production stage with `npm ci --omit=dev`
+- **Config**: compiled `.ts` → `.js` via TypeScript, copied to `./config/`, `./src/`, `./build/`
+- **Custom routes**: separate `custom.ts` files (Strapi 5.34 doesn't support array exports)
+- **Seed**: `SEED_DATABASE=true` on first deploy only, then set to `false`
+- **Media**: `@strapi/provider-upload-aws-s3` → DigitalOcean Spaces (S3-compatible)
+
+### Frontend (Vercel)
+
+- **Root directory**: `frontend`
+- **Framework**: Next.js (auto-detected)
+- **Env vars**: `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_API_MODE=live`
+
+### Environment Variables (Railway)
+
+| Variable | Description |
+|---|---|
+| `DATABASE_URL` | Railway PostgreSQL (auto via `${{Postgres.DATABASE_URL}}`) |
+| `DATABASE_SSL` | `true` |
+| `DATABASE_SSL_REJECT_UNAUTHORIZED` | `false` (Railway self-signed certs) |
+| `HOST` | `0.0.0.0` |
+| `PORT` | `1337` |
+| `NODE_ENV` | `production` |
+| `PUBLIC_URL` | Railway public domain |
+| `FRONTEND_URL` | Vercel domain (for CORS) |
+| `APP_KEYS` | 2 base64 keys, comma-separated |
+| `API_TOKEN_SALT` | base64 secret |
+| `ADMIN_JWT_SECRET` | base64 secret |
+| `TRANSFER_TOKEN_SALT` | base64 secret |
+| `JWT_SECRET` | base64 secret |
+| `ENCRYPTION_KEY` | base64 secret |
+| `SEED_DATABASE` | `false` (only `true` on first deploy) |
+| `DO_SPACE_BUCKET` | `mymediastorage` |
+| `DO_SPACE_ENDPOINT` | `https://fra1.digitaloceanspaces.com` |
+| `DO_SPACE_KEY` | DO Spaces access key |
+| `DO_SPACE_SECRET` | DO Spaces secret key |
+| `DO_SPACE_REGION` | `fra1` |
+| `DO_SPACE_ROOT_PATH` | `coffeepos` |
+| `DO_SPACE_CDN` | `https://mymediastorage.fra1.digitaloceanspaces.com` |
+
 ## Security
 
 - JWT auth via Strapi Users & Permissions
-- Rate limiting: 100 req/min per IP
 - Input validation + sanitization on all custom endpoints
 - CORS restricted to `FRONTEND_URL`
-- Security headers via Strapi middleware
+- Security headers via Strapi middleware (CSP allows DO Spaces domain)
+- Robots: `noindex, nofollow`
 
 ## Dual API Mode
 
@@ -161,4 +220,29 @@ CLOSE  → records closingCash, calculates difference
 
 ## Seed Data
 
-5 categories, 20 products, 24 ingredients, 25 recipes, 12 tables, 11 modifiers, 3 modifier groups, 1 cafe, 3 users (owner/manager/barista)
+| Entity | Count |
+|---|---|
+| Categories | 5 (Кава, Чай, Десерти, Їжа, Напої) |
+| Products | 20 |
+| Ingredients | 24 |
+| Recipes | 25 |
+| Tables | 12 |
+| Modifier groups | 3 (Розмір, Молоко, Додатки) |
+| Modifiers | 11 |
+| Cafes | 1 (Paradise Coffee — Центр) |
+| Users | 3 (owner / manager / barista) |
+
+### Default Users
+
+| Email | Password | Role |
+|---|---|---|
+| owner@coffeepos.com | Password123! | Owner |
+| manager@coffeepos.com | Password123! | Manager |
+| barista@coffeepos.com | Password123! | Barista |
+
+## Strapi 5 Production Notes
+
+- **Route files**: must use separate `custom.ts` files, NOT `export default [customRoutes, coreRouter]` array pattern
+- **Middleware**: must use `module.exports`, NOT `export default` (CommonJS interop issue)
+- **Dockerfile**: must copy `dist/config` → `./config/`, `dist/src` → `./src/`, `dist/build` → `./build/` (Strapi expects these at root)
+- **Users seeding**: use `strapi.service('plugin::users-permissions.user').add()`, NOT `create()` or `hashPassword()`
