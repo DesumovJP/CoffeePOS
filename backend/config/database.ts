@@ -2,6 +2,12 @@ export default ({ env }) => {
   const isProduction = env('NODE_ENV') === 'production';
   const databaseUrl = env('DATABASE_URL');
 
+  console.log('[DB Config]', {
+    NODE_ENV: env('NODE_ENV', 'not set'),
+    DATABASE_URL: databaseUrl ? `${databaseUrl.substring(0, 30)}...` : 'NOT SET',
+    DATABASE_HOST: env('DATABASE_HOST', 'not set'),
+  });
+
   const ssl = isProduction ? true : env.bool('DATABASE_SSL', false);
   const rejectUnauthorized = env.bool('DATABASE_SSL_REJECT_UNAUTHORIZED', false);
 
