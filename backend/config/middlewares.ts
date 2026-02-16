@@ -11,14 +11,6 @@ export default ({ env }) => [
       keepHeaderOnError: true,
     },
   },
-  {
-    name: 'global::rate-limit',
-    config: {
-      windowMs: 60000,
-      max: 100,
-      message: 'Too many requests, please try again later',
-    },
-  },
   'strapi::poweredBy',
   'strapi::query',
   'strapi::body',
