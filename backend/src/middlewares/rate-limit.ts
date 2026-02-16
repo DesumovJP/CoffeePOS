@@ -1,5 +1,3 @@
-import type { Core } from '@strapi/strapi';
-
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
 
 // Clean up expired entries periodically
@@ -12,7 +10,7 @@ setInterval(() => {
   }
 }, 60000);
 
-export default (config: { windowMs?: number; max?: number; message?: string }, { strapi }: { strapi: Core.Strapi }) => {
+module.exports = (config: { windowMs?: number; max?: number; message?: string }, { strapi }) => {
   const windowMs = config.windowMs || 60000; // 1 minute
   const max = config.max || 100;
   const message = config.message || 'Too many requests, please try again later';
