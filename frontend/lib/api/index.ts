@@ -37,6 +37,8 @@ export {
   type ProductsReport,
   type XReport,
   type ZReport,
+  type ShiftActivity,
+  type ShiftActivityType,
 } from './reports';
 export { type ApiRecipe, type ApiRecipeInput, type GetRecipesParams } from './recipes';
 export { type GetModifierGroupsParams } from './modifier-groups';

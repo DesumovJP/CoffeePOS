@@ -91,8 +91,18 @@ export default factories.createCoreController('api::supply.supply', ({ strapi })
 
     // Update shift supplies total
     if (currentShift) {
-      const shiftService = strapi.service('api::shift.shift');
+      const shiftService = strapi.service('api::shift.shift') as any;
       await shiftService.addSupply(currentShift.id, supply.totalCost || 0);
+      await shiftService.logActivity(currentShift.id, 'supply_receive', {
+        supplyId: id,
+        supplierName: supply.supplierName || '',
+        items: supplyItems.map((item: any) => ({
+          name: item.ingredientName || item.name || '',
+          quantity: item.quantity || 0,
+          unitCost: item.unitCost || 0,
+        })),
+        totalCost: supply.totalCost || 0,
+      });
     }
 
     return { data: updated };

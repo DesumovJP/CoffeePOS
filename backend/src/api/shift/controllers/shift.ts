@@ -47,6 +47,12 @@ export default factories.createCoreController('api::shift.shift', ({ strapi }) =
       },
     });
 
+    const shiftService = strapi.service('api::shift.shift') as any;
+    await shiftService.logActivity(shift.id, 'shift_open', {
+      openedBy: sanitizeString(openedBy),
+      openingCash: openingCash || 0,
+    });
+
     return { data: shift };
   },
 
@@ -93,6 +99,14 @@ export default factories.createCoreController('api::shift.shift', ({ strapi }) =
         closingCash: closingCash || 0,
         notes: notes || shift.notes,
       },
+    });
+
+    const shiftService = strapi.service('api::shift.shift') as any;
+    await shiftService.logActivity(updated.id, 'shift_close', {
+      closedBy: sanitizeString(closedBy),
+      closingCash: closingCash || 0,
+      totalSales: updated.totalSales || 0,
+      ordersCount: updated.ordersCount || 0,
     });
 
     return { data: updated };

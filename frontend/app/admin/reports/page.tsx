@@ -8,13 +8,14 @@
  */
 
 import { useState, useMemo } from 'react';
-import { Text, Icon, Button, Badge } from '@/components/atoms';
+import { Text, Icon, Button } from '@/components/atoms';
 import { Modal } from '@/components/atoms';
-import { OrderAccordion, CategoryTabs, type OrderData, type Category } from '@/components/molecules';
+import { OrderAccordion, type OrderData } from '@/components/molecules';
 import { SupplyAccordion, type SupplyAccordionData } from '@/components/molecules';
 import { WriteoffAccordion, type WriteoffAccordionData } from '@/components/molecules';
+import { ActivityInline } from '@/components/molecules';
 import { useMonthlyReport, useDailyReport } from '@/lib/hooks';
-import type { MonthlyDayData, DailyReport, TopProduct, PaymentBreakdown } from '@/lib/api';
+import type { MonthlyDayData, ShiftActivity } from '@/lib/api';
 import styles from './page.module.css';
 
 // ============================================
@@ -93,7 +94,18 @@ function formatNumber(num: number): string {
 // COMPONENT
 // ============================================
 
-type ShiftActivityTab = 'orders' | 'supplies' | 'writeoffs';
+type LegacyActivityType = 'order' | 'supply' | 'writeoff';
+
+interface LegacyDailyActivity {
+  id: string;
+  type: LegacyActivityType;
+  createdAt: number;
+  data: OrderData | SupplyAccordionData | WriteoffAccordionData;
+}
+
+type DailyActivityItem =
+  | { kind: 'accordion'; id: string; type: LegacyActivityType; createdAt: number; data: OrderData | SupplyAccordionData | WriteoffAccordionData }
+  | { kind: 'inline'; activity: ShiftActivity; createdAt: number };
 
 export default function ReportsPage() {
   const today = new Date();
@@ -102,7 +114,6 @@ export default function ReportsPage() {
   const [selectedDayKey, setSelectedDayKey] = useState<string | null>(null);
   const [selectedDayCell, setSelectedDayCell] = useState<DayCell | null>(null);
   const [expandedAccordionId, setExpandedAccordionId] = useState<string | null>(null);
-  const [shiftActivityTab, setShiftActivityTab] = useState<ShiftActivityTab>('orders');
 
   // Fetch monthly report from API (month is 1-based for API)
   const { data: monthlyReport, isLoading: isMonthlyLoading } = useMonthlyReport(currentYear, currentMonth + 1);
@@ -185,7 +196,6 @@ export default function ReportsPage() {
       setSelectedDayKey(day.dateKey);
       setSelectedDayCell(day);
       setExpandedAccordionId(null);
-      setShiftActivityTab('orders');
     }
   };
 
@@ -193,7 +203,6 @@ export default function ReportsPage() {
     setSelectedDayKey(null);
     setSelectedDayCell(null);
     setExpandedAccordionId(null);
-    setShiftActivityTab('orders');
   };
 
   const toggleAccordion = (id: string) => {
@@ -276,15 +285,99 @@ export default function ReportsPage() {
     }));
   }, [dailyReport]);
 
-  // Payment breakdown from daily report
-  const paymentBreakdown = useMemo((): PaymentBreakdown | null => {
-    return dailyReport?.paymentBreakdown || null;
-  }, [dailyReport]);
+  // Lookup maps for matching server activities to accordion data
+  const ordersById = useMemo(() => {
+    const map = new Map<string, OrderData>();
+    dailyOrders.forEach((o) => map.set(o.id, o));
+    return map;
+  }, [dailyOrders]);
 
-  // Top products from daily report
-  const dayTopProducts = useMemo((): TopProduct[] => {
-    return dailyReport?.topProducts || [];
-  }, [dailyReport]);
+  const suppliesById = useMemo(() => {
+    const map = new Map<string, SupplyAccordionData>();
+    dailySupplies.forEach((s) => map.set(s.id, s));
+    return map;
+  }, [dailySupplies]);
+
+  const writeoffsById = useMemo(() => {
+    const map = new Map<string, WriteoffAccordionData>();
+    dailyWriteoffs.forEach((w) => map.set(w.id, w));
+    return map;
+  }, [dailyWriteoffs]);
+
+  // Unified daily activities sorted chronologically (newest first)
+  // Uses server activities when available, falls back to client-side merge
+  const dailyActivities = useMemo((): DailyActivityItem[] => {
+    const serverActivities = dailyReport?.activities;
+
+    if (serverActivities && serverActivities.length > 0) {
+      const items: DailyActivityItem[] = [];
+      const usedOrderIds = new Set<string>();
+      const usedSupplyIds = new Set<string>();
+      const usedWriteoffIds = new Set<string>();
+
+      for (const activity of serverActivities) {
+        const ts = new Date(activity.timestamp).getTime();
+
+        if (activity.type === 'order_create') {
+          const orderId = String(activity.details.orderId);
+          const order = ordersById.get(orderId);
+          if (order) {
+            usedOrderIds.add(orderId);
+            items.push({ kind: 'accordion', id: `order-${orderId}`, type: 'order', createdAt: ts, data: order });
+          }
+        } else if (activity.type === 'supply_receive') {
+          const supplyId = String(activity.details.supplyId);
+          const supply = suppliesById.get(supplyId);
+          if (supply) {
+            usedSupplyIds.add(supplyId);
+            items.push({ kind: 'accordion', id: `supply-${supplyId}`, type: 'supply', createdAt: ts, data: supply });
+          }
+        } else if (activity.type === 'writeoff_create') {
+          const woId = String(activity.details.writeOffId);
+          const wo = writeoffsById.get(woId);
+          if (wo) {
+            usedWriteoffIds.add(woId);
+            items.push({ kind: 'accordion', id: `writeoff-${woId}`, type: 'writeoff', createdAt: ts, data: wo });
+          }
+        } else {
+          // shift_open, shift_close, order_status → inline
+          items.push({ kind: 'inline', activity, createdAt: ts });
+        }
+      }
+
+      // Add any orders/supplies/writeoffs not covered by server activities (older data)
+      dailyOrders.forEach((order) => {
+        if (!usedOrderIds.has(order.id)) {
+          items.push({ kind: 'accordion', id: `order-${order.id}`, type: 'order', createdAt: order.createdAt, data: order });
+        }
+      });
+      dailySupplies.forEach((supply) => {
+        if (!usedSupplyIds.has(supply.id)) {
+          items.push({ kind: 'accordion', id: `supply-${supply.id}`, type: 'supply', createdAt: supply.createdAt, data: supply });
+        }
+      });
+      dailyWriteoffs.forEach((wo) => {
+        if (!usedWriteoffIds.has(wo.id)) {
+          items.push({ kind: 'accordion', id: `writeoff-${wo.id}`, type: 'writeoff', createdAt: wo.createdAt, data: wo });
+        }
+      });
+
+      return items.sort((a, b) => b.createdAt - a.createdAt);
+    }
+
+    // Fallback: client-side merge (for shifts without activities field)
+    const items: DailyActivityItem[] = [];
+    dailyOrders.forEach((order) => {
+      items.push({ kind: 'accordion', id: `order-${order.id}`, type: 'order', createdAt: order.createdAt, data: order });
+    });
+    dailySupplies.forEach((supply) => {
+      items.push({ kind: 'accordion', id: `supply-${supply.id}`, type: 'supply', createdAt: supply.createdAt, data: supply });
+    });
+    dailyWriteoffs.forEach((wo) => {
+      items.push({ kind: 'accordion', id: `writeoff-${wo.id}`, type: 'writeoff', createdAt: wo.createdAt, data: wo });
+    });
+    return items.sort((a, b) => b.createdAt - a.createdAt);
+  }, [dailyReport, dailyOrders, dailySupplies, dailyWriteoffs, ordersById, suppliesById, writeoffsById]);
 
   return (
     <div className={styles.page}>
@@ -359,9 +452,20 @@ export default function ReportsPage() {
                 </div>
                 {hasData && day.isCurrentMonth && (
                   <div className={styles.dayData}>
-                    <Text variant="labelSmall" weight="semibold" color="accent">
-                      ₴{day.revenue.toFixed(0)}
-                    </Text>
+                    <div className={styles.dayIndicator}>
+                      <span className={`${styles.dayIndicatorDot} ${styles.dotSuccess}`} />
+                      <Text variant="labelSmall" weight="semibold" color="accent">
+                        ₴{formatNumber(day.revenue)}
+                      </Text>
+                    </div>
+                    {day.writeOffsTotal > 0 && (
+                      <div className={styles.dayIndicator}>
+                        <span className={`${styles.dayIndicatorDot} ${styles.dotError}`} />
+                        <Text variant="labelSmall" weight="semibold" color="error">
+                          -₴{formatNumber(day.writeOffsTotal)}
+                        </Text>
+                      </div>
+                    )}
                     <Text variant="caption" color="tertiary">
                       {day.ordersCount} зам.
                     </Text>
@@ -393,239 +497,150 @@ export default function ReportsPage() {
       >
         {selectedDayCell && (
           <div className={styles.modalContent}>
-            {/* Payment Breakdown */}
-            {paymentBreakdown && !isDailyLoading && (
-              <div className={styles.paymentBreakdownSection}>
-                <Text variant="labelMedium" weight="semibold" color="secondary">Оплата</Text>
-                <div className={styles.paymentGrid}>
-                  {paymentBreakdown.cash > 0 && (
-                    <div className={styles.paymentItem}>
-                      <div className={styles.paymentItemLabel}>
+            {isDailyLoading ? (
+              <div className={styles.emptyShifts}>
+                <Text variant="bodyMedium" color="secondary">Завантаження...</Text>
+              </div>
+            ) : (
+              <>
+                {/* Summary Cards */}
+                <div className={styles.summaryCards}>
+                  {/* Revenue */}
+                  <div className={styles.summaryCard}>
+                    <div className={styles.summaryCardHeader}>
+                      <Text variant="caption" weight="semibold" color="tertiary">ВИРУЧКА</Text>
+                      <Text variant="caption" weight="semibold" color="success">
+                        {dailyOrders.length} зам.
+                      </Text>
+                    </div>
+                    <Text variant="h3" weight="bold">
+                      {Math.round(selectedDayCell.revenue).toLocaleString()}
+                      <span className={styles.currencySmall}>₴</span>
+                    </Text>
+                    <Text variant="caption" color="tertiary">
+                      сер. чек {dailyOrders.length > 0 ? Math.round(selectedDayCell.revenue / dailyOrders.length) : 0} ₴
+                    </Text>
+                  </div>
+
+                  {/* Cash */}
+                  <div className={styles.summaryCard}>
+                    <div className={styles.summaryCardHeader}>
+                      <Text variant="caption" weight="semibold" color="tertiary">КАСА</Text>
+                    </div>
+                    <div className={styles.summaryCardRow}>
+                      <div className={styles.summaryCardDetail}>
                         <Icon name="cash" size="sm" color="success" />
                         <Text variant="bodySmall" color="secondary">Готівка</Text>
+                        <Text variant="labelMedium" weight="bold">₴{Math.round(selectedDayCell.cashSales)}</Text>
                       </div>
-                      <Text variant="labelMedium" weight="bold">{'\u20B4'}{paymentBreakdown.cash.toFixed(0)}</Text>
-                    </div>
-                  )}
-                  {paymentBreakdown.card > 0 && (
-                    <div className={styles.paymentItem}>
-                      <div className={styles.paymentItemLabel}>
+                      <div className={styles.summaryCardDetail}>
                         <Icon name="card" size="sm" color="info" />
                         <Text variant="bodySmall" color="secondary">Картка</Text>
+                        <Text variant="labelMedium" weight="bold">₴{Math.round(selectedDayCell.cardSales)}</Text>
                       </div>
-                      <Text variant="labelMedium" weight="bold">{'\u20B4'}{paymentBreakdown.card.toFixed(0)}</Text>
                     </div>
-                  )}
-                  {paymentBreakdown.qr > 0 && (
-                    <div className={styles.paymentItem}>
-                      <div className={styles.paymentItemLabel}>
-                        <Icon name="qr" size="sm" color="warning" />
-                        <Text variant="bodySmall" color="secondary">QR</Text>
-                      </div>
-                      <Text variant="labelMedium" weight="bold">{'\u20B4'}{paymentBreakdown.qr.toFixed(0)}</Text>
+                    {dailyShifts.some(s => s.difference !== 0) && (
+                      <Text variant="caption" weight="semibold" color={dailyShifts.reduce((s, sh) => s + sh.difference, 0) >= 0 ? 'success' : 'error'}>
+                        Різниця {dailyShifts.reduce((s, sh) => s + sh.difference, 0) > 0 ? '+' : ''}₴{Math.round(dailyShifts.reduce((s, sh) => s + sh.difference, 0))}
+                      </Text>
+                    )}
+                  </div>
+
+                  {/* Write-offs */}
+                  <div className={styles.summaryCard}>
+                    <div className={styles.summaryCardHeader}>
+                      <Text variant="caption" weight="semibold" color="tertiary">СПИСАННЯ</Text>
+                      <Text variant="caption" weight="semibold" color="warning">
+                        {dailyWriteoffs.length} оп.
+                      </Text>
                     </div>
-                  )}
-                  {paymentBreakdown.other > 0 && (
-                    <div className={styles.paymentItem}>
-                      <div className={styles.paymentItemLabel}>
-                        <Text variant="bodySmall" color="secondary">Інше</Text>
-                      </div>
-                      <Text variant="labelMedium" weight="bold">{'\u20B4'}{paymentBreakdown.other.toFixed(0)}</Text>
+                    <Text variant="h3" weight="bold">
+                      {Math.round(dailyWriteoffs.reduce((s, w) => s + w.totalCost, 0)).toLocaleString()}
+                      <span className={styles.currencySmall}>₴</span>
+                    </Text>
+                    <Text variant="caption" color="tertiary">
+                      {dailyWriteoffs.reduce((s, w) => s + w.items.length, 0)} позицій
+                    </Text>
+                  </div>
+
+                  {/* Supplies */}
+                  <div className={styles.summaryCard}>
+                    <div className={styles.summaryCardHeader}>
+                      <Text variant="caption" weight="semibold" color="tertiary">ПОСТАВКИ</Text>
+                      <Text variant="caption" weight="semibold" color="info">
+                        {dailySupplies.length} оп.
+                      </Text>
+                    </div>
+                    <Text variant="h3" weight="bold">
+                      {Math.round(dailySupplies.reduce((s, sp) => s + sp.totalCost, 0)).toLocaleString()}
+                      <span className={styles.currencySmall}>₴</span>
+                    </Text>
+                    <Text variant="caption" color="tertiary">
+                      {dailySupplies.reduce((s, sp) => s + sp.items.length, 0)} позицій
+                    </Text>
+                  </div>
+                </div>
+
+                {/* Activities List */}
+                <div className={styles.activityList}>
+                  <div className={styles.activityListHeader}>
+                    <Text variant="labelMedium" weight="semibold">
+                      Дії ({dailyActivities.length})
+                    </Text>
+                  </div>
+                  {dailyActivities.length === 0 ? (
+                    <div className={styles.emptyActivity}>
+                      <Text variant="bodySmall" color="tertiary">Немає записів</Text>
+                    </div>
+                  ) : (
+                    <div className={styles.activityItems}>
+                      {dailyActivities.map((item, idx) => {
+                        if (item.kind === 'inline') {
+                          return (
+                            <ActivityInline
+                              key={item.activity.id}
+                              type={item.activity.type}
+                              timestamp={item.activity.timestamp}
+                              details={item.activity.details}
+                            />
+                          );
+                        }
+
+                        const isExpanded = expandedAccordionId === item.id;
+                        if (item.type === 'order') {
+                          return (
+                            <OrderAccordion
+                              key={item.id}
+                              order={item.data as OrderData}
+                              isExpanded={isExpanded}
+                              onToggle={() => toggleAccordion(item.id)}
+                            />
+                          );
+                        }
+                        if (item.type === 'supply') {
+                          return (
+                            <SupplyAccordion
+                              key={item.id}
+                              supply={item.data as SupplyAccordionData}
+                              isExpanded={isExpanded}
+                              onToggle={() => toggleAccordion(item.id)}
+                            />
+                          );
+                        }
+                        return (
+                          <WriteoffAccordion
+                            key={item.id}
+                            writeoff={item.data as WriteoffAccordionData}
+                            isExpanded={isExpanded}
+                            onToggle={() => toggleAccordion(item.id)}
+                          />
+                        );
+                      })}
                     </div>
                   )}
                 </div>
-              </div>
+              </>
             )}
-
-            {/* Top Products */}
-            {dayTopProducts.length > 0 && !isDailyLoading && (
-              <div className={styles.topProductsSection}>
-                <Text variant="labelMedium" weight="semibold" color="secondary">Топ продукти</Text>
-                <div className={styles.topProductsList}>
-                  {dayTopProducts.slice(0, 5).map((product, idx) => (
-                    <div key={product.name} className={styles.topProductItem}>
-                      <div className={styles.topProductLeft}>
-                        <span className={styles.topProductRank}>{idx + 1}</span>
-                        <Text variant="bodySmall">{product.name}</Text>
-                      </div>
-                      <div className={styles.topProductRight}>
-                        <Text variant="caption" color="tertiary">{product.quantity} шт.</Text>
-                        <Text variant="labelSmall" weight="semibold">{'\u20B4'}{product.revenue.toFixed(0)}</Text>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Shift Cards */}
-            <div className={styles.shiftsList}>
-              {isDailyLoading ? (
-                <div className={styles.emptyShifts}>
-                  <Text variant="bodyMedium" color="secondary">Завантаження...</Text>
-                </div>
-              ) : dailyShifts.length === 0 ? (
-                <div className={styles.emptyShifts}>
-                  <Icon name="info" size="xl" color="tertiary" />
-                  <Text variant="bodyMedium" color="secondary">Немає даних про зміни</Text>
-                </div>
-              ) : (
-                dailyShifts.map((shift) => {
-                  const activityCategories: Category[] = [
-                    { id: 'orders', name: 'Замовлення', count: dailyOrders.length },
-                    { id: 'supplies', name: 'Поставки', count: dailySupplies.length },
-                    { id: 'writeoffs', name: 'Списання', count: dailyWriteoffs.length },
-                  ];
-
-                  return (
-                    <div key={shift.id} className={styles.shiftCard}>
-                      {/* Shift Header — always visible, not clickable */}
-                      <div className={styles.shiftCardHeader}>
-                        <div className={styles.shiftHeaderLeft}>
-                          <Badge
-                            variant={shift.status === 'open' ? 'warning' : 'success'}
-                            size="sm"
-                          >
-                            {shift.status === 'open' ? 'Відкрита' : 'Закрита'}
-                          </Badge>
-                          <Text variant="labelSmall" color="tertiary">
-                            {shift.startTime} — {shift.endTime}
-                          </Text>
-                        </div>
-                        <Text variant="bodySmall" weight="medium">{shift.employee}</Text>
-                      </div>
-
-                      {/* Shift Summary */}
-                      <div className={styles.shiftSummary}>
-                        <div className={styles.summaryGrid}>
-                          <div className={styles.summaryCell}>
-                            <div className={styles.summaryCellLabel}>
-                              <Icon name="cash" size="sm" color="success" />
-                              <Text variant="caption" color="secondary">Готівка</Text>
-                            </div>
-                            <Text variant="h4" weight="bold">₴{shift.cashSales}</Text>
-                          </div>
-                          <div className={styles.summaryCell}>
-                            <div className={styles.summaryCellLabel}>
-                              <Icon name="card" size="sm" color="info" />
-                              <Text variant="caption" color="secondary">Картка</Text>
-                            </div>
-                            <Text variant="h4" weight="bold">₴{shift.cardSales}</Text>
-                          </div>
-                          <div className={styles.summaryCell}>
-                            <div className={styles.summaryCellLabel}>
-                              <Text variant="caption" color="secondary">Каса на ранок</Text>
-                            </div>
-                            <Text variant="labelLarge" weight="semibold">₴{shift.openingCash}</Text>
-                          </div>
-                          <div className={styles.summaryCell}>
-                            <div className={styles.summaryCellLabel}>
-                              <Text variant="caption" color="secondary">Каса на вечір</Text>
-                            </div>
-                            <Text variant="labelLarge" weight="semibold">₴{shift.closingCash}</Text>
-                          </div>
-                        </div>
-                        {(shift.difference !== 0 || shift.writeOffs > 0) && (
-                          <div className={styles.summaryIndicators}>
-                            {shift.difference !== 0 && (
-                              <div className={`${styles.indicator} ${shift.difference > 0 ? styles.indicatorSuccess : styles.indicatorError}`}>
-                                <Text variant="caption" weight="semibold" color={shift.difference > 0 ? 'success' : 'error'}>
-                                  Різниця {shift.difference > 0 ? '+' : '-'}₴{Math.abs(shift.difference)}
-                                </Text>
-                              </div>
-                            )}
-                            {shift.writeOffs > 0 && (
-                              <div className={`${styles.indicator} ${styles.indicatorError}`}>
-                                <Text variant="caption" weight="semibold" color="error">
-                                  Списання -₴{shift.writeOffs}
-                                </Text>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Activity Tabs */}
-                      <div className={styles.activityTabs}>
-                        <CategoryTabs
-                          categories={activityCategories}
-                          value={shiftActivityTab}
-                          showAll={false}
-                          onChange={(id) => {
-                            setShiftActivityTab((id as ShiftActivityTab) || 'orders');
-                            setExpandedAccordionId(null);
-                          }}
-                        />
-                      </div>
-
-                      {/* Activity Content */}
-                      <div className={styles.activityContent}>
-                        {shiftActivityTab === 'orders' && (
-                          dailyOrders.length === 0 ? (
-                            <div className={styles.emptyActivity}>
-                              <Text variant="bodySmall" color="tertiary">Немає замовлень</Text>
-                            </div>
-                          ) : (
-                            <div className={styles.accordionList}>
-                              {[...dailyOrders]
-                                .sort((a, b) => b.createdAt - a.createdAt)
-                                .map((order) => (
-                                  <OrderAccordion
-                                    key={order.id}
-                                    order={order}
-                                    isExpanded={expandedAccordionId === order.id}
-                                    onToggle={() => toggleAccordion(order.id)}
-                                  />
-                                ))}
-                            </div>
-                          )
-                        )}
-                        {shiftActivityTab === 'supplies' && (
-                          dailySupplies.length === 0 ? (
-                            <div className={styles.emptyActivity}>
-                              <Text variant="bodySmall" color="tertiary">Немає поставок</Text>
-                            </div>
-                          ) : (
-                            <div className={styles.accordionList}>
-                              {[...dailySupplies]
-                                .sort((a, b) => b.createdAt - a.createdAt)
-                                .map((supply) => (
-                                  <SupplyAccordion
-                                    key={supply.id}
-                                    supply={supply}
-                                    isExpanded={expandedAccordionId === supply.id}
-                                    onToggle={() => toggleAccordion(supply.id)}
-                                  />
-                                ))}
-                            </div>
-                          )
-                        )}
-                        {shiftActivityTab === 'writeoffs' && (
-                          dailyWriteoffs.length === 0 ? (
-                            <div className={styles.emptyActivity}>
-                              <Text variant="bodySmall" color="tertiary">Немає списань</Text>
-                            </div>
-                          ) : (
-                            <div className={styles.accordionList}>
-                              {[...dailyWriteoffs]
-                                .sort((a, b) => b.createdAt - a.createdAt)
-                                .map((wo) => (
-                                  <WriteoffAccordion
-                                    key={wo.id}
-                                    writeoff={wo}
-                                    isExpanded={expandedAccordionId === wo.id}
-                                    onToggle={() => toggleAccordion(wo.id)}
-                                  />
-                                ))}
-                            </div>
-                          )
-                        )}
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
           </div>
         )}
       </Modal>

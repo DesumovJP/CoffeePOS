@@ -33,7 +33,23 @@ export interface DailyReportSummary {
   cashSales: number;
   cardSales: number;
   writeOffsTotal: number;
+  suppliesTotal: number;
   avgOrder: number;
+}
+
+export type ShiftActivityType =
+  | 'order_create'
+  | 'order_status'
+  | 'supply_receive'
+  | 'writeoff_create'
+  | 'shift_open'
+  | 'shift_close';
+
+export interface ShiftActivity {
+  id: string;
+  type: ShiftActivityType;
+  timestamp: string;
+  details: Record<string, any>;
 }
 
 export interface DailyReport {
@@ -42,6 +58,7 @@ export interface DailyReport {
   shifts: any[];
   writeOffs: any[];
   supplies: any[];
+  activities: ShiftActivity[];
   summary: DailyReportSummary;
   topProducts: TopProduct[];
   paymentBreakdown: PaymentBreakdown;

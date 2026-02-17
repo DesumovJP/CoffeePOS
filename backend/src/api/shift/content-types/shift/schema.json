@@ -78,6 +78,9 @@
       "type": "text",
       "maxLength": 1000
     },
+    "activities": {
+      "type": "json"
+    },
     "cafe": {
       "type": "relation",
       "relation": "manyToOne",

@@ -17,3 +17,4 @@ export * from './StatsGrid';
 export * from './OrderAccordion';
 export * from './SupplyAccordion';
 export * from './WriteoffAccordion';
+export * from './ActivityInline';

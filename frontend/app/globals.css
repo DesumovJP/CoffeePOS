@@ -128,8 +128,9 @@
   --text-5xl: clamp(2.25rem, 1.85rem + 1.25vw, 3rem);
   --text-6xl: clamp(2.5rem, 2rem + 1.5vw, 3.75rem);
 
-  --leading-none: 1;
+  --leading-none: 1.05;
   --leading-tight: 1.25;
+  --tracking-tighter: -0.02em;
   --leading-snug: 1.375;
   --leading-normal: 1.5;
   --leading-relaxed: 1.625;
@@ -170,6 +171,8 @@
   --space-16: 4rem;
   --space-20: 5rem;
   --space-24: 6rem;
+  --space-32: 8rem;
+  --space-40: 10rem;
 
   /* ----------------------------------------
      Border Radius

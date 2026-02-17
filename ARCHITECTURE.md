@@ -93,7 +93,7 @@
 
 | Content Type | Description |
 |---|---|
-| **shift** | Work shifts with cash tracking |
+| **shift** | Work shifts with cash tracking and activity logging |
 | **supply** | Ingredient deliveries |
 | **write-off** | Ingredient losses |
 | **task** | Staff tasks (Kanban) |
@@ -109,7 +109,7 @@
 | `POST` | `/api/supplies/:id/receive` | Receive supply, add stock |
 | `POST` | `/api/tasks/:id/complete` | Complete task |
 | `GET` | `/api/ingredients/low-stock` | Low stock items |
-| `GET` | `/api/reports/daily` | Daily report |
+| `GET` | `/api/reports/daily` | Daily report (orders, shifts, writeOffs, supplies, activities, summary) |
 | `GET` | `/api/reports/monthly` | Monthly calendar report |
 | `GET` | `/api/reports/products` | Product analytics |
 | `GET` | `/api/reports/x-report` | Mid-shift report |
@@ -152,12 +152,29 @@ pending → confirmed → preparing → ready → completed
 5. Create InventoryTransaction per ingredient
 6. Update Shift totals
 
+### Activity Logging
+
+Shift-scoped activity log stored as JSON array in `shift.activities` field. Each activity has `id`, `type`, `timestamp`, and `details`.
+
+| Activity Type | Trigger |
+|---|---|
+| `order_create` | New order created |
+| `order_status` | Order status change |
+| `supply_receive` | Supply received |
+| `writeoff_create` | Write-off created |
+| `shift_open` | Shift opened |
+| `shift_close` | Shift closed |
+
+**Utility**: `backend/src/utils/activity.ts` — `ActivityType`, `Activity` interface, `generateActivityId()` helper.
+
+**Service**: `backend/src/api/shift/services/shift.ts` — `logActivity(shiftId, type, details)` prepends activity to JSON array.
+
 ### Shift Lifecycle
 
 ```
-OPEN  → validates no existing open shift
-ACTIVE → tracks: sales, write-offs, supplies
-CLOSE  → records closingCash, calculates difference
+OPEN  → validates no existing open shift, logs shift_open activity
+ACTIVE → tracks: sales, write-offs, supplies; logs activities per action
+CLOSE  → records closingCash, calculates difference, logs shift_close activity
 ```
 
 ## Deployment

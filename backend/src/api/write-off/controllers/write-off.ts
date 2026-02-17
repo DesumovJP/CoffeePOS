@@ -66,8 +66,18 @@ export default factories.createCoreController('api::write-off.write-off', ({ str
 
     // Update shift write-offs total
     if (currentShift) {
-      const shiftService = strapi.service('api::shift.shift');
-      await (shiftService as any).addWriteOff(currentShift.id, totalCost);
+      const shiftService = strapi.service('api::shift.shift') as any;
+      await shiftService.addWriteOff(currentShift.id, totalCost);
+      await shiftService.logActivity(currentShift.id, 'writeoff_create', {
+        writeOffId: writeOff.id,
+        type,
+        reason: reason || '',
+        items: items.map((item: any) => ({
+          name: item.ingredientName || item.name || '',
+          quantity: item.quantity || 0,
+        })),
+        totalCost,
+      });
     }
 
     return { data: writeOff };

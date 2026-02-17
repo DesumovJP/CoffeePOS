@@ -55,6 +55,23 @@ export default {
       },
     });
 
+    // Get supplies for the day
+    const supplies = await strapi.db.query('api::supply.supply').findMany({
+      where: {
+        createdAt: { $gte: startOfDay, $lte: endOfDay },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    // Aggregate activities from all shifts
+    const activities: any[] = [];
+    for (const shift of allShifts) {
+      if (Array.isArray(shift.activities)) {
+        activities.push(...shift.activities);
+      }
+    }
+    activities.sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
     // Calculate totals
     const completedOrders = orders.filter((o: any) => o.status !== 'cancelled');
     const cancelledOrders = orders.filter((o: any) => o.status === 'cancelled');
@@ -104,18 +121,23 @@ export default {
       else if (type === 'delivery') orderTypeBreakdown.delivery += 1;
     }
 
+    const suppliesTotal = supplies.reduce((sum: number, s: any) => sum + (parseFloat(s.totalCost) || 0), 0);
+
     return {
       data: {
         date,
         orders,
         shifts: allShifts,
         writeOffs,
+        supplies,
+        activities,
         summary: {
           totalRevenue,
           ordersCount: completedOrders.length,
           cashSales,
           cardSales,
           writeOffsTotal,
+          suppliesTotal,
           avgOrder: completedOrders.length > 0 ? totalRevenue / completedOrders.length : 0,
         },
         topProducts,

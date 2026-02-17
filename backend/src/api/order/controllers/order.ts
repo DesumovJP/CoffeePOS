@@ -100,12 +100,23 @@ export default factories.createCoreController('api::order.order', ({ strapi }) =
 
     // Update shift totals
     if (currentShift && payment) {
-      const shiftService = strapi.service('api::shift.shift');
+      const shiftService = strapi.service('api::shift.shift') as any;
       await shiftService.addSale(
         currentShift.id,
         total,
         payment.method || 'cash'
       );
+      await shiftService.logActivity(currentShift.id, 'order_create', {
+        orderId: orderId,
+        orderNumber: order.orderNumber,
+        items: (items || []).map((item: any) => ({
+          name: item.productName || item.name,
+          quantity: item.quantity || 1,
+          unitPrice: item.unitPrice || 0,
+        })),
+        total,
+        paymentMethod: payment.method || 'cash',
+      });
     }
 
     // Return complete order with relations
@@ -146,6 +157,20 @@ export default factories.createCoreController('api::order.order', ({ strapi }) =
       data: updateData,
       populate: ['items', 'payment', 'shift'],
     });
+
+    // Log order status change
+    const currentShift = await strapi.db.query('api::shift.shift').findOne({
+      where: { status: 'open' },
+    });
+    if (currentShift) {
+      const shiftService = strapi.service('api::shift.shift') as any;
+      await shiftService.logActivity(currentShift.id, 'order_status', {
+        orderId: id,
+        orderNumber: order.orderNumber,
+        fromStatus: order.status,
+        toStatus: status,
+      });
+    }
 
     return { data: updated };
   },
