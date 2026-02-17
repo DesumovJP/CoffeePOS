@@ -39,7 +39,7 @@ export interface RequestOptions {
 // CONFIG
 // ============================================
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337';
+const API_URL = (process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337').replace(/\/+$/, '');
 const API_PREFIX = '/api';
 
 // ============================================
