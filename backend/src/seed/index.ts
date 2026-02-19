@@ -156,15 +156,18 @@ export default async function seed({ strapi }: StrapiContext) {
       const { categorySlug, hasModifiers, ...productData } = product;
       const categoryId = categoryMap[categorySlug];
 
-      const modifierGroupIds = hasModifiers
-        ? [modifierGroupMap['size'], modifierGroupMap['milk'], modifierGroupMap['extras']].filter(Boolean)
+      // Build modifier groups connect array for manyToMany
+      const modifierGroupConnect = hasModifiers
+        ? [modifierGroupMap['size'], modifierGroupMap['milk'], modifierGroupMap['extras']]
+            .filter(Boolean)
+            .map((id) => ({ id }))
         : [];
 
       const created = await strapi.db.query('api::product.product').create({
         data: {
           ...productData,
           category: categoryId,
-          modifierGroups: modifierGroupIds,
+          modifierGroups: modifierGroupConnect.length > 0 ? { connect: modifierGroupConnect } : undefined,
           trackInventory: productData.trackInventory || false,
           stockQuantity: productData.stockQuantity || 0,
           lowStockThreshold: productData.lowStockThreshold || 5,

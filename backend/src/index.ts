@@ -14,14 +14,14 @@ export default {
     const shouldSeed = process.env.SEED_DATABASE === 'true';
 
     if (shouldSeed) {
-      const categoriesCount = await strapi.db.query('api::category.category').count();
+      const productsCount = await strapi.db.query('api::product.product').count();
 
-      if (categoriesCount === 0) {
-        strapi.log.info('Database is empty, running seed...');
+      if (productsCount === 0) {
+        strapi.log.info('No products found, running full seed...');
         await seed({ strapi } as any);
         await seedUsers({ strapi });
       } else {
-        strapi.log.info(`Database already has ${categoriesCount} categories, skipping seed.`);
+        strapi.log.info(`Database already has ${productsCount} products, skipping seed.`);
         await seedUsers({ strapi });
       }
     }
