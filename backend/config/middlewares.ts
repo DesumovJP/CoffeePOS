@@ -31,7 +31,9 @@ export default ({ env }) => {
     {
       name: 'strapi::cors',
       config: {
-        origin: env('FRONTEND_URL', 'http://localhost:3000').split(','),
+        origin: env('FRONTEND_URL', 'http://localhost:3000')
+          .split(',')
+          .map((s: string) => s.trim()),
         methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
         headers: ['Content-Type', 'Authorization', 'Origin', 'Accept'],
         keepHeaderOnError: true,

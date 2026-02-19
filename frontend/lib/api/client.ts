@@ -39,13 +39,12 @@ export interface RequestOptions {
 // CONFIG
 // ============================================
 
-// In local dev with live backend, use relative URL so Next.js rewrites can proxy to Strapi (avoids CORS)
-const isLocalProxyMode =
+// In live mode, use relative URL so Next.js rewrites can proxy to Strapi (avoids CORS)
+const isProxyMode =
   typeof window !== 'undefined' &&
-  window.location.hostname === 'localhost' &&
   process.env.NEXT_PUBLIC_API_MODE === 'live';
 
-const API_URL = isLocalProxyMode
+const API_URL = isProxyMode
   ? ''
   : (process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337').replace(/\/+$/, '');
 const API_PREFIX = '/api';
@@ -121,6 +120,14 @@ export class ApiClient {
       const response = await fetch(url, fetchOptions);
 
       if (!response.ok) {
+        // Auto-logout on 401 (expired/invalid JWT)
+        if (response.status === 401 && typeof window !== 'undefined') {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          window.location.href = '/login';
+          throw { status: 401, name: 'Unauthorized', message: 'Сесія закінчилась' } as ApiError;
+        }
+
         const error = await response.json().catch(() => ({
           error: {
             status: response.status,

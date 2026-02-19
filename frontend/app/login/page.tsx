@@ -22,8 +22,9 @@ export default function LoginPage() {
   const router = useRouter();
   const { login, isAuthenticated, isLoading: authLoading } = useAuth();
 
-  const [identifier, setIdentifier] = useState('owner@coffeepos.com');
-  const [password, setPassword] = useState('owner123');
+  const isMock = process.env.NEXT_PUBLIC_API_MODE === 'mock';
+  const [identifier, setIdentifier] = useState(isMock ? 'owner@coffeepos.com' : '');
+  const [password, setPassword] = useState(isMock ? 'owner123' : '');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
