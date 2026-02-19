@@ -33,15 +33,18 @@ export default {
  */
 async function ensurePermissions(strapi: Core.Strapi) {
   try {
-    const authenticatedRole = await (strapi as any).query('plugin::users-permissions.role').findOne({
+    const roleQuery = strapi.db.query('plugin::users-permissions.role');
+    const permQuery = strapi.db.query('plugin::users-permissions.permission');
+
+    const authenticatedRole = await roleQuery.findOne({
       where: { type: 'authenticated' },
-      populate: ['permissions'],
+      populate: { permissions: true },
     });
 
     if (!authenticatedRole) return;
 
     const existingActions = new Set(
-      (authenticatedRole.permissions || []).map((p: any) => p.action)
+      ((authenticatedRole as any).permissions || []).map((p: any) => p.action)
     );
 
     // All content types that need full CRUD for authenticated users
@@ -74,7 +77,7 @@ async function ensurePermissions(strapi: Core.Strapi) {
       for (const action of actions) {
         const fullAction = `${ct}.${action}`;
         if (!existingActions.has(fullAction)) {
-          await (strapi as any).query('plugin::users-permissions.permission').create({
+          await permQuery.create({
             data: {
               action: fullAction,
               role: authenticatedRole.id,
@@ -105,7 +108,7 @@ async function ensurePermissions(strapi: Core.Strapi) {
 
     for (const action of customActions) {
       if (!existingActions.has(action)) {
-        await (strapi as any).query('plugin::users-permissions.permission').create({
+        await permQuery.create({
           data: {
             action,
             role: authenticatedRole.id,
