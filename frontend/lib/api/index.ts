@@ -45,6 +45,15 @@ export { type GetModifierGroupsParams } from './modifier-groups';
 export { type Task, type TaskStatus, type TaskPriority, type TaskType, type TaskCreateData, type TaskUpdateData, type GetTasksParams } from './tasks';
 export { type ApiInventoryTransaction, type ApiTransactionType, type GetTransactionsParams } from './inventory-transactions';
 export { type GetTablesParams } from './tables';
+export { type GetActivitiesParams, type ActivitiesResponse } from './activities';
+export {
+  type Employee,
+  type EmployeeInput,
+  type EmployeeStats,
+  type EmployeePerformance,
+  type EmployeeRole,
+  type GetEmployeesParams,
+} from './employees';
 
 // API Services — real implementations
 import { productsApi as _realProductsApi } from './products';
@@ -60,6 +69,8 @@ import { apiInventoryTransactionsApi as _realApiInventoryTransactionsApi } from 
 import { tablesApi as _realTablesApi } from './tables';
 import { tasksApi as _realTasksApi } from './tasks';
 import { modifierGroupsApi as _realModifierGroupsApi, modifiersApi as _realModifiersApi } from './modifier-groups';
+import { activitiesApi as _realActivitiesApi } from './activities';
+import { employeesApi as _realEmployeesApi } from './employees';
 
 // Conditional mock/real services
 const IS_MOCK = process.env.NEXT_PUBLIC_API_MODE === 'mock';
@@ -82,6 +93,8 @@ let tablesApi = _realTablesApi;
 let tasksApi = _realTasksApi;
 let modifierGroupsApi = _realModifierGroupsApi;
 let modifiersApi = _realModifiersApi;
+let activitiesApi = _realActivitiesApi;
+let employeesApi = _realEmployeesApi;
 
 if (IS_MOCK) {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -102,6 +115,8 @@ if (IS_MOCK) {
   apiInventoryTransactionsApi = mock.apiInventoryTransactionsApi;
   tablesApi = mock.tablesApi;
   tasksApi = mock.tasksApi;
+  activitiesApi = mock.activitiesApi;
+  employeesApi = mock.employeesApi;
 }
 
 export {
@@ -123,4 +138,6 @@ export {
   tasksApi,
   modifierGroupsApi,
   modifiersApi,
+  activitiesApi,
+  employeesApi,
 };

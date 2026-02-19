@@ -18,3 +18,4 @@ export * from './OrderAccordion';
 export * from './SupplyAccordion';
 export * from './WriteoffAccordion';
 export * from './ActivityInline';
+export * from './EmployeeCard';

@@ -20,7 +20,7 @@ export const categoryKeys = {
   list: (params: GetCategoriesParams) => [...categoryKeys.lists(), params] as const,
   active: () => [...categoryKeys.all, 'active'] as const,
   details: () => [...categoryKeys.all, 'detail'] as const,
-  detail: (id: number) => [...categoryKeys.details(), id] as const,
+  detail: (id: string) => [...categoryKeys.details(), id] as const,
 };
 
 // ============================================
@@ -52,7 +52,7 @@ export function useActiveCategories() {
 /**
  * Hook to fetch a single category by ID
  */
-export function useCategory(id: number) {
+export function useCategory(id: string) {
   return useQuery({
     queryKey: categoryKeys.detail(id),
     queryFn: () => categoriesApi.getById(id),
@@ -87,7 +87,7 @@ export function useUpdateCategory() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<CategoryInput> }) =>
+    mutationFn: ({ id, data }: { id: string; data: Partial<CategoryInput> }) =>
       categoriesApi.update(id, data),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: categoryKeys.detail(id) });
@@ -104,7 +104,7 @@ export function useDeleteCategory() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) => categoriesApi.delete(id),
+    mutationFn: (id: string) => categoriesApi.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: categoryKeys.lists() });
       queryClient.invalidateQueries({ queryKey: categoryKeys.active() });
@@ -119,7 +119,7 @@ export function useReorderCategories() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (orderedIds: number[]) => categoriesApi.reorder(orderedIds),
+    mutationFn: (orderedIds: string[]) => categoriesApi.reorder(orderedIds),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: categoryKeys.lists() });
       queryClient.invalidateQueries({ queryKey: categoryKeys.active() });

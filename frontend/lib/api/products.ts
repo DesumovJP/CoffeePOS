@@ -34,7 +34,7 @@ export const productsApi = {
     const queryParams: Record<string, string | number | boolean | undefined> = {
       'pagination[page]': params.page,
       'pagination[pageSize]': params.pageSize || 100,
-      'populate': params.populate || 'image,category',
+      'populate': params.populate || 'image,category,modifierGroups',
       'sort': params.sort || 'sortOrder:asc,name:asc',
     };
 
@@ -61,8 +61,8 @@ export const productsApi = {
   /**
    * Get a single product by ID
    */
-  async getById(id: number): Promise<ApiResponse<Product>> {
-    return apiClient.get<Product>(`/products/${id}`, {
+  async getById(documentId: string): Promise<ApiResponse<Product>> {
+    return apiClient.get<Product>(`/products/${documentId}`, {
       populate: 'image,gallery,category,modifierGroups.modifiers',
     });
   },
@@ -87,22 +87,22 @@ export const productsApi = {
   /**
    * Update a product
    */
-  async update(id: number, data: Partial<ProductInput>): Promise<ApiResponse<Product>> {
-    return apiClient.put<Product>(`/products/${id}`, { data });
+  async update(documentId: string, data: Partial<ProductInput>): Promise<ApiResponse<Product>> {
+    return apiClient.put<Product>(`/products/${documentId}`, { data });
   },
 
   /**
    * Delete a product
    */
-  async delete(id: number): Promise<ApiResponse<Product>> {
-    return apiClient.delete<Product>(`/products/${id}`);
+  async delete(documentId: string): Promise<ApiResponse<Product>> {
+    return apiClient.delete<Product>(`/products/${documentId}`);
   },
 
   /**
    * Update product stock quantity
    */
-  async updateStock(id: number, quantity: number): Promise<ApiResponse<Product>> {
-    return apiClient.put<Product>(`/products/${id}`, {
+  async updateStock(documentId: string, quantity: number): Promise<ApiResponse<Product>> {
+    return apiClient.put<Product>(`/products/${documentId}`, {
       data: { stockQuantity: quantity },
     });
   },

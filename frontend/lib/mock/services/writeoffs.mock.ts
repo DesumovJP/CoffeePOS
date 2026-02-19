@@ -6,6 +6,7 @@ import type { ApiResponse } from '@/lib/api/client';
 import type { WriteOff, WriteOffCreateData, GetWriteOffsParams } from '@/lib/api/writeoffs';
 import { getStore } from '../store';
 import { mockDelay, wrapResponse, generateDocumentId, nowISO } from '../helpers';
+import { logActivity } from '../activity-logger';
 
 export const mockWriteoffsApi = {
   async getAll(params: GetWriteOffsParams = {}): Promise<ApiResponse<WriteOff[]>> {
@@ -54,6 +55,13 @@ export const mockWriteoffsApi = {
     if (store.currentShift) {
       store.currentShift.writeOffsTotal += data.totalCost;
     }
+
+    logActivity('writeoff_create', {
+      writeOffId: writeoff.id,
+      type: writeoff.type,
+      itemCount: writeoff.items.length,
+      totalCost: writeoff.totalCost,
+    });
 
     return wrapResponse(writeoff);
   },

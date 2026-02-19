@@ -1,7 +1,7 @@
 /**
- * Orders History Page Styles
+ * History Page Styles (Історія)
  *
- * Clean structured layout — NO gradient orbs
+ * Unified activity timeline — NO gradient orbs
  */
 
 .page {
@@ -40,22 +40,12 @@
   min-width: 0;
 }
 
-.toolbarRight {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  flex-shrink: 0;
-}
-
-.toolbarRight > :first-child {
-  width: 160px;
-}
-
 /* ============================================
    STATS — glass pill
    ============================================ */
 
 .headerStats {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
@@ -82,7 +72,7 @@
 }
 
 /* ============================================
-   ORDERS LIST
+   ACTIVITIES LIST
    ============================================ */
 
 .ordersList {
@@ -128,26 +118,111 @@
 }
 
 /* ============================================
-   ORDER WRAPPER
+   ACTIVITY ITEM — glass card row
    ============================================ */
 
-.orderWrapper {
-  position: relative;
+.activityItem {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--blur-md));
+  -webkit-backdrop-filter: blur(var(--blur-md));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  transition: background 0.15s ease;
 }
 
-.statusIndicator {
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 3px;
-  height: calc(100% - var(--space-4));
-  border-radius: var(--radius-full);
-  z-index: 1;
+.activityItem:hover {
+  background: var(--glass-bg-elevated);
 }
 
-.statusIndicator.cancelled { background: var(--color-error); }
-.statusIndicator.refunded { background: var(--color-warning); }
+.activityIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+  background: var(--glass-bg-elevated);
+}
+
+.activityContent {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.activityHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.activityMeta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1-5);
+  flex-wrap: wrap;
+}
+
+/* ============================================
+   ACTIVITY COLOR CLASSES
+   ============================================ */
+
+.activityOrder .activityIcon {
+  color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+}
+
+.activityCancel .activityIcon {
+  color: var(--color-error);
+  background: color-mix(in srgb, var(--color-error) 12%, transparent);
+}
+
+.activityShift .activityIcon {
+  color: var(--color-warning);
+  background: color-mix(in srgb, var(--color-warning) 12%, transparent);
+}
+
+.activitySupply .activityIcon {
+  color: var(--color-success);
+  background: color-mix(in srgb, var(--color-success) 12%, transparent);
+}
+
+.activityWriteoff .activityIcon {
+  color: var(--color-error);
+  background: color-mix(in srgb, var(--color-error) 12%, transparent);
+}
+
+.activityIngredient .activityIcon {
+  color: var(--color-info, var(--color-accent));
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+}
+
+/* ============================================
+   MOBILE SEARCH BAR
+   ============================================ */
+
+.mobileSearchBar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.mobileSearchBar > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.mobileSearchClose {
+  flex-shrink: 0;
+}
 
 /* ============================================
    RESPONSIVE
@@ -163,20 +238,6 @@
     flex-direction: column;
     align-items: stretch;
     gap: var(--space-3);
-  }
-
-  .toolbarRight {
-    justify-content: space-between;
-  }
-
-  .toolbarRight > :first-child {
-    flex: 1;
-    width: auto;
-    min-width: 120px;
-  }
-
-  .headerStats {
-    flex-shrink: 0;
   }
 }
 
@@ -199,5 +260,9 @@
     flex-direction: column;
     align-items: flex-start;
     gap: var(--space-1);
+  }
+
+  .activityItem {
+    padding: var(--space-2) var(--space-3);
   }
 }

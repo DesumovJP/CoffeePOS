@@ -18,6 +18,8 @@ import type { WriteOff } from '@/lib/api/writeoffs';
 import type { ApiRecipe } from '@/lib/api/recipes';
 import type { ApiInventoryTransaction } from '@/lib/api/inventory-transactions';
 import type { Task } from '@/lib/api/tasks';
+import type { Employee } from '@/lib/api/employees';
+import type { ShiftActivity } from '@/lib/api/reports';
 import {
   initCategories,
   initProducts,
@@ -32,6 +34,8 @@ import {
   initWriteoffs,
   initTransactions,
   initTasks,
+  initEmployees,
+  initActivities,
 } from './data/init';
 
 class MockStore {
@@ -48,6 +52,8 @@ class MockStore {
   recipes: ApiRecipe[];
   transactions: ApiInventoryTransaction[];
   tasks: Task[];
+  employees: Employee[];
+  activities: ShiftActivity[];
   private nextId: number;
   private nextOrderNum: number;
 
@@ -65,6 +71,8 @@ class MockStore {
     this.writeoffs = initWriteoffs(this.ingredients);
     this.transactions = initTransactions(this.ingredients, this.products);
     this.tasks = initTasks();
+    this.employees = initEmployees();
+    this.activities = initActivities(this.orders, this.currentShift, this.closedShifts, this.supplies, this.writeoffs);
     this.nextId = 2000;
     this.nextOrderNum = 1020;
   }

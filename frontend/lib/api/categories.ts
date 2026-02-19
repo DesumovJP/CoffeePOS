@@ -56,8 +56,8 @@ export const categoriesApi = {
   /**
    * Get a single category by ID
    */
-  async getById(id: number): Promise<ApiResponse<Category>> {
-    return apiClient.get<Category>(`/categories/${id}`, {
+  async getById(documentId: string): Promise<ApiResponse<Category>> {
+    return apiClient.get<Category>(`/categories/${documentId}`, {
       populate: 'image,products,parentCategory',
     });
   },
@@ -82,24 +82,24 @@ export const categoriesApi = {
   /**
    * Update a category
    */
-  async update(id: number, data: Partial<CategoryInput>): Promise<ApiResponse<Category>> {
-    return apiClient.put<Category>(`/categories/${id}`, { data });
+  async update(documentId: string, data: Partial<CategoryInput>): Promise<ApiResponse<Category>> {
+    return apiClient.put<Category>(`/categories/${documentId}`, { data });
   },
 
   /**
    * Delete a category
    */
-  async delete(id: number): Promise<ApiResponse<Category>> {
-    return apiClient.delete<Category>(`/categories/${id}`);
+  async delete(documentId: string): Promise<ApiResponse<Category>> {
+    return apiClient.delete<Category>(`/categories/${documentId}`);
   },
 
   /**
    * Reorder categories
    */
-  async reorder(orderedIds: number[]): Promise<void> {
+  async reorder(orderedDocumentIds: string[]): Promise<void> {
     await Promise.all(
-      orderedIds.map((id, index) =>
-        apiClient.put(`/categories/${id}`, { data: { sortOrder: index } })
+      orderedDocumentIds.map((documentId, index) =>
+        apiClient.put(`/categories/${documentId}`, { data: { sortOrder: index } })
       )
     );
   },

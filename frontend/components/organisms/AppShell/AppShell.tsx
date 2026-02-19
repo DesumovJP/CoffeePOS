@@ -28,19 +28,19 @@ const navigation: NavGroup[] = [
     id: 'main',
     items: [
       { id: 'pos', label: 'Каса', icon: 'cart', href: '/pos' },
-      { id: 'orders', label: 'Замовлення', icon: 'receipt', href: '/orders' },
-      { id: 'kds', label: 'Кухня', icon: 'coffee', href: '/kds' },
-      { id: 'tables', label: 'Столи', icon: 'store', href: '/tables' },
+      { id: 'orders', label: 'Історія', icon: 'clock', href: '/orders' },
+      { id: 'products', label: 'Продукція', icon: 'package', href: '/admin/products' },
       { id: 'tasks', label: 'Завдання', icon: 'check', href: '/tasks' },
+      { id: 'kds', label: 'Кухня', icon: 'coffee', href: '/kds', disabled: true },
+      { id: 'tables', label: 'Столи', icon: 'store', href: '/tables', disabled: true },
     ],
   },
   {
     id: 'management',
     label: 'Управління',
     items: [
-      { id: 'dashboard', label: 'Дашборд', icon: 'chart', href: '/admin/dashboard' },
-      { id: 'products', label: 'Продукція', icon: 'package', href: '/admin/products' },
-      { id: 'reports', label: 'Звіти', icon: 'calendar', href: '/admin/reports' },
+      { id: 'analytics', label: 'Аналітика', icon: 'chart', href: '/admin/dashboard' },
+      { id: 'employees', label: 'Працівники', icon: 'user', href: '/admin/employees' },
     ],
   },
 ];
@@ -51,18 +51,18 @@ const navigation: NavGroup[] = [
 const routeToNavId: Record<string, string> = {
   '/pos': 'pos',
   '/orders': 'orders',
-  '/kds': 'kds',
-  '/tables': 'tables',
-  '/tasks': 'tasks',
-  '/admin/dashboard': 'dashboard',
+  '/admin/dashboard': 'analytics',
   '/admin/products': 'products',
-  '/admin/reports': 'reports',
+  '/admin/employees': 'employees',
+  '/tasks': 'tasks',
   '/profile': 'profile',
 };
 
 // Page metadata with actions
 interface PageMeta {
   title: string;
+  icon: IconName;
+  search?: boolean;
   action?: {
     label: string;
     icon: IconName;
@@ -71,21 +71,13 @@ interface PageMeta {
 }
 
 const pageMeta: Record<string, PageMeta> = {
-  '/pos': { title: 'Каса' },
-  '/orders': { title: 'Замовлення' },
-  '/kds': { title: 'Кухня' },
-  '/tables': {
-    title: 'Столи',
-    action: { label: 'Додати стіл', icon: 'plus' },
-  },
-  '/tasks': {
-    title: 'Завдання',
-    action: { label: 'Нове завдання', icon: 'plus' },
-  },
-  '/admin/dashboard': { title: 'Дашборд' },
-  '/admin/products': { title: 'Продукція' },
-  '/admin/reports': { title: 'Звіти' },
-  '/profile': { title: 'Профіль' },
+  '/pos': { title: 'Каса', icon: 'cart', search: true },
+  '/orders': { title: 'Історія', icon: 'clock', search: true },
+  '/admin/dashboard': { title: 'Аналітика', icon: 'chart' },
+  '/admin/products': { title: 'Продукція', icon: 'package', search: true, action: { label: 'Додати', icon: 'plus' } },
+  '/admin/employees': { title: 'Працівники', icon: 'user', search: true, action: { label: 'Додати', icon: 'plus' } },
+  '/tasks': { title: 'Завдання', icon: 'check', search: true, action: { label: 'Додати', icon: 'plus' } },
+  '/profile': { title: 'Профіль', icon: 'user' },
 };
 
 // ============================================
@@ -176,7 +168,7 @@ export function AppShell({ children }: AppShellProps) {
   }
 
   // Get page metadata
-  const meta = pageMeta[pathname] || { title: 'CoffeePOS' };
+  const meta = pageMeta[pathname] || { title: 'CoffeePOS', icon: 'store' as IconName };
 
   // Desktop/Tablet: Sidebar layout
   if (isTablet) {
@@ -203,15 +195,39 @@ export function AppShell({ children }: AppShellProps) {
               </Text>
             </div>
             <div className={styles.topBarRight}>
-              {meta.action && (
+              {meta.search && (
                 <Button
-                  variant="primary"
+                  variant="ghost"
                   size="sm"
-                  onClick={meta.action.onClick ?? (() => window.dispatchEvent(new CustomEvent('appshell:action')))}
+                  iconOnly
+                  onClick={() => window.dispatchEvent(new CustomEvent('appshell:search'))}
+                  aria-label="Пошук"
                 >
-                  <Icon name={meta.action.icon} size="sm" />
-                  {meta.action.label}
+                  <Icon name="search" size="md" />
                 </Button>
+              )}
+              {meta.action && (
+                isDesktop ? (
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={meta.action.onClick ?? (() => window.dispatchEvent(new CustomEvent('appshell:action')))}
+                    aria-label={meta.action.label}
+                  >
+                    <Icon name={meta.action.icon} size="sm" />
+                    {meta.action.label}
+                  </Button>
+                ) : (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    iconOnly
+                    onClick={meta.action.onClick ?? (() => window.dispatchEvent(new CustomEvent('appshell:action')))}
+                    aria-label={meta.action.label}
+                  >
+                    <Icon name={meta.action.icon} size="md" />
+                  </Button>
+                )
               )}
               {IS_MOCK && <MockBanner />}
               <NotificationCenter position="right" />
@@ -243,22 +259,31 @@ export function AppShell({ children }: AppShellProps) {
             >
               <Icon name="menu" size="md" />
             </Button>
-            <div className={styles.brand}>
-              <Icon name="store" size="md" color="accent" />
-              <Text variant="h5" weight="bold" className={styles.brandName}>
-                {meta.title}
-              </Text>
-            </div>
+            <Text variant="h5" weight="bold" className={styles.brandName}>
+              {meta.title}
+            </Text>
           </div>
           <div className={styles.navbarRight}>
             {meta.action && (
               <Button
-                variant="primary"
+                variant="ghost"
                 size="sm"
+                iconOnly
                 onClick={meta.action.onClick ?? (() => window.dispatchEvent(new CustomEvent('appshell:action')))}
+                aria-label={meta.action.label}
               >
-                <Icon name={meta.action.icon} size="sm" />
-                {meta.action.label}
+                <Icon name={meta.action.icon} size="md" />
+              </Button>
+            )}
+            {meta.search && (
+              <Button
+                variant="ghost"
+                size="sm"
+                iconOnly
+                onClick={() => window.dispatchEvent(new CustomEvent('appshell:search'))}
+                aria-label="Пошук"
+              >
+                <Icon name="search" size="md" />
               </Button>
             )}
             {IS_MOCK && <MockBanner />}

@@ -19,7 +19,7 @@ export const orderKeys = {
   lists: () => [...orderKeys.all, 'list'] as const,
   list: (params: GetOrdersParams) => [...orderKeys.lists(), params] as const,
   details: () => [...orderKeys.all, 'detail'] as const,
-  detail: (id: number) => [...orderKeys.details(), id] as const,
+  detail: (id: string) => [...orderKeys.details(), id] as const,
   active: () => [...orderKeys.all, 'active'] as const,
 };
 
@@ -41,7 +41,7 @@ export function useOrders(params: GetOrdersParams = {}) {
 /**
  * Hook to fetch a single order by ID
  */
-export function useOrder(id: number) {
+export function useOrder(id: string) {
   return useQuery({
     queryKey: orderKeys.detail(id),
     queryFn: () => ordersApi.getById(id),
@@ -73,7 +73,7 @@ export function useUpdateOrderStatus() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, status }: { id: number; status: OrderStatus }) =>
+    mutationFn: ({ id, status }: { id: string; status: OrderStatus }) =>
       ordersApi.updateStatus(id, status),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: orderKeys.detail(id) });
@@ -90,7 +90,7 @@ export function useCancelOrder() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) => ordersApi.cancel(id),
+    mutationFn: (id: string) => ordersApi.cancel(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: orderKeys.lists() });
       queryClient.invalidateQueries({ queryKey: orderKeys.active() });

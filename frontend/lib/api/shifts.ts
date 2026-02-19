@@ -60,8 +60,8 @@ export const shiftsApi = {
     return apiClient.post<Shift>('/shifts/open', { data });
   },
 
-  async close(id: number, data: ShiftCloseData): Promise<ApiResponse<Shift>> {
-    return apiClient.post<Shift>(`/shifts/${id}/close`, { data });
+  async close(documentId: string, data: ShiftCloseData): Promise<ApiResponse<Shift>> {
+    return apiClient.post<Shift>(`/shifts/${documentId}/close`, { data });
   },
 
   async getAll(params: GetShiftsParams = {}): Promise<ApiResponse<Shift[]>> {
@@ -78,7 +78,7 @@ export const shiftsApi = {
     return apiClient.get<Shift[]>('/shifts', queryParams);
   },
 
-  async getById(id: number): Promise<ApiResponse<Shift>> {
-    return apiClient.get<Shift>(`/shifts/${id}`);
+  async getById(documentId: string): Promise<ApiResponse<Shift>> {
+    return apiClient.get<Shift>(`/shifts/${documentId}`);
   },
 };

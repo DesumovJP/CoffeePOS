@@ -22,15 +22,26 @@ export const mockTasksApi = {
     if (params.type) {
       items = items.filter((t) => t.type === params.type);
     }
+    if (params.assignedTo) {
+      items = items.filter((t) => t.assignedTo === params.assignedTo);
+    }
+    if (params.search) {
+      const q = params.search.toLowerCase();
+      items = items.filter(
+        (t) =>
+          t.title.toLowerCase().includes(q) ||
+          (t.description && t.description.toLowerCase().includes(q))
+      );
+    }
 
     items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     return wrapResponse(items, items.length);
   },
 
-  async getById(id: number): Promise<ApiResponse<Task>> {
+  async getById(documentId: string): Promise<ApiResponse<Task>> {
     await mockDelay();
     const store = getStore();
-    const task = store.tasks.find((t) => t.id === id);
+    const task = store.tasks.find((t) => t.documentId === documentId);
     if (!task) throw { status: 404, name: 'NotFoundError', message: 'Task not found' };
     return wrapResponse(task);
   },
@@ -50,6 +61,7 @@ export const mockTasksApi = {
       assignedTo: data.assignedTo,
       dueDate: data.dueDate,
       type: data.type || 'task',
+      createdBy: data.createdBy,
       createdAt: now,
       updatedAt: now,
     };
@@ -58,10 +70,10 @@ export const mockTasksApi = {
     return wrapResponse(task);
   },
 
-  async update(id: number, data: TaskUpdateData): Promise<ApiResponse<Task>> {
+  async update(documentId: string, data: TaskUpdateData): Promise<ApiResponse<Task>> {
     await mockDelay();
     const store = getStore();
-    const idx = store.tasks.findIndex((t) => t.id === id);
+    const idx = store.tasks.findIndex((t) => t.documentId === documentId);
     if (idx === -1) throw { status: 404, name: 'NotFoundError', message: 'Task not found' };
 
     store.tasks[idx] = {
@@ -73,10 +85,10 @@ export const mockTasksApi = {
     return wrapResponse(store.tasks[idx]);
   },
 
-  async complete(id: number, completedBy: string): Promise<ApiResponse<Task>> {
+  async complete(documentId: string, completedBy: string): Promise<ApiResponse<Task>> {
     await mockDelay();
     const store = getStore();
-    const idx = store.tasks.findIndex((t) => t.id === id);
+    const idx = store.tasks.findIndex((t) => t.documentId === documentId);
     if (idx === -1) throw { status: 404, name: 'NotFoundError', message: 'Task not found' };
 
     const now = nowISO();
@@ -91,10 +103,10 @@ export const mockTasksApi = {
     return wrapResponse(store.tasks[idx]);
   },
 
-  async delete(id: number): Promise<ApiResponse<Task>> {
+  async delete(documentId: string): Promise<ApiResponse<Task>> {
     await mockDelay();
     const store = getStore();
-    const idx = store.tasks.findIndex((t) => t.id === id);
+    const idx = store.tasks.findIndex((t) => t.documentId === documentId);
     if (idx === -1) throw { status: 404, name: 'NotFoundError', message: 'Task not found' };
 
     const [removed] = store.tasks.splice(idx, 1);

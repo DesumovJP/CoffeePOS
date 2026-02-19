@@ -108,12 +108,37 @@
 /* Responsive */
 @media (max-width: 480px) {
   .picker {
-    min-width: 160px;
-    max-width: calc(100vw - 2rem);
+    position: static;
+    min-width: unset;
+    max-width: unset;
+    width: 100%;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.12);
+    animation: slideUpSheet var(--duration-normal) var(--ease-default);
+  }
+
+  .header {
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .sizes {
+    padding: var(--space-1) var(--space-2);
+    padding-bottom: env(safe-area-inset-bottom, var(--space-2));
   }
 
   .sizeBtn {
     padding: var(--space-3) var(--space-3);
+  }
+}
+
+@keyframes slideUpSheet {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 

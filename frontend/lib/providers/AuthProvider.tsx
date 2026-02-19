@@ -49,15 +49,15 @@ export interface AuthContextValue extends AuthState {
 // ============================================
 
 const MOCK_USER: AuthUser = {
-  id: 1,
-  username: 'Демо Користувач',
-  email: 'demo@coffeepos.com',
+  id: 3,
+  username: 'Олена Коваленко',
+  email: 'olena@paradise.cafe',
   confirmed: true,
   blocked: false,
   role: {
-    id: 1,
-    name: 'Owner',
-    type: 'owner',
+    id: 3,
+    name: 'Barista',
+    type: 'barista',
   },
 };
 

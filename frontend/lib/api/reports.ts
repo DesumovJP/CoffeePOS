@@ -40,8 +40,11 @@ export interface DailyReportSummary {
 export type ShiftActivityType =
   | 'order_create'
   | 'order_status'
+  | 'order_cancel'
+  | 'supply_create'
   | 'supply_receive'
   | 'writeoff_create'
+  | 'ingredient_adjust'
   | 'shift_open'
   | 'shift_close';
 

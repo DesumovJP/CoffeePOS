@@ -40,8 +40,8 @@ export const tablesApi = {
   /**
    * Get a single table by ID
    */
-  async getById(id: number): Promise<ApiResponse<CafeTable>> {
-    return apiClient.get<CafeTable>(`/cafe-tables/${id}`);
+  async getById(documentId: string): Promise<ApiResponse<CafeTable>> {
+    return apiClient.get<CafeTable>(`/cafe-tables/${documentId}`);
   },
 
   /**
@@ -54,14 +54,14 @@ export const tablesApi = {
   /**
    * Update a table
    */
-  async update(id: number, data: Partial<CafeTableInput>): Promise<ApiResponse<CafeTable>> {
-    return apiClient.put<CafeTable>(`/cafe-tables/${id}`, { data });
+  async update(documentId: string, data: Partial<CafeTableInput>): Promise<ApiResponse<CafeTable>> {
+    return apiClient.put<CafeTable>(`/cafe-tables/${documentId}`, { data });
   },
 
   /**
    * Delete a table
    */
-  async delete(id: number): Promise<ApiResponse<CafeTable>> {
-    return apiClient.delete<CafeTable>(`/cafe-tables/${id}`);
+  async delete(documentId: string): Promise<ApiResponse<CafeTable>> {
+    return apiClient.delete<CafeTable>(`/cafe-tables/${documentId}`);
   },
 };

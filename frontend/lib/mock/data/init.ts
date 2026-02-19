@@ -20,7 +20,9 @@ import type { WriteOff } from '@/lib/api/writeoffs';
 import type { ApiRecipe } from '@/lib/api/recipes';
 import type { ApiInventoryTransaction } from '@/lib/api/inventory-transactions';
 import type { Task } from '@/lib/api/tasks';
+import type { Employee } from '@/lib/api/employees';
 import type { StrapiMedia } from '@/lib/api/types';
+import type { ShiftActivity, ShiftActivityType } from '@/lib/api/reports';
 import {
   productCategories,
   ingredientCategories as seedIngredientCategories,
@@ -231,6 +233,55 @@ export function initTables(): CafeTable[] {
 }
 
 // ============================================
+// EMPLOYEES
+// ============================================
+
+export function initEmployees(): Employee[] {
+  const ts = strapiTimestamps();
+  return [
+    {
+      id: 1, documentId: 'emp-1',
+      name: 'Іван Шевченко', email: 'ivan@paradise.cafe', phone: '+380 67 100 0001',
+      role: 'owner', position: 'Власник', isActive: true, hireDate: '2023-01-15',
+      salary: 45000, ...ts,
+    },
+    {
+      id: 2, documentId: 'emp-2',
+      name: 'Марія Петренко', email: 'maria@paradise.cafe', phone: '+380 67 100 0002',
+      role: 'manager', position: 'Менеджер зміни', isActive: true, hireDate: '2023-06-01',
+      salary: 28000, ...ts,
+    },
+    {
+      id: 3, documentId: 'emp-3',
+      name: 'Олена Коваленко', email: 'olena@paradise.cafe', phone: '+380 67 100 0003',
+      role: 'barista', position: 'Старший бариста', isActive: true, hireDate: '2024-09-15',
+      salary: 22000, ...ts,
+    },
+    {
+      id: 4, documentId: 'emp-4',
+      name: 'Андрій Мельник', email: 'andriy@paradise.cafe', phone: '+380 67 100 0004',
+      role: 'barista', position: 'Бариста', isActive: true, hireDate: '2024-11-01',
+      salary: 18000, ...ts,
+    },
+    {
+      id: 5, documentId: 'emp-5',
+      name: 'Софія Бондаренко', email: 'sofia@paradise.cafe', phone: '+380 67 100 0005',
+      role: 'barista', position: 'Бариста-стажер', isActive: true, hireDate: '2025-08-10',
+      salary: 14000, ...ts,
+    },
+  ];
+}
+
+// Employee names for rotation across seed data
+const EMPLOYEE_NAMES = [
+  'Олена Коваленко',
+  'Андрій Мельник',
+  'Марія Петренко',
+  'Софія Бондаренко',
+  'Іван Шевченко',
+];
+
+// ============================================
 // ORDERS
 // ============================================
 
@@ -311,6 +362,7 @@ export function initOrders(products: Product[], tables: CafeTable[]): Order[] {
       payment,
       priority: 'normal',
       completedAt: status === 'completed' ? dateStr : undefined,
+      createdBy: EMPLOYEE_NAMES[i % EMPLOYEE_NAMES.length],
       createdAt: dateStr,
       updatedAt: dateStr,
     });
@@ -343,6 +395,8 @@ export function initShift(): Shift {
   };
 }
 
+const SHIFT_EMPLOYEES = ['Олена Коваленко', 'Андрій Мельник', 'Марія Петренко', 'Софія Бондаренко', 'Олена Коваленко'];
+
 export function initClosedShifts(): Shift[] {
   const ts = strapiTimestamps();
   const shifts: Shift[] = [];
@@ -352,14 +406,15 @@ export function initClosedShifts(): Shift[] {
     const openDate = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
     openDate.setHours(8, 0, 0, 0);
     const closeDate = new Date(openDate.getTime() + 10 * 60 * 60 * 1000);
+    const employee = SHIFT_EMPLOYEES[(i - 1) % SHIFT_EMPLOYEES.length];
 
     shifts.push({
       id: 100 + i,
       documentId: `shift-closed-${i}`,
       openedAt: openDate.toISOString(),
       closedAt: closeDate.toISOString(),
-      openedBy: 'Олена Коваленко',
-      closedBy: 'Олена Коваленко',
+      openedBy: employee,
+      closedBy: employee,
       openingCash: 2000,
       closingCash: 3500 + i * 200,
       status: 'closed',
@@ -412,7 +467,7 @@ export function initSupplies(ingredients: Ingredient[]): Supply[] {
       orderedAt: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(),
       receivedAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(),
       createdBy_barista: 'Олена Коваленко',
-      receivedBy: 'Олена Коваленко',
+      receivedBy: 'Марія Петренко',
       ...ts,
     },
     {
@@ -423,7 +478,7 @@ export function initSupplies(ingredients: Ingredient[]): Supply[] {
       totalCost: sumCost(items2),
       orderedAt: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString(),
       shippedAt: now.toISOString(),
-      createdBy_barista: 'Олена Коваленко',
+      createdBy_barista: 'Марія Петренко',
       ...ts,
     },
     {
@@ -433,7 +488,7 @@ export function initSupplies(ingredients: Ingredient[]): Supply[] {
       items: items3,
       totalCost: sumCost(items3),
       orderedAt: now.toISOString(),
-      createdBy_barista: 'Олена Коваленко',
+      createdBy_barista: 'Андрій Мельник',
       ...ts,
     },
     {
@@ -496,7 +551,7 @@ export function initWriteoffs(ingredients: Ingredient[]): WriteOff[] {
       ],
       totalCost: 24,
       reason: 'Пошкоджена упаковка при доставці',
-      performedBy: 'Олена Коваленко',
+      performedBy: 'Андрій Мельник',
       createdAt: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString(),
       updatedAt: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString(),
     },
@@ -514,7 +569,7 @@ export function initWriteoffs(ingredients: Ingredient[]): WriteOff[] {
       ],
       totalCost: 25,
       reason: 'Бракована партія',
-      performedBy: 'Олена Коваленко',
+      performedBy: 'Софія Бондаренко',
       ...ts,
     },
   ];
@@ -600,6 +655,7 @@ export function initTasks(): Task[] {
       status: 'todo',
       priority: 'high',
       assignedTo: 'Олена Коваленко',
+      createdBy: 'Олена Коваленко',
       dueDate: today,
       type: 'daily',
       ...ts,
@@ -610,7 +666,8 @@ export function initTasks(): Task[] {
       description: 'Очікується доставка кави та сиропів. Перевірити комплектність.',
       status: 'in_progress',
       priority: 'high',
-      assignedTo: 'Олена Коваленко',
+      assignedTo: 'Марія Петренко',
+      createdBy: 'Іван Шевченко',
       dueDate: today,
       type: 'task',
       ...ts,
@@ -621,11 +678,12 @@ export function initTasks(): Task[] {
       description: 'Щоденне чищення групи та трубки пароутворювача',
       status: 'done',
       priority: 'medium',
-      assignedTo: 'Олена Коваленко',
+      assignedTo: 'Андрій Мельник',
+      createdBy: 'Андрій Мельник',
       dueDate: today,
       type: 'daily',
       completedAt: new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString(),
-      completedBy: 'Олена Коваленко',
+      completedBy: 'Андрій Мельник',
       ...ts,
     },
     {
@@ -634,7 +692,8 @@ export function initTasks(): Task[] {
       description: 'Залишилось менше 50 штук, потрібно замовити нову партію',
       status: 'todo',
       priority: 'medium',
-      assignedTo: 'Олена Коваленко',
+      assignedTo: 'Марія Петренко',
+      createdBy: 'Іван Шевченко',
       dueDate: tomorrow,
       type: 'task',
       ...ts,
@@ -645,7 +704,8 @@ export function initTasks(): Task[] {
       description: 'Порівняти фактичні залишки сиропів з даними в системі',
       status: 'todo',
       priority: 'low',
-      assignedTo: 'Олена Коваленко',
+      assignedTo: 'Софія Бондаренко',
+      createdBy: 'Марія Петренко',
       dueDate: tomorrow,
       type: 'task',
       ...ts,
@@ -657,6 +717,7 @@ export function initTasks(): Task[] {
       status: 'done',
       priority: 'medium',
       assignedTo: 'Олена Коваленко',
+      createdBy: 'Олена Коваленко',
       dueDate: today,
       type: 'daily',
       completedAt: new Date(now.getTime() - 5 * 60 * 60 * 1000).toISOString(),
@@ -669,10 +730,142 @@ export function initTasks(): Task[] {
       description: 'Вологе прибирання підлоги у залі та на терасі',
       status: 'in_progress',
       priority: 'low',
-      assignedTo: 'Олена Коваленко',
+      assignedTo: 'Софія Бондаренко',
+      createdBy: 'Софія Бондаренко',
       dueDate: today,
       type: 'daily',
       ...ts,
     },
   ];
+}
+
+// ============================================
+// ACTIVITIES (seeded from existing data)
+// ============================================
+
+let _activityId = 0;
+function makeActivity(
+  type: ShiftActivityType,
+  timestamp: string,
+  details: Record<string, any>
+): ShiftActivity {
+  return {
+    id: `seed-activity-${++_activityId}`,
+    type,
+    timestamp,
+    details,
+  };
+}
+
+export function initActivities(
+  orders: Order[],
+  currentShift: Shift | null,
+  closedShifts: Shift[],
+  supplies: Supply[],
+  writeoffs: WriteOff[]
+): ShiftActivity[] {
+  const activities: ShiftActivity[] = [];
+
+  // Shift activities (closed shifts first, then current)
+  for (const shift of [...closedShifts].reverse()) {
+    activities.push(
+      makeActivity('shift_open', shift.openedAt, {
+        shiftId: shift.id,
+        openedBy: shift.openedBy,
+        openingCash: shift.openingCash,
+      })
+    );
+    if (shift.closedAt) {
+      activities.push(
+        makeActivity('shift_close', shift.closedAt, {
+          shiftId: shift.id,
+          closedBy: shift.closedBy,
+          closingCash: shift.closingCash,
+          totalSales: shift.totalSales,
+          ordersCount: shift.ordersCount,
+        })
+      );
+    }
+  }
+
+  if (currentShift) {
+    activities.push(
+      makeActivity('shift_open', currentShift.openedAt, {
+        shiftId: currentShift.id,
+        openedBy: currentShift.openedBy,
+        openingCash: currentShift.openingCash,
+      })
+    );
+  }
+
+  // Order activities
+  for (const order of orders) {
+    activities.push(
+      makeActivity('order_create', order.createdAt, {
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+        total: order.total,
+        itemCount: order.items?.length || 0,
+        paymentMethod: order.payment?.method || 'cash',
+      })
+    );
+
+    if (order.status === 'completed' && order.completedAt) {
+      activities.push(
+        makeActivity('order_status', order.completedAt, {
+          orderId: order.id,
+          orderNumber: order.orderNumber,
+          from: 'preparing',
+          to: 'completed',
+        })
+      );
+    }
+    if (order.status === 'cancelled') {
+      activities.push(
+        makeActivity('order_cancel', order.updatedAt, {
+          orderId: order.id,
+          orderNumber: order.orderNumber,
+          reason: 'Скасовано клієнтом',
+        })
+      );
+    }
+  }
+
+  // Supply activities
+  for (const supply of supplies) {
+    activities.push(
+      makeActivity('supply_create', supply.createdAt, {
+        supplyId: supply.id,
+        supplierName: supply.supplierName,
+        itemCount: supply.items.length,
+        totalCost: supply.totalCost,
+      })
+    );
+    if (supply.status === 'received' && supply.receivedAt) {
+      activities.push(
+        makeActivity('supply_receive', supply.receivedAt, {
+          supplyId: supply.id,
+          supplierName: supply.supplierName,
+          totalCost: supply.totalCost,
+        })
+      );
+    }
+  }
+
+  // Writeoff activities
+  for (const wo of writeoffs) {
+    activities.push(
+      makeActivity('writeoff_create', wo.createdAt, {
+        writeOffId: wo.id,
+        type: wo.type,
+        itemCount: wo.items.length,
+        totalCost: wo.totalCost,
+      })
+    );
+  }
+
+  // Sort by timestamp
+  activities.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+
+  return activities;
 }

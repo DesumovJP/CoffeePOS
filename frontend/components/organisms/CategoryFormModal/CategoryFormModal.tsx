@@ -126,7 +126,7 @@ export function CategoryFormModal({
 
       try {
         if (isEditMode && category) {
-          await categoriesApi.update(category.id, data);
+          await categoriesApi.update(category.documentId, data);
         } else {
           await categoriesApi.create(data);
         }
@@ -144,18 +144,14 @@ export function CategoryFormModal({
   );
 
   const footer = (
-    <div className={styles.footer}>
-      <Button variant="ghost" onClick={onClose} disabled={isSubmitting}>
-        Скасувати
-      </Button>
-      <Button
-        variant="primary"
-        onClick={handleSubmit as any}
-        loading={isSubmitting}
-      >
-        {isEditMode ? 'Зберегти' : 'Створити'}
-      </Button>
-    </div>
+    <Button
+      variant="primary"
+      onClick={handleSubmit as any}
+      loading={isSubmitting}
+      fullWidth
+    >
+      {isEditMode ? 'Зберегти' : 'Створити'}
+    </Button>
   );
 
   return (

@@ -39,7 +39,15 @@ export interface RequestOptions {
 // CONFIG
 // ============================================
 
-const API_URL = (process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337').replace(/\/+$/, '');
+// In local dev with live backend, use relative URL so Next.js rewrites can proxy to Strapi (avoids CORS)
+const isLocalProxyMode =
+  typeof window !== 'undefined' &&
+  window.location.hostname === 'localhost' &&
+  process.env.NEXT_PUBLIC_API_MODE === 'live';
+
+const API_URL = isLocalProxyMode
+  ? ''
+  : (process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337').replace(/\/+$/, '');
 const API_PREFIX = '/api';
 
 // ============================================
@@ -47,17 +55,20 @@ const API_PREFIX = '/api';
 // ============================================
 
 function buildUrl(endpoint: string, params?: Record<string, string | number | boolean | undefined>): string {
-  const url = new URL(`${API_URL}${API_PREFIX}${endpoint}`);
+  const path = `${API_URL}${API_PREFIX}${endpoint}`;
 
-  if (params) {
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined) {
-        url.searchParams.append(key, String(value));
-      }
-    });
+  if (!params || Object.keys(params).length === 0) {
+    return path;
   }
 
-  return url.toString();
+  const searchParams = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined) {
+      searchParams.append(key, String(value));
+    }
+  });
+
+  return `${path}?${searchParams.toString()}`;
 }
 
 function getAuthToken(): string | null {

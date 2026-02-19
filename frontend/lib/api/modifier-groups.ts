@@ -41,8 +41,8 @@ export const modifierGroupsApi = {
   /**
    * Get a single modifier group by ID
    */
-  async getById(id: number): Promise<ApiResponse<ModifierGroup>> {
-    return apiClient.get<ModifierGroup>(`/modifier-groups/${id}`, {
+  async getById(documentId: string): Promise<ApiResponse<ModifierGroup>> {
+    return apiClient.get<ModifierGroup>(`/modifier-groups/${documentId}`, {
       'populate': 'modifiers',
     });
   },
@@ -57,15 +57,15 @@ export const modifierGroupsApi = {
   /**
    * Update a modifier group
    */
-  async update(id: number, data: Partial<ModifierGroupInput>): Promise<ApiResponse<ModifierGroup>> {
-    return apiClient.put<ModifierGroup>(`/modifier-groups/${id}`, { data });
+  async update(documentId: string, data: Partial<ModifierGroupInput>): Promise<ApiResponse<ModifierGroup>> {
+    return apiClient.put<ModifierGroup>(`/modifier-groups/${documentId}`, { data });
   },
 
   /**
    * Delete a modifier group
    */
-  async delete(id: number): Promise<ApiResponse<ModifierGroup>> {
-    return apiClient.delete<ModifierGroup>(`/modifier-groups/${id}`);
+  async delete(documentId: string): Promise<ApiResponse<ModifierGroup>> {
+    return apiClient.delete<ModifierGroup>(`/modifier-groups/${documentId}`);
   },
 };
 
@@ -84,14 +84,14 @@ export const modifiersApi = {
   /**
    * Update a modifier
    */
-  async update(id: number, data: Partial<ModifierInput>): Promise<ApiResponse<Modifier>> {
-    return apiClient.put<Modifier>(`/modifiers/${id}`, { data });
+  async update(documentId: string, data: Partial<ModifierInput>): Promise<ApiResponse<Modifier>> {
+    return apiClient.put<Modifier>(`/modifiers/${documentId}`, { data });
   },
 
   /**
    * Delete a modifier
    */
-  async delete(id: number): Promise<ApiResponse<Modifier>> {
-    return apiClient.delete<Modifier>(`/modifiers/${id}`);
+  async delete(documentId: string): Promise<ApiResponse<Modifier>> {
+    return apiClient.delete<Modifier>(`/modifiers/${documentId}`);
   },
 };

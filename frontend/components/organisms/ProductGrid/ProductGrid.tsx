@@ -39,6 +39,10 @@ export interface ProductGridProps extends HTMLAttributes<HTMLDivElement> {
   showStock?: boolean;
   /** Extra content rendered in the header row (after search) */
   headerExtra?: React.ReactNode;
+  /** Mobile search mode (replaces header with search input) */
+  mobileSearchOpen?: boolean;
+  /** Callback to close mobile search */
+  onMobileSearchClose?: () => void;
   /** Callback when product is added (with optional size) */
   onProductAdd?: (event: ProductAddEvent) => void;
   /** Callback when category changes */
@@ -63,6 +67,8 @@ export const ProductGrid = forwardRef<HTMLDivElement, ProductGridProps>(
       compact = false,
       showStock = false,
       headerExtra,
+      mobileSearchOpen = false,
+      onMobileSearchClose,
       onProductAdd,
       onCategoryChange,
       onSearchChange,
@@ -144,7 +150,8 @@ export const ProductGrid = forwardRef<HTMLDivElement, ProductGridProps>(
       <div ref={ref} className={classNames} {...props}>
         {/* Header with categories and search */}
         <div className={styles.header}>
-          <div className={styles.headerRow}>
+          {/* Normal header row (hidden on mobile when search is open) */}
+          <div className={`${styles.headerRow} ${mobileSearchOpen ? styles.hiddenOnMobile : ''}`}>
             {/* Categories */}
             <div className={styles.categoriesWrapper}>
               {categories.length > 0 && (
@@ -158,7 +165,7 @@ export const ProductGrid = forwardRef<HTMLDivElement, ProductGridProps>(
               )}
             </div>
 
-            {/* Search */}
+            {/* Search (desktop only, hidden on mobile via CSS) */}
             <div className={styles.searchWrapper}>
               <SearchInput
                 value={searchQuery}
@@ -172,6 +179,31 @@ export const ProductGrid = forwardRef<HTMLDivElement, ProductGridProps>(
 
             {headerExtra}
           </div>
+
+          {/* Mobile search bar (only visible on mobile when active) */}
+          {mobileSearchOpen && (
+            <div className={styles.mobileSearchBar}>
+              <SearchInput
+                value={searchQuery}
+                onChange={onSearchChange}
+                placeholder="Пошук товарів..."
+                variant="glass"
+                fullWidth
+                autoFocus
+              />
+              <button
+                type="button"
+                className={styles.mobileSearchClose}
+                onClick={() => {
+                  onSearchChange?.('');
+                  onMobileSearchClose?.();
+                }}
+                aria-label="Закрити пошук"
+              >
+                <Icon name="close" size="sm" />
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Products grid */}
@@ -204,21 +236,27 @@ export const ProductGrid = forwardRef<HTMLDivElement, ProductGridProps>(
 
               {/* Size Picker */}
               {sizePickerProduct && sizePickerPosition && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: sizePickerPosition.top,
-                    left: sizePickerPosition.left,
-                  }}
-                >
-                  <SizePicker
-                    productName={sizePickerProduct.name}
-                    sizes={sizePickerProduct.sizes || []}
-                    currency={currency}
-                    onSelect={handleSizeSelect}
-                    onClose={closeSizePicker}
+                <>
+                  <div
+                    className={styles.sizePickerBackdrop}
+                    onClick={closeSizePicker}
                   />
-                </div>
+                  <div
+                    className={styles.sizePickerPositioner}
+                    style={{
+                      top: sizePickerPosition.top,
+                      left: sizePickerPosition.left,
+                    }}
+                  >
+                    <SizePicker
+                      productName={sizePickerProduct.name}
+                      sizes={sizePickerProduct.sizes || []}
+                      currency={currency}
+                      onSelect={handleSizeSelect}
+                      onClose={closeSizePicker}
+                    />
+                  </div>
+                </>
               )}
             </div>
           ) : (

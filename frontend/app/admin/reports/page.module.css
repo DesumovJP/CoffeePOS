@@ -272,40 +272,16 @@
 }
 
 /* ============================================
-   SHIFTS SECTION
+   SHIFT CARD
    ============================================ */
-
-.shiftsSection {
-  display: flex;
-  flex-direction: column;
-  background: var(--bg-secondary);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-}
-
-.shiftsSectionHeader {
-  padding: var(--space-2-5) var(--space-3);
-  background: var(--bg-tertiary);
-  border-bottom: 1px solid var(--glass-border);
-}
-
-.shiftCards {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  padding: var(--space-3);
-}
-
-/* Shift Card */
 .shiftCard {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
   padding: var(--space-3);
-  background: var(--bg-primary);
+  background: var(--bg-secondary);
   border: 1px solid var(--glass-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   cursor: pointer;
   transition: background-color var(--duration-fast) var(--ease-out),
               border-color var(--duration-fast) var(--ease-out);
@@ -458,9 +434,6 @@
     margin: auto auto 0;
   }
 
-  .summaryCards {
-    grid-template-columns: 1fr;
-  }
 }
 
 @media (max-width: 480px) {

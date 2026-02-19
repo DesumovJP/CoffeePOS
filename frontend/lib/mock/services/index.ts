@@ -16,3 +16,5 @@ export { mockRecipesApi as recipesApi } from './recipes.mock';
 export { mockTablesApi as tablesApi } from './tables.mock';
 export { mockApiInventoryTransactionsApi as apiInventoryTransactionsApi } from './inventory-transactions.mock';
 export { mockTasksApi as tasksApi } from './tasks.mock';
+export { mockActivitiesApi as activitiesApi } from './activities.mock';
+export { mockEmployeesApi as employeesApi } from './employees.mock';

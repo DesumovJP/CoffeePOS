@@ -18,6 +18,7 @@ import type {
 } from '@/lib/api/ingredients';
 import { getStore } from '../store';
 import { mockDelay, wrapResponse, generateDocumentId, nowISO, slugify } from '../helpers';
+import { logActivity } from '../activity-logger';
 
 export const mockIngredientsApi = {
   async getAll(params: GetIngredientsParams = {}): Promise<ApiResponse<Ingredient[]>> {
@@ -51,9 +52,9 @@ export const mockIngredientsApi = {
     return wrapResponse(items, items.length);
   },
 
-  async getById(id: number): Promise<ApiResponse<Ingredient>> {
+  async getById(documentId: string): Promise<ApiResponse<Ingredient>> {
     await mockDelay();
-    const ingredient = getStore().ingredients.find((i) => i.id === id);
+    const ingredient = getStore().ingredients.find((i) => i.documentId === documentId);
     if (!ingredient) throw { status: 404, name: 'NotFoundError', message: 'Ingredient not found' };
     return wrapResponse(ingredient);
   },
@@ -87,10 +88,10 @@ export const mockIngredientsApi = {
     return wrapResponse(ingredient);
   },
 
-  async update(id: number, data: Partial<IngredientInput>): Promise<ApiResponse<Ingredient>> {
+  async update(documentId: string, data: Partial<IngredientInput>): Promise<ApiResponse<Ingredient>> {
     await mockDelay();
     const store = getStore();
-    const idx = store.ingredients.findIndex((i) => i.id === id);
+    const idx = store.ingredients.findIndex((i) => i.documentId === documentId);
     if (idx === -1) throw { status: 404, name: 'NotFoundError', message: 'Ingredient not found' };
 
     const existing = store.ingredients[idx];
@@ -108,24 +109,24 @@ export const mockIngredientsApi = {
     return wrapResponse(store.ingredients[idx]);
   },
 
-  async delete(id: number): Promise<ApiResponse<Ingredient>> {
+  async delete(documentId: string): Promise<ApiResponse<Ingredient>> {
     await mockDelay();
     const store = getStore();
-    const idx = store.ingredients.findIndex((i) => i.id === id);
+    const idx = store.ingredients.findIndex((i) => i.documentId === documentId);
     if (idx === -1) throw { status: 404, name: 'NotFoundError', message: 'Ingredient not found' };
     const [removed] = store.ingredients.splice(idx, 1);
     return wrapResponse(removed);
   },
 
   async adjustQuantity(
-    id: number,
+    documentId: string,
     adjustment: number,
     type?: string,
     notes?: string
   ): Promise<ApiResponse<Ingredient>> {
     await mockDelay();
     const store = getStore();
-    const idx = store.ingredients.findIndex((i) => i.id === id);
+    const idx = store.ingredients.findIndex((i) => i.documentId === documentId);
     if (idx === -1) throw { status: 404, name: 'NotFoundError', message: 'Ingredient not found' };
 
     const prev = store.ingredients[idx].quantity;
@@ -134,6 +135,14 @@ export const mockIngredientsApi = {
       quantity: prev + adjustment,
       updatedAt: nowISO(),
     };
+
+    logActivity('ingredient_adjust', {
+      ingredientId: store.ingredients[idx].id,
+      name: store.ingredients[idx].name,
+      previousQty: prev,
+      newQty: store.ingredients[idx].quantity,
+      reason: notes || type || 'manual',
+    });
 
     return wrapResponse(store.ingredients[idx]);
   },
@@ -165,15 +174,15 @@ export const mockIngredientCategoriesApi = {
     return wrapResponse(items, items.length);
   },
 
-  async getById(id: number): Promise<ApiResponse<IngredientCategory>> {
+  async getById(documentId: string): Promise<ApiResponse<IngredientCategory>> {
     await mockDelay();
     const store = getStore();
-    const cat = store.ingredientCategories.find((c) => c.id === id);
+    const cat = store.ingredientCategories.find((c) => c.documentId === documentId);
     if (!cat) throw { status: 404, name: 'NotFoundError', message: 'Ingredient category not found' };
     // Attach ingredients
     const withIngredients = {
       ...cat,
-      ingredients: store.ingredients.filter((i) => i.category?.id === id),
+      ingredients: store.ingredients.filter((i) => i.category?.id === cat.id),
     };
     return wrapResponse(withIngredients);
   },
@@ -198,10 +207,10 @@ export const mockIngredientCategoriesApi = {
     return wrapResponse(cat);
   },
 
-  async update(id: number, data: Partial<IngredientCategoryInput>): Promise<ApiResponse<IngredientCategory>> {
+  async update(documentId: string, data: Partial<IngredientCategoryInput>): Promise<ApiResponse<IngredientCategory>> {
     await mockDelay();
     const store = getStore();
-    const idx = store.ingredientCategories.findIndex((c) => c.id === id);
+    const idx = store.ingredientCategories.findIndex((c) => c.documentId === documentId);
     if (idx === -1) throw { status: 404, name: 'NotFoundError', message: 'Ingredient category not found' };
 
     store.ingredientCategories[idx] = {
@@ -213,10 +222,10 @@ export const mockIngredientCategoriesApi = {
     return wrapResponse(store.ingredientCategories[idx]);
   },
 
-  async delete(id: number): Promise<ApiResponse<IngredientCategory>> {
+  async delete(documentId: string): Promise<ApiResponse<IngredientCategory>> {
     await mockDelay();
     const store = getStore();
-    const idx = store.ingredientCategories.findIndex((c) => c.id === id);
+    const idx = store.ingredientCategories.findIndex((c) => c.documentId === documentId);
     if (idx === -1) throw { status: 404, name: 'NotFoundError', message: 'Ingredient category not found' };
     const [removed] = store.ingredientCategories.splice(idx, 1);
     return wrapResponse(removed);

@@ -36,7 +36,7 @@ export function useReceiveSupply() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, receivedBy }: { id: number; receivedBy: string }) =>
+    mutationFn: ({ id, receivedBy }: { id: string; receivedBy: string }) =>
       suppliesApi.receive(id, receivedBy),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: supplyKeys.lists() });
@@ -48,7 +48,7 @@ export function useCancelSupply() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) => suppliesApi.cancel(id),
+    mutationFn: (id: string) => suppliesApi.cancel(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: supplyKeys.lists() });
     },

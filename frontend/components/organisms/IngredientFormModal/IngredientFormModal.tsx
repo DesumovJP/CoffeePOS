@@ -158,7 +158,7 @@ export function IngredientFormModal({
 
       try {
         if (isEditMode && ingredient) {
-          await ingredientsApi.update(ingredient.id, data);
+          await ingredientsApi.update(ingredient.documentId, data);
         } else {
           await ingredientsApi.create(data);
         }
@@ -176,18 +176,14 @@ export function IngredientFormModal({
   );
 
   const footer = (
-    <div className={styles.footer}>
-      <Button variant="ghost" onClick={onClose} disabled={isSubmitting}>
-        Скасувати
-      </Button>
-      <Button
-        variant="primary"
-        onClick={handleSubmit as any}
-        loading={isSubmitting}
-      >
-        {isEditMode ? 'Зберегти' : 'Створити'}
-      </Button>
-    </div>
+    <Button
+      variant="primary"
+      onClick={handleSubmit as any}
+      loading={isSubmitting}
+      fullWidth
+    >
+      {isEditMode ? 'Зберегти' : 'Створити'}
+    </Button>
   );
 
   return (

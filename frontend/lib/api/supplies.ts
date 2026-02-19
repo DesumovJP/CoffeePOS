@@ -73,15 +73,15 @@ export const suppliesApi = {
     return apiClient.post<Supply>('/supplies', { data });
   },
 
-  async update(id: number, data: Partial<SupplyCreateData & { status: SupplyStatus }>): Promise<ApiResponse<Supply>> {
-    return apiClient.put<Supply>(`/supplies/${id}`, { data });
+  async update(documentId: string, data: Partial<SupplyCreateData & { status: SupplyStatus }>): Promise<ApiResponse<Supply>> {
+    return apiClient.put<Supply>(`/supplies/${documentId}`, { data });
   },
 
-  async receive(id: number, receivedBy: string): Promise<ApiResponse<Supply>> {
-    return apiClient.post<Supply>(`/supplies/${id}/receive`, { data: { receivedBy } });
+  async receive(documentId: string, receivedBy: string): Promise<ApiResponse<Supply>> {
+    return apiClient.post<Supply>(`/supplies/${documentId}/receive`, { data: { receivedBy } });
   },
 
-  async cancel(id: number): Promise<ApiResponse<Supply>> {
-    return apiClient.put<Supply>(`/supplies/${id}`, { data: { status: 'cancelled' } });
+  async cancel(documentId: string): Promise<ApiResponse<Supply>> {
+    return apiClient.put<Supply>(`/supplies/${documentId}`, { data: { status: 'cancelled' } });
   },
 };

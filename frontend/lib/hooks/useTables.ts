@@ -19,7 +19,7 @@ export const tableKeys = {
   lists: () => [...tableKeys.all, 'list'] as const,
   list: (params: GetTablesParams) => [...tableKeys.lists(), params] as const,
   details: () => [...tableKeys.all, 'detail'] as const,
-  detail: (id: number) => [...tableKeys.details(), id] as const,
+  detail: (id: string) => [...tableKeys.details(), id] as const,
 };
 
 // ============================================
@@ -40,7 +40,7 @@ export function useTables(params: GetTablesParams = {}) {
 /**
  * Hook to fetch a single table by ID
  */
-export function useTable(id: number) {
+export function useTable(id: string) {
   return useQuery({
     queryKey: tableKeys.detail(id),
     queryFn: () => tablesApi.getById(id),
@@ -74,7 +74,7 @@ export function useUpdateTable() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<CafeTableInput> }) =>
+    mutationFn: ({ id, data }: { id: string; data: Partial<CafeTableInput> }) =>
       tablesApi.update(id, data),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: tableKeys.detail(id) });
@@ -90,7 +90,7 @@ export function useDeleteTable() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) => tablesApi.delete(id),
+    mutationFn: (id: string) => tablesApi.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: tableKeys.lists() });
     },

@@ -19,7 +19,7 @@ import styles from './ModifierGroupFormModal.module.css';
 
 interface ModifierRow {
   id: string;
-  existingId?: number; // Strapi ID if editing existing
+  existingDocumentId?: string; // Strapi documentId if editing existing
   name: string;
   price: number;
   isDefault: boolean;
@@ -80,7 +80,7 @@ export function ModifierGroupFormModal({
         setModifierRows(
           (group.modifiers || []).map((mod) => ({
             id: generateModRowId(),
-            existingId: mod.id,
+            existingDocumentId: mod.documentId,
             name: mod.name,
             price: mod.price,
             isDefault: mod.isDefault,
@@ -114,7 +114,7 @@ export function ModifierGroupFormModal({
   }, []);
 
   const updateModifierRow = useCallback(
-    (rowId: string, field: keyof Omit<ModifierRow, 'id' | 'existingId'>, value: string | number | boolean) => {
+    (rowId: string, field: keyof Omit<ModifierRow, 'id' | 'existingDocumentId'>, value: string | number | boolean) => {
       setModifierRows((prev) =>
         prev.map((r) => (r.id === rowId ? { ...r, [field]: value } : r))
       );
@@ -147,7 +147,7 @@ export function ModifierGroupFormModal({
       let groupId: number;
 
       if (isEditing && group) {
-        await modifierGroupsApi.update(group.id, groupPayload);
+        await modifierGroupsApi.update(group.documentId, groupPayload);
         groupId = group.id;
       } else {
         const result = await modifierGroupsApi.create(groupPayload);
@@ -159,12 +159,12 @@ export function ModifierGroupFormModal({
 
       // If editing, delete modifiers that were removed
       if (isEditing && group?.modifiers) {
-        const remainingIds = new Set(
-          validModifiers.filter((r) => r.existingId).map((r) => r.existingId)
+        const remainingDocIds = new Set(
+          validModifiers.filter((r) => r.existingDocumentId).map((r) => r.existingDocumentId)
         );
         for (const existingMod of group.modifiers) {
-          if (!remainingIds.has(existingMod.id)) {
-            await modifiersApi.delete(existingMod.id);
+          if (!remainingDocIds.has(existingMod.documentId)) {
+            await modifiersApi.delete(existingMod.documentId);
           }
         }
       }
@@ -181,8 +181,8 @@ export function ModifierGroupFormModal({
           modifierGroup: groupId,
         };
 
-        if (row.existingId) {
-          await modifiersApi.update(row.existingId, modPayload);
+        if (row.existingDocumentId) {
+          await modifiersApi.update(row.existingDocumentId, modPayload);
         } else {
           await modifiersApi.create(modPayload);
         }
@@ -199,21 +199,16 @@ export function ModifierGroupFormModal({
   };
 
   const footer = (
-    <>
-      <Button variant="secondary" size="lg" onClick={onClose} disabled={submitting}>
-        Скасувати
-      </Button>
-      <Button
-        variant="primary"
-        size="lg"
-        onClick={handleSubmit}
-        loading={submitting}
-        fullWidth
-      >
-        <Icon name="check" size="md" />
-        {isEditing ? 'Зберегти' : 'Створити'}
-      </Button>
-    </>
+    <Button
+      variant="primary"
+      size="lg"
+      onClick={handleSubmit}
+      loading={submitting}
+      fullWidth
+    >
+      <Icon name="check" size="md" />
+      {isEditing ? 'Зберегти' : 'Створити'}
+    </Button>
   );
 
   return (

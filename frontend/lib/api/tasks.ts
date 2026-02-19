@@ -24,6 +24,7 @@ export interface Task {
   type: TaskType;
   completedAt?: string;
   completedBy?: string;
+  createdBy?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -36,6 +37,7 @@ export interface TaskCreateData {
   assignedTo?: string;
   dueDate?: string;
   type?: TaskType;
+  createdBy?: string;
 }
 
 export interface TaskUpdateData {
@@ -55,6 +57,8 @@ export interface GetTasksParams {
   priority?: TaskPriority;
   type?: TaskType;
   sort?: string;
+  assignedTo?: string;
+  search?: string;
 }
 
 // ============================================
@@ -78,27 +82,34 @@ export const tasksApi = {
     if (params.type) {
       queryParams['filters[type][$eq]'] = params.type;
     }
+    if (params.assignedTo) {
+      queryParams['filters[assignedTo][$eq]'] = params.assignedTo;
+    }
+    if (params.search) {
+      queryParams['filters[$or][0][title][$containsi]'] = params.search;
+      queryParams['filters[$or][1][description][$containsi]'] = params.search;
+    }
 
     return apiClient.get<Task[]>('/tasks', queryParams);
   },
 
-  async getById(id: number): Promise<ApiResponse<Task>> {
-    return apiClient.get<Task>(`/tasks/${id}`);
+  async getById(documentId: string): Promise<ApiResponse<Task>> {
+    return apiClient.get<Task>(`/tasks/${documentId}`);
   },
 
   async create(data: TaskCreateData): Promise<ApiResponse<Task>> {
     return apiClient.post<Task>('/tasks', { data });
   },
 
-  async update(id: number, data: TaskUpdateData): Promise<ApiResponse<Task>> {
-    return apiClient.put<Task>(`/tasks/${id}`, { data });
+  async update(documentId: string, data: TaskUpdateData): Promise<ApiResponse<Task>> {
+    return apiClient.put<Task>(`/tasks/${documentId}`, { data });
   },
 
-  async complete(id: number, completedBy: string): Promise<ApiResponse<Task>> {
-    return apiClient.post<Task>(`/tasks/${id}/complete`, { data: { completedBy } });
+  async complete(documentId: string, completedBy: string): Promise<ApiResponse<Task>> {
+    return apiClient.post<Task>(`/tasks/${documentId}/complete`, { data: { completedBy } });
   },
 
-  async delete(id: number): Promise<ApiResponse<Task>> {
-    return apiClient.delete<Task>(`/tasks/${id}`);
+  async delete(documentId: string): Promise<ApiResponse<Task>> {
+    return apiClient.delete<Task>(`/tasks/${documentId}`);
   },
 };

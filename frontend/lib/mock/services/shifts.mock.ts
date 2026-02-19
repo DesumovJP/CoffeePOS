@@ -6,6 +6,7 @@ import type { ApiResponse } from '@/lib/api/client';
 import type { Shift, ShiftOpenData, ShiftCloseData, GetShiftsParams } from '@/lib/api/shifts';
 import { getStore } from '../store';
 import { mockDelay, wrapResponse, generateDocumentId, nowISO } from '../helpers';
+import { logActivity } from '../activity-logger';
 
 export const mockShiftsApi = {
   async getCurrent(): Promise<ApiResponse<Shift | null>> {
@@ -37,14 +38,21 @@ export const mockShiftsApi = {
     };
 
     store.currentShift = shift;
+
+    logActivity('shift_open', {
+      shiftId: shift.id,
+      openedBy: shift.openedBy,
+      openingCash: shift.openingCash,
+    });
+
     return wrapResponse(shift);
   },
 
-  async close(id: number, data: ShiftCloseData): Promise<ApiResponse<Shift>> {
+  async close(documentId: string, data: ShiftCloseData): Promise<ApiResponse<Shift>> {
     await mockDelay();
     const store = getStore();
 
-    if (!store.currentShift || store.currentShift.id !== id) {
+    if (!store.currentShift || store.currentShift.documentId !== documentId) {
       throw { status: 404, name: 'NotFoundError', message: 'Shift not found or not open' };
     }
 
@@ -61,6 +69,14 @@ export const mockShiftsApi = {
 
     store.closedShifts.unshift(closedShift);
     store.currentShift = null;
+
+    logActivity('shift_close', {
+      shiftId: closedShift.id,
+      closedBy: closedShift.closedBy,
+      closingCash: closedShift.closingCash,
+      totalSales: closedShift.totalSales,
+      ordersCount: closedShift.ordersCount,
+    });
 
     return wrapResponse(closedShift);
   },
@@ -81,12 +97,12 @@ export const mockShiftsApi = {
     return wrapResponse(items, items.length);
   },
 
-  async getById(id: number): Promise<ApiResponse<Shift>> {
+  async getById(documentId: string): Promise<ApiResponse<Shift>> {
     await mockDelay();
     const store = getStore();
-    const shift = store.currentShift?.id === id
+    const shift = store.currentShift?.documentId === documentId
       ? store.currentShift
-      : store.closedShifts.find((s) => s.id === id);
+      : store.closedShifts.find((s) => s.documentId === documentId);
 
     if (!shift) throw { status: 404, name: 'NotFoundError', message: 'Shift not found' };
     return wrapResponse(shift);

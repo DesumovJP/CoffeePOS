@@ -24,3 +24,6 @@ export * from './CategoryFormModal';
 export * from './IngredientFormModal';
 export * from './ReceiptTemplate';
 export * from './ErrorBoundary';
+export * from './EmployeeFormModal';
+export * from './EmployeeDetailModal';
+export * from './TaskFormModal';

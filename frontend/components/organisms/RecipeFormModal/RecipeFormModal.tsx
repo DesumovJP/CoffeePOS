@@ -175,7 +175,7 @@ export function RecipeFormModal({
 
     try {
       if (isEditing && recipe) {
-        await recipesApi.update(recipe.id, payload);
+        await recipesApi.update(recipe.documentId, payload);
       } else {
         await recipesApi.create(payload);
       }
@@ -190,21 +190,16 @@ export function RecipeFormModal({
   };
 
   const footer = (
-    <>
-      <Button variant="secondary" size="lg" onClick={onClose} disabled={submitting}>
-        Скасувати
-      </Button>
-      <Button
-        variant="primary"
-        size="lg"
-        onClick={handleSubmit}
-        loading={submitting}
-        fullWidth
-      >
-        <Icon name="check" size="md" />
-        {isEditing ? 'Зберегти' : 'Створити'}
-      </Button>
-    </>
+    <Button
+      variant="primary"
+      size="lg"
+      onClick={handleSubmit}
+      loading={submitting}
+      fullWidth
+    >
+      <Icon name="check" size="md" />
+      {isEditing ? 'Зберегти' : 'Створити'}
+    </Button>
   );
 
   return (

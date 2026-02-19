@@ -155,7 +155,7 @@ export function ProductFormModal({
 
       try {
         if (isEditMode && product) {
-          await productsApi.update(product.id, data);
+          await productsApi.update(product.documentId, data);
         } else {
           await productsApi.create(data);
         }
@@ -173,18 +173,14 @@ export function ProductFormModal({
   );
 
   const footer = (
-    <div className={styles.footer}>
-      <Button variant="ghost" onClick={onClose} disabled={isSubmitting}>
-        Скасувати
-      </Button>
-      <Button
-        variant="primary"
-        onClick={handleSubmit as any}
-        loading={isSubmitting}
-      >
-        {isEditMode ? 'Зберегти' : 'Створити'}
-      </Button>
-    </div>
+    <Button
+      variant="primary"
+      onClick={handleSubmit as any}
+      loading={isSubmitting}
+      fullWidth
+    >
+      {isEditMode ? 'Зберегти' : 'Створити'}
+    </Button>
   );
 
   return (

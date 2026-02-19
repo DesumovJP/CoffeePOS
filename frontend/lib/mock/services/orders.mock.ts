@@ -15,6 +15,7 @@ import type {
 import type { GetOrdersParams, CreateOrderPayload } from '@/lib/api/orders';
 import { getStore } from '../store';
 import { mockDelay, wrapResponse, generateDocumentId, nowISO } from '../helpers';
+import { logActivity } from '../activity-logger';
 
 export const mockOrdersApi = {
   async getAll(params: GetOrdersParams = {}): Promise<ApiResponse<Order[]>> {
@@ -45,9 +46,9 @@ export const mockOrdersApi = {
     return wrapResponse(items, items.length);
   },
 
-  async getById(id: number): Promise<ApiResponse<Order>> {
+  async getById(documentId: string): Promise<ApiResponse<Order>> {
     await mockDelay();
-    const order = getStore().orders.find((o) => o.id === id);
+    const order = getStore().orders.find((o) => o.documentId === documentId);
     if (!order) throw { status: 404, name: 'NotFoundError', message: 'Order not found' };
     return wrapResponse(order);
   },
@@ -133,13 +134,21 @@ export const mockOrdersApi = {
       }
     }
 
+    logActivity('order_create', {
+      orderId: order.id,
+      orderNumber: order.orderNumber,
+      total: order.total,
+      itemCount: orderItems.length,
+      paymentMethod: payment?.method || 'cash',
+    });
+
     return wrapResponse(order);
   },
 
-  async updateStatus(id: number, status: OrderStatus): Promise<ApiResponse<Order>> {
+  async updateStatus(documentId: string, status: OrderStatus): Promise<ApiResponse<Order>> {
     await mockDelay();
     const store = getStore();
-    const idx = store.orders.findIndex((o) => o.id === id);
+    const idx = store.orders.findIndex((o) => o.documentId === documentId);
     if (idx === -1) throw { status: 404, name: 'NotFoundError', message: 'Order not found' };
 
     const now = nowISO();
@@ -148,22 +157,43 @@ export const mockOrdersApi = {
     if (status === 'completed') update.completedAt = now;
     if (status === 'ready') update.preparedAt = now;
 
+    const previousStatus = store.orders[idx].status;
     store.orders[idx] = { ...store.orders[idx], ...update };
+
+    logActivity('order_status', {
+      orderId: store.orders[idx].id,
+      orderNumber: store.orders[idx].orderNumber,
+      from: previousStatus,
+      to: status,
+    });
+
     return wrapResponse(store.orders[idx]);
   },
 
-  async update(id: number, data: Partial<OrderInput>): Promise<ApiResponse<Order>> {
+  async update(documentId: string, data: Partial<OrderInput>): Promise<ApiResponse<Order>> {
     await mockDelay();
     const store = getStore();
-    const idx = store.orders.findIndex((o) => o.id === id);
+    const idx = store.orders.findIndex((o) => o.documentId === documentId);
     if (idx === -1) throw { status: 404, name: 'NotFoundError', message: 'Order not found' };
 
     store.orders[idx] = { ...store.orders[idx], ...data, updatedAt: nowISO() } as Order;
     return wrapResponse(store.orders[idx]);
   },
 
-  async cancel(id: number): Promise<ApiResponse<Order>> {
-    return this.updateStatus(id, 'cancelled');
+  async cancel(documentId: string): Promise<ApiResponse<Order>> {
+    const store = getStore();
+    const order = store.orders.find((o) => o.documentId === documentId);
+    const result = await this.updateStatus(documentId, 'cancelled');
+
+    if (order) {
+      logActivity('order_cancel', {
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+        reason: 'Скасовано',
+      });
+    }
+
+    return result;
   },
 
   async getCountByStatus(): Promise<Record<OrderStatus, number>> {
@@ -180,11 +210,11 @@ export const mockOrdersApi = {
 };
 
 export const mockOrderItemsApi = {
-  async updateStatus(id: number, status: OrderItemInput['status']): Promise<ApiResponse<OrderItem>> {
+  async updateStatus(documentId: string, status: OrderItemInput['status']): Promise<ApiResponse<OrderItem>> {
     await mockDelay();
     const store = getStore();
     for (const order of store.orders) {
-      const item = order.items?.find((i) => i.id === id);
+      const item = order.items?.find((i) => i.documentId === documentId);
       if (item) {
         const updated = { ...item, status: status || 'pending', updatedAt: nowISO() };
         const idx = order.items!.indexOf(item);
@@ -195,11 +225,11 @@ export const mockOrderItemsApi = {
     throw { status: 404, name: 'NotFoundError', message: 'Order item not found' };
   },
 
-  async update(id: number, data: Partial<OrderItemInput>): Promise<ApiResponse<OrderItem>> {
+  async update(documentId: string, data: Partial<OrderItemInput>): Promise<ApiResponse<OrderItem>> {
     await mockDelay();
     const store = getStore();
     for (const order of store.orders) {
-      const item = order.items?.find((i) => i.id === id);
+      const item = order.items?.find((i) => i.documentId === documentId);
       if (item) {
         const updated = { ...item, ...data, updatedAt: nowISO() } as OrderItem;
         const idx = order.items!.indexOf(item);
@@ -210,11 +240,11 @@ export const mockOrderItemsApi = {
     throw { status: 404, name: 'NotFoundError', message: 'Order item not found' };
   },
 
-  async delete(id: number): Promise<ApiResponse<OrderItem>> {
+  async delete(documentId: string): Promise<ApiResponse<OrderItem>> {
     await mockDelay();
     const store = getStore();
     for (const order of store.orders) {
-      const idx = order.items?.findIndex((i) => i.id === id) ?? -1;
+      const idx = order.items?.findIndex((i) => i.documentId === documentId) ?? -1;
       if (idx !== -1) {
         const [removed] = order.items!.splice(idx, 1);
         return wrapResponse(removed);
@@ -244,7 +274,7 @@ export const mockPaymentsApi = {
     return wrapResponse(payment);
   },
 
-  async process(orderId: number, paymentData: Omit<PaymentInput, 'order'>): Promise<ApiResponse<Payment>> {
+  async process(orderDocumentId: string, paymentData: Omit<PaymentInput, 'order'>): Promise<ApiResponse<Payment>> {
     await mockDelay();
     const store = getStore();
     const now = nowISO();
@@ -263,7 +293,7 @@ export const mockPaymentsApi = {
     };
 
     // Attach payment to order
-    const order = store.orders.find((o) => o.id === orderId);
+    const order = store.orders.find((o) => o.documentId === orderDocumentId);
     if (order) {
       order.payment = payment;
     }
@@ -271,11 +301,11 @@ export const mockPaymentsApi = {
     return wrapResponse(payment);
   },
 
-  async refund(id: number, reason?: string): Promise<ApiResponse<Payment>> {
+  async refund(documentId: string, reason?: string): Promise<ApiResponse<Payment>> {
     await mockDelay();
     const store = getStore();
     for (const order of store.orders) {
-      if (order.payment?.id === id) {
+      if (order.payment?.documentId === documentId) {
         order.payment = {
           ...order.payment,
           status: 'refunded',
@@ -288,9 +318,9 @@ export const mockPaymentsApi = {
     throw { status: 404, name: 'NotFoundError', message: 'Payment not found' };
   },
 
-  async getByOrderId(orderId: number): Promise<ApiResponse<Payment[]>> {
+  async getByOrderId(orderDocumentId: string): Promise<ApiResponse<Payment[]>> {
     await mockDelay();
-    const order = getStore().orders.find((o) => o.id === orderId);
+    const order = getStore().orders.find((o) => o.documentId === orderDocumentId);
     const payments = order?.payment ? [order.payment] : [];
     return wrapResponse(payments, payments.length);
   },

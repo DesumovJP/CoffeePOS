@@ -27,6 +27,7 @@ type TableStatus = 'free' | 'occupied' | 'waiting';
 
 interface TableWithStatus {
   id: number;
+  documentId: string;
   number: number;
   seats: number;
   zone?: string;
@@ -51,6 +52,7 @@ function deriveTableStatus(table: CafeTable, activeOrders: Order[]): TableWithSt
     const status: TableStatus = tableOrder.status === 'ready' ? 'waiting' : 'occupied';
     return {
       id: table.id,
+      documentId: table.documentId,
       number: table.number,
       seats: table.seats,
       zone: table.zone,
@@ -65,6 +67,7 @@ function deriveTableStatus(table: CafeTable, activeOrders: Order[]): TableWithSt
 
   return {
     id: table.id,
+    documentId: table.documentId,
     number: table.number,
     seats: table.seats,
     zone: table.zone,
@@ -106,7 +109,7 @@ export default function TablesPage() {
   // CRUD state
   const [formOpen, setFormOpen] = useState(false);
   const [editingTable, setEditingTable] = useState<CafeTable | null>(null);
-  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   const queryClient = useQueryClient();
   const { data: tables, isLoading: tablesLoading } = useTables();
@@ -151,7 +154,7 @@ export default function TablesPage() {
     // Build a CafeTable-like object from TableWithStatus for the form
     const cafeTable: CafeTable = {
       id: tableWithStatus.id,
-      documentId: '',
+      documentId: tableWithStatus.documentId,
       number: tableWithStatus.number,
       seats: tableWithStatus.seats,
       zone: tableWithStatus.zone,
@@ -165,9 +168,9 @@ export default function TablesPage() {
     setSelectedTable(null);
   }, []);
 
-  const handleDeleteTable = useCallback(async (id: number) => {
+  const handleDeleteTable = useCallback(async (documentId: string) => {
     try {
-      await deleteTable.mutateAsync(id);
+      await deleteTable.mutateAsync(documentId);
       setDeleteConfirmId(null);
       setSelectedTable(null);
     } catch {
@@ -273,7 +276,7 @@ export default function TablesPage() {
                         variant="ghost"
                         size="xs"
                         className={styles.quickAction}
-                        onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(table.id); }}
+                        onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(table.documentId); }}
                       >
                         <Icon name="close" size="xs" />
                       </Button>
@@ -378,7 +381,7 @@ export default function TablesPage() {
                       fullWidth
                       onClick={() => {
                         setSelectedTable(null);
-                        setDeleteConfirmId(selectedTable.id);
+                        setDeleteConfirmId(selectedTable.documentId);
                       }}
                     >
                       <Icon name="close" size="sm" />
@@ -413,24 +416,15 @@ export default function TablesPage() {
         variant="error"
         size="sm"
         footer={
-          <>
-            <Button
-              variant="secondary"
-              size="lg"
-              onClick={() => setDeleteConfirmId(null)}
-            >
-              Скасувати
-            </Button>
-            <Button
-              variant="danger"
-              size="lg"
-              loading={deleteTable.isPending}
-              onClick={() => deleteConfirmId && handleDeleteTable(deleteConfirmId)}
-            >
-              <Icon name="close" size="sm" />
-              Видалити
-            </Button>
-          </>
+          <Button
+            variant="danger"
+            size="lg"
+            loading={deleteTable.isPending}
+            onClick={() => deleteConfirmId && handleDeleteTable(deleteConfirmId)}
+            fullWidth
+          >
+            Видалити
+          </Button>
         }
       />
     </div>

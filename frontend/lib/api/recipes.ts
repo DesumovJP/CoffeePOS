@@ -69,11 +69,11 @@ export const recipesApi = {
     return apiClient.post<ApiRecipe>('/recipes', { data });
   },
 
-  async update(id: number, data: Partial<ApiRecipeInput>): Promise<ApiResponse<ApiRecipe>> {
-    return apiClient.put<ApiRecipe>(`/recipes/${id}`, { data });
+  async update(documentId: string, data: Partial<ApiRecipeInput>): Promise<ApiResponse<ApiRecipe>> {
+    return apiClient.put<ApiRecipe>(`/recipes/${documentId}`, { data });
   },
 
-  async delete(id: number): Promise<ApiResponse<ApiRecipe>> {
-    return apiClient.delete<ApiRecipe>(`/recipes/${id}`);
+  async delete(documentId: string): Promise<ApiResponse<ApiRecipe>> {
+    return apiClient.delete<ApiRecipe>(`/recipes/${documentId}`);
   },
 };

@@ -43,6 +43,10 @@ export interface OrderSummaryProps extends HTMLAttributes<HTMLDivElement> {
   compact?: boolean;
   /** Loading state */
   loading?: boolean;
+  /** Mobile collapsed state */
+  collapsed?: boolean;
+  /** Toggle collapsed/expanded on mobile */
+  onToggle?: () => void;
   /** Callback when item quantity changes */
   onQuantityChange?: (itemId: string, quantity: number) => void;
   /** Callback when item is removed */
@@ -89,6 +93,8 @@ export const OrderSummary = forwardRef<HTMLDivElement, OrderSummaryProps>(
       showTax = false,
       compact = false,
       loading = false,
+      collapsed = false,
+      onToggle,
       onQuantityChange,
       onRemoveItem,
       onEditItem,
@@ -135,6 +141,28 @@ export const OrderSummary = forwardRef<HTMLDivElement, OrderSummaryProps>(
 
     return (
       <div ref={ref} className={classNames} {...props}>
+        {/* Mobile drag handle + collapsed summary */}
+        <div className={styles.mobileHandle} onClick={onToggle} role="button" tabIndex={0} aria-label={collapsed ? 'Розгорнути кошик' : 'Згорнути кошик'}>
+          <div className={styles.handlePill} />
+          {collapsed && !isEmpty && (
+            <div className={styles.handleSummary}>
+              <div className={styles.handleInfo}>
+                <Icon name="cart" size="sm" color="secondary" />
+                <span className={styles.handleCount}>{itemCount} поз.</span>
+                <span className={styles.handleDot}>·</span>
+                <span className={styles.handleTotal}>{formatPrice(total, currency)}</span>
+              </div>
+              <button
+                type="button"
+                className={styles.handlePayBtn}
+                onClick={(e) => { e.stopPropagation(); onCheckout?.(); }}
+              >
+                Оплата
+              </button>
+            </div>
+          )}
+        </div>
+
         {/* Header */}
         <div className={styles.header}>
           <div className={styles.headerInfo}>

@@ -1,7 +1,7 @@
 /**
  * Drawer Component Styles
  *
- * Glass slide-out navigation with warm brand
+ * Clean, minimal slide-out navigation
  */
 
 /* ============================================
@@ -12,9 +12,9 @@
   position: fixed;
   inset: 0;
   z-index: var(--z-overlay);
-  background-color: var(--overlay-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   animation: fadeIn var(--duration-fast) var(--ease-out);
 }
 
@@ -37,56 +37,30 @@
   display: flex;
   flex-direction: column;
   background: var(--bg-primary);
-  border-right: 1px solid var(--glass-border);
   box-shadow: var(--shadow-modal);
-  animation: slideInLeft var(--duration-normal) var(--ease-spring);
+  animation: slideInLeft var(--duration-normal) var(--ease-out);
 }
 
 @keyframes slideInLeft {
-  from {
-    transform: translateX(-100%);
-  }
-  to {
-    transform: translateX(0);
-  }
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
 }
 
 /* ============================================
-   BRAND
+   HEADER — minimal, just close button
    ============================================ */
 
-.brand {
+.header {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-4);
-  border-bottom: 1px solid var(--glass-border);
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
   flex-shrink: 0;
 }
 
-.brandLeft {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2-5);
-  flex: 1;
-  min-width: 0;
-}
-
-.logo {
-  width: 2.25rem;
-  height: 2.25rem;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--color-brand-subtle);
-  border-radius: var(--radius-lg);
-}
-
-.brandName {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.headerTitle {
+  opacity: 0.4;
+  letter-spacing: 0.05em;
 }
 
 /* ============================================
@@ -97,8 +71,8 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
-  padding: var(--space-3) var(--space-2);
+  gap: var(--space-5);
+  padding: var(--space-2) var(--space-3);
   overflow-y: auto;
   overflow-x: hidden;
 }
@@ -106,18 +80,13 @@
 .group {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
-}
-
-.group + .group {
-  margin-top: var(--space-3);
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--glass-border);
+  gap: 2px;
 }
 
 .groupLabel {
-  padding: 0 var(--space-2);
-  margin-bottom: var(--space-1);
+  padding: 0 var(--space-3);
+  margin-bottom: var(--space-2);
+  letter-spacing: 0.06em;
 }
 
 .items {
@@ -135,7 +104,7 @@
   position: relative;
   display: flex;
   align-items: center;
-  gap: var(--space-2-5);
+  gap: var(--space-3);
   width: 100%;
   height: 2.75rem;
   padding: 0 var(--space-3);
@@ -145,11 +114,12 @@
   cursor: pointer;
   color: var(--text-secondary);
   transition: all var(--duration-fast) var(--ease-default);
+  font-size: var(--text-sm);
 }
 
 .item:hover:not(.disabled) {
   color: var(--text-primary);
-  background: rgba(0, 0, 0, 0.04);
+  background: var(--bg-tertiary);
 }
 
 .item:focus-visible {
@@ -158,21 +128,13 @@
 }
 
 .item.active {
-  color: var(--color-brand);
-  background: var(--color-brand-subtle);
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
   font-weight: var(--font-medium);
 }
 
-.item.active::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 3px;
-  height: 1.25rem;
-  background: var(--color-brand);
-  border-radius: 0 var(--radius-full) var(--radius-full) 0;
+.item.active .itemIcon {
+  color: var(--color-brand);
 }
 
 .item.disabled {
@@ -215,18 +177,16 @@
 
 .footer {
   flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-3);
+  border-top: 1px solid var(--glass-border);
 }
 
 .userButton {
   display: flex;
   align-items: center;
-  gap: var(--space-2-5);
+  gap: var(--space-3);
   width: 100%;
-  padding: var(--space-2) var(--space-2);
+  padding: var(--space-2-5) var(--space-3);
   background: transparent;
   border: none;
   border-radius: var(--radius-lg);
@@ -235,11 +195,11 @@
 }
 
 .userButton:hover {
-  background: rgba(0, 0, 0, 0.04);
+  background: var(--bg-tertiary);
 }
 
 .userButton.active {
-  background: var(--color-brand-subtle);
+  background: var(--bg-tertiary);
 }
 
 .userInfo {
@@ -251,14 +211,13 @@
 }
 
 /* ============================================
-   REDUCED MOTION
+   SMALL SCREENS & REDUCED MOTION
    ============================================ */
 
-/* Full-width drawer on small screens */
 @media (max-width: 480px) {
   .drawer {
-    width: 100%;
-    border-right: none;
+    width: 80%;
+    max-width: 20rem;
   }
 }
 

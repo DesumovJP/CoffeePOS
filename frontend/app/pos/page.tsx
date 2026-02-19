@@ -6,7 +6,7 @@
  * Main point of sale interface
  */
 
-import { useState, useCallback, useMemo, useRef } from 'react';
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import {
   ProductGrid,
   OrderSummary,
@@ -116,6 +116,7 @@ function transformApiProduct(
   const sizes = recipesMap.get(product.id);
   return {
     id: String(product.id),
+    documentId: product.documentId,
     name: product.name,
     price: product.price,
     image: product.image?.url,
@@ -231,6 +232,15 @@ export default function POSPage() {
   // Keyboard shortcuts tooltip
   const [showShortcuts, setShowShortcuts] = useState(false);
 
+  // Mobile search (triggered from AppShell navbar search icon)
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+
+  useEffect(() => {
+    const handler = () => setMobileSearchOpen(true);
+    window.addEventListener('appshell:search', handler);
+    return () => window.removeEventListener('appshell:search', handler);
+  }, []);
+
   // Transform store items to OrderSummary format
   const orderItems: OrderItemData[] = useMemo(() => {
     if (!currentOrder) return [];
@@ -253,15 +263,33 @@ export default function POSPage() {
     return parts[parts.length - 1] || '---';
   }, [currentOrder]);
 
+  // Mobile cart drawer (collapsed/expanded)
+  const [cartExpanded, setCartExpanded] = useState(false);
+  const cartTouchStartY = useRef(0);
+
+  useEffect(() => {
+    if (orderItems.length === 0) setCartExpanded(false);
+  }, [orderItems.length]);
+
+  const handleCartTouchStart = useCallback((e: React.TouchEvent) => {
+    cartTouchStartY.current = e.touches[0].clientY;
+  }, []);
+
+  const handleCartTouchEnd = useCallback((e: React.TouchEvent) => {
+    const deltaY = e.changedTouches[0].clientY - cartTouchStartY.current;
+    if (deltaY > 40) setCartExpanded(false);
+    if (deltaY < -40) setCartExpanded(true);
+  }, []);
+
   // Handlers
   const handleProductAdd = useCallback(async (event: ProductAddEvent) => {
     const { product, size } = event;
 
     // Check if product has modifiers (not sizes)
-    if (product.hasModifiers) {
+    if (product.hasModifiers && product.documentId) {
       // Fetch product with modifiers on-demand
       try {
-        const response = await productsApi.getById(Number(product.id));
+        const response = await productsApi.getById(product.documentId);
         const apiProduct = response.data;
         if (apiProduct && apiProduct.modifierGroups && apiProduct.modifierGroups.length > 0) {
           setSelectedProductForModifier(transformToModifierProduct(apiProduct));
@@ -376,15 +404,6 @@ export default function POSPage() {
       description: 'Відкрити оплату',
     },
     {
-      key: 'F12',
-      action: () => {
-        if (orderItems.length > 0 && !isPaymentModalOpen) {
-          openPaymentModal();
-        }
-      },
-      description: 'Відкрити оплату',
-    },
-    {
       key: 'Escape',
       action: () => {
         if (isPaymentModalOpen) {
@@ -431,7 +450,7 @@ export default function POSPage() {
         {/* Main content */}
         <main className={styles.main}>
           {/* Product grid */}
-          <div className={styles.products}>
+          <div className={`${styles.products} ${orderItems.length === 0 ? styles.productsFullHeight : ''}`}>
             <ProductGrid
               products={products}
               categories={categories}
@@ -441,6 +460,8 @@ export default function POSPage() {
               onCategoryChange={setSelectedCategory}
               onSearchChange={setSearchQuery}
               loading={isLoading}
+              mobileSearchOpen={mobileSearchOpen}
+              onMobileSearchClose={() => setMobileSearchOpen(false)}
               headerExtra={
                 <div className={styles.shortcutsIndicator}>
                   <button
@@ -458,10 +479,6 @@ export default function POSPage() {
                       <div className={styles.shortcutsList}>
                         <div className={styles.shortcutItem}>
                           <kbd className={styles.kbd}>Enter</kbd>
-                          <Text variant="bodySmall" color="secondary">Відкрити оплату</Text>
-                        </div>
-                        <div className={styles.shortcutItem}>
-                          <kbd className={styles.kbd}>F12</kbd>
                           <Text variant="bodySmall" color="secondary">Відкрити оплату</Text>
                         </div>
                         <div className={styles.shortcutItem}>
@@ -485,10 +502,16 @@ export default function POSPage() {
           </div>
 
           {/* Order summary */}
-          <div className={styles.order}>
+          <div
+            className={`${styles.order} ${orderItems.length === 0 ? styles.orderEmpty : !cartExpanded ? styles.orderCollapsed : ''}`}
+            onTouchStart={handleCartTouchStart}
+            onTouchEnd={handleCartTouchEnd}
+          >
             <OrderSummary
               items={orderItems}
               orderNumber={orderNumber}
+              collapsed={!cartExpanded}
+              onToggle={() => setCartExpanded((v) => !v)}
               onQuantityChange={handleQuantityChange}
               onRemoveItem={handleRemoveItem}
               onClear={handleClearOrder}

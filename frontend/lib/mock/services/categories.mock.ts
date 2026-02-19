@@ -28,9 +28,9 @@ export const mockCategoriesApi = {
     return wrapResponse(items, items.length);
   },
 
-  async getById(id: number): Promise<ApiResponse<Category>> {
+  async getById(documentId: string): Promise<ApiResponse<Category>> {
     await mockDelay();
-    const category = getStore().categories.find((c) => c.id === id);
+    const category = getStore().categories.find((c) => c.documentId === documentId);
     if (!category) throw { status: 404, name: 'NotFoundError', message: 'Category not found' };
     return wrapResponse(category);
   },
@@ -64,10 +64,10 @@ export const mockCategoriesApi = {
     return wrapResponse(category);
   },
 
-  async update(id: number, data: Partial<CategoryInput>): Promise<ApiResponse<Category>> {
+  async update(documentId: string, data: Partial<CategoryInput>): Promise<ApiResponse<Category>> {
     await mockDelay();
     const store = getStore();
-    const idx = store.categories.findIndex((c) => c.id === id);
+    const idx = store.categories.findIndex((c) => c.documentId === documentId);
     if (idx === -1) throw { status: 404, name: 'NotFoundError', message: 'Category not found' };
 
     store.categories[idx] = {
@@ -80,20 +80,20 @@ export const mockCategoriesApi = {
     return wrapResponse(store.categories[idx]);
   },
 
-  async delete(id: number): Promise<ApiResponse<Category>> {
+  async delete(documentId: string): Promise<ApiResponse<Category>> {
     await mockDelay();
     const store = getStore();
-    const idx = store.categories.findIndex((c) => c.id === id);
+    const idx = store.categories.findIndex((c) => c.documentId === documentId);
     if (idx === -1) throw { status: 404, name: 'NotFoundError', message: 'Category not found' };
     const [removed] = store.categories.splice(idx, 1);
     return wrapResponse(removed);
   },
 
-  async reorder(orderedIds: number[]): Promise<void> {
+  async reorder(orderedIds: string[]): Promise<void> {
     await mockDelay();
     const store = getStore();
-    orderedIds.forEach((id, index) => {
-      const cat = store.categories.find((c) => c.id === id);
+    orderedIds.forEach((documentId, index) => {
+      const cat = store.categories.find((c) => c.documentId === documentId);
       if (cat) {
         cat.sortOrder = index;
         cat.updatedAt = nowISO();

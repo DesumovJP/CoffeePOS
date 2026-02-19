@@ -1,16 +1,16 @@
 'use client';
 
 /**
- * CoffeePOS - Orders History Page
+ * CoffeePOS - History Page (Історія)
  *
- * View and manage completed orders with accordion details
+ * Order history with date filters and search.
+ * Uses real orders API (/api/orders) for live mode.
  */
 
-import { useState, useMemo } from 'react';
-import { Text, GlassCard, Icon } from '@/components';
-import { SearchInput, CategoryTabs, type Category, OrderAccordion, type OrderData } from '@/components/molecules';
+import { useState, useMemo, useEffect, useCallback } from 'react';
+import { Text, GlassCard, Icon, Badge, Button } from '@/components';
+import { SearchInput, CategoryTabs, type Category } from '@/components/molecules';
 import { useOrders } from '@/lib/hooks';
-import type { Order, PaymentMethod } from '@/lib/api';
 import styles from './page.module.css';
 
 // ============================================
@@ -61,105 +61,106 @@ function formatDateGroup(dateStr: string): string {
   return date.toLocaleDateString('uk-UA', { weekday: 'long', day: 'numeric', month: 'long' });
 }
 
-function mapPaymentMethod(method?: PaymentMethod): 'cash' | 'card' | 'other' {
-  if (method === 'cash') return 'cash';
-  if (method === 'card') return 'card';
-  return 'other';
+function formatTime(ts: string): string {
+  return new Date(ts).toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
 }
 
-function orderToAccordionData(order: Order): OrderData {
-  return {
-    id: order.orderNumber,
-    items: (order.items || []).map((item) => ({
-      id: String(item.id),
-      name: item.productName,
-      price: item.unitPrice,
-      quantity: item.quantity,
-      modifiers: item.modifiers?.map((m) => ({
-        id: m.id,
-        name: m.name,
-        price: m.price,
-      })),
-    })),
-    createdAt: new Date(order.createdAt).getTime(),
-    status: order.status === 'completed' ? 'completed' : 'cancelled',
-    table: order.tableNumber,
-    customer: order.customerName,
-    paymentMethod: mapPaymentMethod(order.payment?.method),
-  };
+function formatCurrency(value: number): string {
+  return new Intl.NumberFormat('uk-UA', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value);
 }
 
-function calculateTotal(order: Order): number {
-  return order.total;
+const statusConfig: Record<string, { label: string; variant: 'success' | 'warning' | 'error' | 'default' }> = {
+  completed: { label: 'Готово', variant: 'success' },
+  preparing: { label: 'Готується', variant: 'warning' },
+  pending: { label: 'Очікує', variant: 'default' },
+  confirmed: { label: 'Підтверджено', variant: 'default' },
+  ready: { label: 'Готово', variant: 'success' },
+  cancelled: { label: 'Скасовано', variant: 'error' },
+};
+
+const paymentMethodLabel: Record<string, string> = {
+  cash: 'Готівка',
+  card: 'Картка',
+  qr: 'QR',
+};
+
+interface OrderGroup {
+  dateKey: string;
+  label: string;
+  orders: any[];
 }
 
-// Group orders by date
-function groupOrdersByDate(orders: Order[]): Map<string, Order[]> {
-  const groups = new Map<string, Order[]>();
+function groupOrdersByDate(orders: any[]): OrderGroup[] {
+  const groups = new Map<string, any[]>();
 
-  orders.forEach((order) => {
+  for (const order of orders) {
     const dateKey = new Date(order.createdAt).toDateString();
     if (!groups.has(dateKey)) {
       groups.set(dateKey, []);
     }
     groups.get(dateKey)!.push(order);
-  });
+  }
 
-  return groups;
+  return Array.from(groups.entries()).map(([dateKey, orders]) => ({
+    dateKey,
+    label: formatDateGroup(orders[0].createdAt),
+    orders,
+  }));
 }
 
 // ============================================
 // COMPONENT
 // ============================================
 
-export default function OrdersPage() {
+export default function HistoryPage() {
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
-  // Build API params from filters
+  useEffect(() => {
+    const handler = () => setMobileSearchOpen(true);
+    window.addEventListener('appshell:search', handler);
+    return () => window.removeEventListener('appshell:search', handler);
+  }, []);
+
+  const closeMobileSearch = useCallback(() => {
+    setMobileSearchOpen(false);
+    setSearchQuery('');
+  }, []);
+
   const dateRange = useMemo(() => getDateRange(selectedFilter), [selectedFilter]);
 
-  const { data: orders, isLoading } = useOrders({
-    status: ['completed', 'cancelled'],
-    sort: 'createdAt:desc',
+  const { data: orders = [], isLoading } = useOrders({
     ...dateRange,
+    pageSize: 100,
   });
 
-  // Client-side search filter
+  // Client-side search filter (by order number)
   const filteredOrders = useMemo(() => {
-    if (!orders) return [];
-
     if (!searchQuery.trim()) return orders;
-
-    const query = searchQuery.toLowerCase();
+    const q = searchQuery.toLowerCase().trim();
     return orders.filter(
-      (o) =>
-        o.orderNumber.toLowerCase().includes(query) ||
-        o.customerName?.toLowerCase().includes(query) ||
-        o.items?.some((i) => i.productName.toLowerCase().includes(query))
+      (o: any) =>
+        (o.orderNumber || '').toLowerCase().includes(q) ||
+        String(o.total || '').includes(q)
     );
   }, [orders, searchQuery]);
 
-  // Group filtered orders by date
-  const groupedOrders = useMemo(() => {
-    return groupOrdersByDate(filteredOrders);
-  }, [filteredOrders]);
+  const grouped = useMemo(() => groupOrdersByDate(filteredOrders), [filteredOrders]);
 
-  // Calculate summary stats
+  // Summary stats
   const summary = useMemo(() => {
-    const completed = filteredOrders.filter((o) => o.status === 'completed');
-    const totalRevenue = completed.reduce((sum, o) => sum + calculateTotal(o), 0);
+    const completedOrders = filteredOrders.filter((o: any) => o.status === 'completed');
+    const totalRevenue = completedOrders.reduce((s: number, o: any) => s + (parseFloat(o.total) || 0), 0);
     return {
       count: filteredOrders.length,
-      completedCount: completed.length,
+      ordersCount: completedOrders.length,
       totalRevenue,
     };
   }, [filteredOrders]);
-
-  const toggleOrder = (orderId: string) => {
-    setExpandedOrderId(expandedOrderId === orderId ? null : orderId);
-  };
 
   return (
     <div className={styles.page}>
@@ -168,6 +169,29 @@ export default function OrdersPage() {
         <div className={styles.gradientOrb1} />
         <div className={styles.gradientOrb2} />
       </div>
+
+      {/* Mobile search bar */}
+      {mobileSearchOpen && (
+        <div className={styles.mobileSearchBar}>
+          <SearchInput
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="Пошук за номером замовлення..."
+            variant="glass"
+            autoFocus
+          />
+          <Button
+            variant="ghost"
+            size="sm"
+            iconOnly
+            onClick={closeMobileSearch}
+            aria-label="Закрити пошук"
+            className={styles.mobileSearchClose}
+          >
+            <Icon name="close" size="md" />
+          </Button>
+        </div>
+      )}
 
       {/* Toolbar */}
       <div className={styles.toolbar}>
@@ -178,23 +202,15 @@ export default function OrdersPage() {
           allLabel="Всі"
           onChange={(id) => setSelectedFilter(id || 'all')}
         />
-        <div className={styles.toolbarRight}>
-          <SearchInput
-            value={searchQuery}
-            onChange={setSearchQuery}
-            placeholder="Пошук..."
-            variant="glass"
-          />
-          <div className={styles.headerStats}>
-            <div className={styles.statItem}>
-              <Icon name="receipt" size="sm" color="accent" />
-              <Text variant="labelMedium" weight="semibold">{summary.count}</Text>
-            </div>
-            <div className={styles.statDivider} />
-            <div className={styles.statItem}>
-              <Icon name="cash" size="sm" color="success" />
-              <Text variant="labelMedium" weight="semibold">₴{summary.totalRevenue.toFixed(0)}</Text>
-            </div>
+        <div className={styles.headerStats}>
+          <div className={styles.statItem}>
+            <Icon name="cart" size="sm" color="accent" />
+            <Text variant="labelMedium" weight="semibold">{summary.ordersCount}</Text>
+          </div>
+          <div className={styles.statDivider} />
+          <div className={styles.statItem}>
+            <Icon name="cash" size="sm" color="success" />
+            <Text variant="labelMedium" weight="semibold">₴{formatCurrency(summary.totalRevenue)}</Text>
           </div>
         </div>
       </div>
@@ -212,39 +228,66 @@ export default function OrdersPage() {
           <GlassCard padding="xl" className={styles.emptyState}>
             <Icon name="search" size="2xl" color="tertiary" />
             <Text variant="bodyLarge" color="secondary">
-              Замовлення не знайдено
+              Замовлень не знайдено
             </Text>
             <Text variant="caption" color="tertiary">
               Спробуйте змінити фільтри або пошуковий запит
             </Text>
           </GlassCard>
         ) : (
-          Array.from(groupedOrders.entries()).map(([dateKey, dateOrders]) => (
-            <div key={dateKey} className={styles.dateGroup}>
+          grouped.map((group) => (
+            <div key={group.dateKey} className={styles.dateGroup}>
               <div className={styles.dateGroupHeader}>
                 <Text variant="labelMedium" weight="semibold" color="secondary">
-                  {formatDateGroup(dateOrders[0].createdAt)}
+                  {group.label}
                 </Text>
                 <Text variant="caption" color="tertiary">
-                  {dateOrders.length} зам. · ₴{dateOrders.filter((o) => o.status === 'completed').reduce((s, o) => s + calculateTotal(o), 0).toFixed(0)}
+                  {group.orders.length} зам.
                 </Text>
               </div>
               <div className={styles.dateGroupOrders}>
-                {dateOrders.map((order) => (
-                  <div key={order.id} className={styles.orderWrapper}>
-                    {order.status !== 'completed' && (
-                      <div className={`${styles.statusIndicator} ${styles[order.status]}`} />
-                    )}
-                    <OrderAccordion
-                      order={orderToAccordionData(order)}
-                      isExpanded={expandedOrderId === order.orderNumber}
-                      onToggle={() => toggleOrder(order.orderNumber)}
-                      showTable={true}
-                      showCustomer={true}
-                      showPaymentMethod={true}
-                    />
-                  </div>
-                ))}
+                {group.orders.map((order: any) => {
+                  const total = parseFloat(order.total) || 0;
+                  const status = statusConfig[order.status] || statusConfig.pending;
+                  const itemCount = order.items?.length || 0;
+                  const paymentMethod = order.payment?.method || order.paymentMethod;
+
+                  return (
+                    <div key={order.id || order.documentId} className={styles.activityItem}>
+                      <div className={styles.activityIcon}>
+                        <Icon name="receipt" size="sm" />
+                      </div>
+                      <div className={styles.activityContent}>
+                        <div className={styles.activityHeader}>
+                          <Text variant="labelMedium" weight="semibold">
+                            {order.orderNumber || `#${order.id}`}
+                          </Text>
+                          <Text variant="caption" color="tertiary">
+                            {formatTime(order.createdAt)}
+                          </Text>
+                        </div>
+                        <div className={styles.activityMeta}>
+                          <Text variant="bodySmall" weight="semibold">
+                            ₴{formatCurrency(total)}
+                          </Text>
+                          {itemCount > 0 && (
+                            <Text variant="bodySmall" color="secondary">
+                              · {itemCount} поз.
+                            </Text>
+                          )}
+                          {paymentMethod && (
+                            <Text variant="bodySmall" color="secondary">
+                              · {paymentMethodLabel[paymentMethod] || paymentMethod}
+                            </Text>
+                          )}
+                          <Badge variant={status.variant} size="sm">
+                            {status.label}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           ))

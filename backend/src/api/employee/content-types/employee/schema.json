@@ -1,0 +1,58 @@
+{
+  "kind": "collectionType",
+  "collectionName": "employees",
+  "info": {
+    "singularName": "employee",
+    "pluralName": "employees",
+    "displayName": "Employee",
+    "description": "Staff members of the cafe"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true,
+      "maxLength": 255
+    },
+    "email": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "phone": {
+      "type": "string",
+      "maxLength": 50
+    },
+    "role": {
+      "type": "enumeration",
+      "enum": ["owner", "manager", "barista"],
+      "required": true,
+      "default": "barista"
+    },
+    "position": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "isActive": {
+      "type": "boolean",
+      "default": true
+    },
+    "hireDate": {
+      "type": "date"
+    },
+    "salary": {
+      "type": "decimal",
+      "min": 0
+    },
+    "notes": {
+      "type": "text",
+      "maxLength": 2000
+    },
+    "cafe": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::cafe.cafe"
+    }
+  }
+}

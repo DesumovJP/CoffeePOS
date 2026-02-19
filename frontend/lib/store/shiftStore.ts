@@ -68,7 +68,7 @@ export const useShiftStore = create<ShiftState>()(
 
           set({ isShiftLoading: true, shiftError: null }, false, 'closeShift');
           try {
-            await shiftsApi.close(currentShift.id, { closingCash, closedBy, notes });
+            await shiftsApi.close(currentShift.documentId, { closingCash, closedBy, notes });
             set({ currentShift: null, isShiftLoading: false }, false, 'closeShift/success');
             return true;
           } catch (error: any) {

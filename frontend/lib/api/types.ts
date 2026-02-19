@@ -201,6 +201,7 @@ export interface Order extends StrapiEntity {
   preparedAt?: string;
   estimatedPrepTime?: number;
   priority: OrderPriority;
+  createdBy?: string;
 }
 
 export interface OrderInput {

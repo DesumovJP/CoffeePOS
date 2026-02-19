@@ -31,9 +31,9 @@ export const mockProductsApi = {
     return wrapResponse(items, items.length);
   },
 
-  async getById(id: number): Promise<ApiResponse<Product>> {
+  async getById(documentId: string): Promise<ApiResponse<Product>> {
     await mockDelay();
-    const product = getStore().products.find((p) => p.id === id);
+    const product = getStore().products.find((p) => p.documentId === documentId);
     if (!product) throw { status: 404, name: 'NotFoundError', message: 'Product not found' };
     return wrapResponse(product);
   },
@@ -84,10 +84,10 @@ export const mockProductsApi = {
     return wrapResponse(product);
   },
 
-  async update(id: number, data: Partial<ProductInput>): Promise<ApiResponse<Product>> {
+  async update(documentId: string, data: Partial<ProductInput>): Promise<ApiResponse<Product>> {
     await mockDelay();
     const store = getStore();
-    const idx = store.products.findIndex((p) => p.id === id);
+    const idx = store.products.findIndex((p) => p.documentId === documentId);
     if (idx === -1) throw { status: 404, name: 'NotFoundError', message: 'Product not found' };
 
     const existing = store.products[idx];
@@ -105,19 +105,19 @@ export const mockProductsApi = {
     return wrapResponse(store.products[idx]);
   },
 
-  async delete(id: number): Promise<ApiResponse<Product>> {
+  async delete(documentId: string): Promise<ApiResponse<Product>> {
     await mockDelay();
     const store = getStore();
-    const idx = store.products.findIndex((p) => p.id === id);
+    const idx = store.products.findIndex((p) => p.documentId === documentId);
     if (idx === -1) throw { status: 404, name: 'NotFoundError', message: 'Product not found' };
     const [removed] = store.products.splice(idx, 1);
     return wrapResponse(removed);
   },
 
-  async updateStock(id: number, quantity: number): Promise<ApiResponse<Product>> {
+  async updateStock(documentId: string, quantity: number): Promise<ApiResponse<Product>> {
     await mockDelay();
     const store = getStore();
-    const idx = store.products.findIndex((p) => p.id === id);
+    const idx = store.products.findIndex((p) => p.documentId === documentId);
     if (idx === -1) throw { status: 404, name: 'NotFoundError', message: 'Product not found' };
     store.products[idx] = { ...store.products[idx], stockQuantity: quantity, updatedAt: nowISO() };
     return wrapResponse(store.products[idx]);

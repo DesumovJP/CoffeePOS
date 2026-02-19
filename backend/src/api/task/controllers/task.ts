@@ -22,7 +22,7 @@ export default factories.createCoreController('api::task.task', ({ strapi }) => 
     }
 
     const task = await strapi.db.query('api::task.task').findOne({
-      where: { id },
+      where: { documentId: id },
     });
 
     if (!task) {
@@ -34,7 +34,7 @@ export default factories.createCoreController('api::task.task', ({ strapi }) => 
     }
 
     const updated = await strapi.db.query('api::task.task').update({
-      where: { id },
+      where: { documentId: id },
       data: {
         status: 'done',
         completedAt: new Date().toISOString(),

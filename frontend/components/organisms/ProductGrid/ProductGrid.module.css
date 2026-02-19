@@ -39,6 +39,31 @@
   max-width: 240px;
 }
 
+/* Mobile search bar (hidden by default, shown on mobile when active) */
+.mobileSearchBar {
+  display: none;
+}
+
+.mobileSearchClose {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all var(--duration-fast) var(--ease-default);
+}
+
+.mobileSearchClose:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
 @media (max-width: 1024px) {
   .headerRow {
     flex-direction: column;
@@ -50,6 +75,7 @@
   .searchWrapper {
     flex: none;
     width: 100%;
+    max-width: none;
   }
 }
 
@@ -99,6 +125,7 @@
   animation: skeleton 1.5s ease-in-out infinite;
 }
 
+
 @keyframes skeleton {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
@@ -123,6 +150,18 @@
 }
 
 /* ============================================
+   SIZE PICKER OVERLAY
+   ============================================ */
+
+.sizePickerBackdrop {
+  display: none;
+}
+
+.sizePickerPositioner {
+  position: absolute;
+}
+
+/* ============================================
    RESPONSIVE
    ============================================ */
 
@@ -138,6 +177,27 @@
   .grid {
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   }
+
+  .loading {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
+
+  /* Hide search & headerExtra on mobile — search moves to AppShell navbar */
+  .searchWrapper {
+    display: none;
+  }
+
+  /* Mobile search bar replaces categories when active */
+  .mobileSearchBar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    width: 100%;
+  }
+
+  .hiddenOnMobile {
+    display: none;
+  }
 }
 
 @media (max-width: 480px) {
@@ -146,7 +206,35 @@
     gap: var(--space-2);
   }
 
+  .loading {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-2);
+  }
+
+  /* Show only 4 skeletons on mobile (2 rows of 2) */
+  .skeleton:nth-child(n+5) {
+    display: none;
+  }
+
   .compact {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .sizePickerBackdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: var(--z-modal);
+    animation: fadeIn var(--duration-fast) var(--ease-default);
+  }
+
+  .sizePickerPositioner {
+    position: fixed !important;
+    top: auto !important;
+    left: 0 !important;
+    right: 0;
+    bottom: 0;
+    z-index: var(--z-popover);
   }
 }

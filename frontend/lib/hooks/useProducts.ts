@@ -19,7 +19,7 @@ export const productKeys = {
   lists: () => [...productKeys.all, 'list'] as const,
   list: (params: GetProductsParams) => [...productKeys.lists(), params] as const,
   details: () => [...productKeys.all, 'detail'] as const,
-  detail: (id: number) => [...productKeys.details(), id] as const,
+  detail: (id: string) => [...productKeys.details(), id] as const,
   featured: () => [...productKeys.all, 'featured'] as const,
   lowStock: () => [...productKeys.all, 'low-stock'] as const,
 };
@@ -42,7 +42,7 @@ export function useProducts(params: GetProductsParams = {}) {
 /**
  * Hook to fetch a single product by ID
  */
-export function useProduct(id: number) {
+export function useProduct(id: string) {
   return useQuery({
     queryKey: productKeys.detail(id),
     queryFn: () => productsApi.getById(id),
@@ -98,7 +98,7 @@ export function useUpdateProduct() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<ProductInput> }) =>
+    mutationFn: ({ id, data }: { id: string; data: Partial<ProductInput> }) =>
       productsApi.update(id, data),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: productKeys.detail(id) });
@@ -114,7 +114,7 @@ export function useDeleteProduct() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) => productsApi.delete(id),
+    mutationFn: (id: string) => productsApi.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: productKeys.lists() });
     },
@@ -128,7 +128,7 @@ export function useUpdateProductStock() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, quantity }: { id: number; quantity: number }) =>
+    mutationFn: ({ id, quantity }: { id: string; quantity: number }) =>
       productsApi.updateStock(id, quantity),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: productKeys.detail(id) });

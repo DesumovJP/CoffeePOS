@@ -24,6 +24,7 @@ export interface ProductSize {
 
 export interface Product {
   id: string;
+  documentId?: string;
   name: string;
   price: number;
   image?: string;
@@ -173,7 +174,7 @@ export const ProductCard = memo(forwardRef<HTMLButtonElement, ProductCardProps>(
 
             {product.sizes && product.sizes.length > 1 ? (
               <Text variant="caption" color="tertiary" className={styles.sizesHint}>
-                {product.sizes.map((s) => s.name).join(' · ')}
+                {`${product.sizes.length} розм.`}
               </Text>
             ) : showStock && product.stockQuantity !== undefined && !isOutOfStock ? (
               <Text variant="caption" color="tertiary">

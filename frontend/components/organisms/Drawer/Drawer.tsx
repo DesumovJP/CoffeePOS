@@ -8,7 +8,7 @@
 
 import { useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Text, Icon, Button, Avatar, Divider } from '@/components/atoms';
+import { Text, Icon, Button, Avatar } from '@/components/atoms';
 import type { NavGroup, UserInfo } from '@/components/organisms/Sidebar';
 import styles from './Drawer.module.css';
 
@@ -107,16 +107,11 @@ export function Drawer({
         aria-label="Навігаційне меню"
         tabIndex={-1}
       >
-        {/* Brand */}
-        <div className={styles.brand}>
-          <div className={styles.brandLeft}>
-            <div className={styles.logo}>
-              <Icon name="store" size="lg" color="accent" />
-            </div>
-            <Text variant="h5" weight="bold" className={styles.brandName}>
-              CoffeePOS
-            </Text>
-          </div>
+        {/* Header */}
+        <div className={styles.header}>
+          <Text variant="overline" color="tertiary" className={styles.headerTitle}>
+            Меню
+          </Text>
           <Button
             variant="ghost"
             size="sm"
@@ -183,7 +178,6 @@ export function Drawer({
         {/* Footer — User profile */}
         {user && (
           <div className={styles.footer}>
-            <Divider spacing="sm" />
             <button
               type="button"
               className={`${styles.userButton} ${activeItemId === 'profile' ? styles.active : ''}`}

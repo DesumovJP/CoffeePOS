@@ -88,8 +88,8 @@ export const ordersApi = {
   /**
    * Get a single order by ID
    */
-  async getById(id: number): Promise<ApiResponse<Order>> {
-    return apiClient.get<Order>(`/orders/${id}`, {
+  async getById(documentId: string): Promise<ApiResponse<Order>> {
+    return apiClient.get<Order>(`/orders/${documentId}`, {
       populate: 'items.product,payment,createdByUser',
     });
   },
@@ -105,40 +105,23 @@ export const ordersApi = {
   },
 
   /**
-   * Create a new order with items
+   * Create a new order with items and payment in a single request.
+   * Backend custom controller expects: { data: { order, items, payment } }
    */
   async create(payload: CreateOrderPayload): Promise<ApiResponse<Order>> {
-    // First create the order
-    const orderResponse = await apiClient.post<Order>('/orders', {
-      data: payload.order,
+    return apiClient.post<Order>('/orders', {
+      data: {
+        order: payload.order,
+        items: payload.items,
+        payment: payload.payment,
+      },
     });
-
-    const orderId = orderResponse.data.id;
-
-    // Create order items
-    await Promise.all(
-      payload.items.map((item) =>
-        apiClient.post('/order-items', {
-          data: { ...item, order: orderId },
-        })
-      )
-    );
-
-    // Create payment if provided
-    if (payload.payment) {
-      await apiClient.post('/payments', {
-        data: { ...payload.payment, order: orderId },
-      });
-    }
-
-    // Return the complete order
-    return ordersApi.getById(orderId);
   },
 
   /**
    * Update order status
    */
-  async updateStatus(id: number, status: OrderStatus): Promise<ApiResponse<Order>> {
+  async updateStatus(documentId: string, status: OrderStatus): Promise<ApiResponse<Order>> {
     const data: Partial<OrderInput> = { status };
 
     if (status === 'completed') {
@@ -147,21 +130,21 @@ export const ordersApi = {
       data.preparedAt = new Date().toISOString();
     }
 
-    return apiClient.put<Order>(`/orders/${id}`, { data });
+    return apiClient.put<Order>(`/orders/${documentId}`, { data });
   },
 
   /**
    * Update order
    */
-  async update(id: number, data: Partial<OrderInput>): Promise<ApiResponse<Order>> {
-    return apiClient.put<Order>(`/orders/${id}`, { data });
+  async update(documentId: string, data: Partial<OrderInput>): Promise<ApiResponse<Order>> {
+    return apiClient.put<Order>(`/orders/${documentId}`, { data });
   },
 
   /**
    * Cancel an order
    */
-  async cancel(id: number): Promise<ApiResponse<Order>> {
-    return ordersApi.updateStatus(id, 'cancelled');
+  async cancel(documentId: string): Promise<ApiResponse<Order>> {
+    return ordersApi.updateStatus(documentId, 'cancelled');
   },
 
   /**
@@ -193,28 +176,28 @@ export const orderItemsApi = {
   /**
    * Update order item status
    */
-  async updateStatus(id: number, status: OrderItemInput['status']): Promise<ApiResponse<OrderItem>> {
+  async updateStatus(documentId: string, status: OrderItemInput['status']): Promise<ApiResponse<OrderItem>> {
     const data: Partial<OrderItemInput> = { status };
 
     if (status === 'ready') {
       data.preparedAt = new Date().toISOString();
     }
 
-    return apiClient.put<OrderItem>(`/order-items/${id}`, { data });
+    return apiClient.put<OrderItem>(`/order-items/${documentId}`, { data });
   },
 
   /**
    * Update order item
    */
-  async update(id: number, data: Partial<OrderItemInput>): Promise<ApiResponse<OrderItem>> {
-    return apiClient.put<OrderItem>(`/order-items/${id}`, { data });
+  async update(documentId: string, data: Partial<OrderItemInput>): Promise<ApiResponse<OrderItem>> {
+    return apiClient.put<OrderItem>(`/order-items/${documentId}`, { data });
   },
 
   /**
    * Delete order item
    */
-  async delete(id: number): Promise<ApiResponse<OrderItem>> {
-    return apiClient.delete<OrderItem>(`/order-items/${id}`);
+  async delete(documentId: string): Promise<ApiResponse<OrderItem>> {
+    return apiClient.delete<OrderItem>(`/order-items/${documentId}`);
   },
 };
 
@@ -233,10 +216,10 @@ export const paymentsApi = {
   /**
    * Process a payment
    */
-  async process(orderId: number, paymentData: Omit<PaymentInput, 'order'>): Promise<ApiResponse<Payment>> {
+  async process(orderDocumentId: string, paymentData: Omit<PaymentInput, 'order'>): Promise<ApiResponse<Payment>> {
     const data: PaymentInput = {
       ...paymentData,
-      order: orderId,
+      order: orderDocumentId as any,
       status: 'completed',
       processedAt: new Date().toISOString(),
     };
@@ -247,8 +230,8 @@ export const paymentsApi = {
   /**
    * Refund a payment
    */
-  async refund(id: number, reason?: string): Promise<ApiResponse<Payment>> {
-    return apiClient.put<Payment>(`/payments/${id}`, {
+  async refund(documentId: string, reason?: string): Promise<ApiResponse<Payment>> {
+    return apiClient.put<Payment>(`/payments/${documentId}`, {
       data: {
         status: 'refunded',
         refundReason: reason,
@@ -259,9 +242,9 @@ export const paymentsApi = {
   /**
    * Get payment by order ID
    */
-  async getByOrderId(orderId: number): Promise<ApiResponse<Payment[]>> {
+  async getByOrderId(orderDocumentId: string): Promise<ApiResponse<Payment[]>> {
     return apiClient.get<Payment[]>('/payments', {
-      'filters[order][id][$eq]': orderId,
+      'filters[order][documentId][$eq]': orderDocumentId,
     });
   },
 };

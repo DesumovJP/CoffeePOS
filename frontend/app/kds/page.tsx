@@ -77,8 +77,8 @@ function playNotification() {
 
 interface KDSOrderCardProps {
   order: Order;
-  onMarkReady: (orderId: number) => void;
-  onToggleItemStatus: (itemId: number, currentStatus: OrderItemStatus) => void;
+  onMarkReady: (documentId: string) => void;
+  onToggleItemStatus: (documentId: string, currentStatus: OrderItemStatus) => void;
   isUpdating: boolean;
 }
 
@@ -143,7 +143,7 @@ function KDSOrderCard({ order, onMarkReady, onToggleItemStatus, isUpdating }: KD
           <KDSItemRow
             key={item.id}
             item={item}
-            onToggle={() => onToggleItemStatus(item.id, item.status)}
+            onToggle={() => onToggleItemStatus(item.documentId, item.status)}
           />
         ))}
       </div>
@@ -164,7 +164,7 @@ function KDSOrderCard({ order, onMarkReady, onToggleItemStatus, isUpdating }: KD
           variant="success"
           size="lg"
           fullWidth
-          onClick={() => onMarkReady(order.id)}
+          onClick={() => onMarkReady(order.documentId)}
           disabled={isUpdating}
           loading={isUpdating}
         >
@@ -233,8 +233,8 @@ export default function KDSPage() {
   const { data: orders, isLoading, error } = useActiveOrders();
   const updateStatus = useUpdateOrderStatus();
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [updatingOrderId, setUpdatingOrderId] = useState<number | null>(null);
-  const prevOrderIdsRef = useRef<Set<number>>(new Set());
+  const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
+  const prevOrderIdsRef = useRef<Set<string>>(new Set());
 
   // Filter for kitchen-relevant statuses
   const kdsOrders = useMemo(() => {
@@ -254,7 +254,7 @@ export default function KDSPage() {
   useEffect(() => {
     if (!kdsOrders || kdsOrders.length === 0) return;
 
-    const currentIds = new Set(kdsOrders.map((o) => o.id));
+    const currentIds = new Set(kdsOrders.map((o) => o.documentId));
     const prevIds = prevOrderIdsRef.current;
 
     // Check if there are new orders
@@ -270,10 +270,10 @@ export default function KDSPage() {
     prevOrderIdsRef.current = currentIds;
   }, [kdsOrders]);
 
-  const handleMarkReady = useCallback(async (orderId: number) => {
-    setUpdatingOrderId(orderId);
+  const handleMarkReady = useCallback(async (documentId: string) => {
+    setUpdatingOrderId(documentId);
     try {
-      await updateStatus.mutateAsync({ id: orderId, status: 'ready' });
+      await updateStatus.mutateAsync({ id: documentId, status: 'ready' });
     } catch {
       // Error handled by React Query
     } finally {
@@ -281,10 +281,10 @@ export default function KDSPage() {
     }
   }, [updateStatus]);
 
-  const handleToggleItemStatus = useCallback(async (itemId: number, currentStatus: OrderItemStatus) => {
+  const handleToggleItemStatus = useCallback(async (documentId: string, currentStatus: OrderItemStatus) => {
     const newStatus: OrderItemStatus = currentStatus === 'ready' ? 'preparing' : 'ready';
     try {
-      await orderItemsApi.updateStatus(itemId, newStatus);
+      await orderItemsApi.updateStatus(documentId, newStatus);
     } catch {
       // Silently fail for item status toggles
     }
@@ -292,65 +292,63 @@ export default function KDSPage() {
 
   return (
     <div className={styles.page}>
-      {/* Status bar */}
-      <div className={styles.statusBar}>
+      {/* Toolbar */}
+      <div className={styles.toolbar}>
         <Badge variant="primary" size="md">
           {kdsOrders.length} {kdsOrders.length === 1 ? 'замовлення' : 'замовлень'}
         </Badge>
         <div className={styles.clock}>
           <Icon name="clock" size="sm" color="secondary" />
-          <Text variant="labelLarge" weight="semibold" color="secondary">
+          <Text variant="labelMedium" weight="semibold" color="secondary">
             {formatTime(currentTime)}
           </Text>
         </div>
       </div>
 
       {/* Content */}
-      <div className={styles.content}>
-        {isLoading && (
-          <div className={styles.center}>
-            <Spinner size="lg" />
-            <Text variant="bodyLarge" color="secondary">
-              Завантаження замовлень...
-            </Text>
-          </div>
-        )}
+      {isLoading && (
+        <div className={styles.center}>
+          <Spinner size="lg" />
+          <Text variant="bodyLarge" color="secondary">
+            Завантаження замовлень...
+          </Text>
+        </div>
+      )}
 
-        {error && (
-          <div className={styles.center}>
-            <Icon name="error" size="2xl" color="error" />
-            <Text variant="bodyLarge" color="error">
-              Помилка завантаження замовлень
-            </Text>
-          </div>
-        )}
+      {error && (
+        <div className={styles.center}>
+          <Icon name="error" size="2xl" color="error" />
+          <Text variant="bodyLarge" color="error">
+            Помилка завантаження замовлень
+          </Text>
+        </div>
+      )}
 
-        {!isLoading && !error && kdsOrders.length === 0 && (
-          <div className={styles.center}>
-            <Icon name="check" size="2xl" color="success" />
-            <Text variant="h4" color="secondary">
-              Немає активних замовлень
-            </Text>
-            <Text variant="bodyMedium" color="tertiary">
-              Нові замовлення з`являться автоматично
-            </Text>
-          </div>
-        )}
+      {!isLoading && !error && kdsOrders.length === 0 && (
+        <div className={styles.center}>
+          <Icon name="check" size="2xl" color="success" />
+          <Text variant="h4" color="secondary">
+            Немає активних замовлень
+          </Text>
+          <Text variant="bodyMedium" color="tertiary">
+            Нові замовлення з&#39;являться автоматично
+          </Text>
+        </div>
+      )}
 
-        {!isLoading && !error && kdsOrders.length > 0 && (
-          <div className={styles.grid}>
-            {kdsOrders.map((order) => (
-              <KDSOrderCard
-                key={order.id}
-                order={order}
-                onMarkReady={handleMarkReady}
-                onToggleItemStatus={handleToggleItemStatus}
-                isUpdating={updatingOrderId === order.id}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+      {!isLoading && !error && kdsOrders.length > 0 && (
+        <div className={styles.grid}>
+          {kdsOrders.map((order) => (
+            <KDSOrderCard
+              key={order.documentId}
+              order={order}
+              onMarkReady={handleMarkReady}
+              onToggleItemStatus={handleToggleItemStatus}
+              isUpdating={updatingOrderId === order.documentId}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

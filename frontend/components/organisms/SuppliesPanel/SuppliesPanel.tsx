@@ -205,7 +205,7 @@ interface ReceiveSupplyModalProps {
   isOpen: boolean;
   onClose: () => void;
   supply: Supply | null;
-  onReceive: (id: number, receivedBy: string) => void;
+  onReceive: (id: string, receivedBy: string) => void;
   isReceiving: boolean;
 }
 
@@ -216,7 +216,7 @@ function ReceiveSupplyModal({ isOpen, onClose, supply, onReceive, isReceiving }:
 
   const handleReceive = () => {
     if (!receivedBy.trim()) return;
-    onReceive(supply.id, receivedBy.trim());
+    onReceive(supply.documentId, receivedBy.trim());
     setReceivedBy('');
   };
 
@@ -367,7 +367,7 @@ export function SuppliesPanel() {
               size="sm"
               onClick={(e) => {
                 e.stopPropagation();
-                cancelMutation.mutate(supply.id);
+                cancelMutation.mutate(supply.documentId);
               }}
             >
               <Icon name="close" size="sm" />
@@ -384,7 +384,7 @@ export function SuppliesPanel() {
     });
   }, [createMutation]);
 
-  const handleReceiveSupply = useCallback((id: number, receivedBy: string) => {
+  const handleReceiveSupply = useCallback((id: string, receivedBy: string) => {
     receiveMutation.mutate({ id, receivedBy }, {
       onSuccess: () => {
         setReceiveModalOpen(false);

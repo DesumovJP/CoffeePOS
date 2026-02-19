@@ -44,7 +44,15 @@ const client = ApiClient.getInstance();
 // AUTH API
 // ============================================
 
-const BASE_URL = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337';
+// In local dev with live backend, use relative URL so Next.js rewrites can proxy to Strapi (avoids CORS)
+const isLocalProxyMode =
+  typeof window !== 'undefined' &&
+  window.location.hostname === 'localhost' &&
+  process.env.NEXT_PUBLIC_API_MODE === 'live';
+
+const BASE_URL = isLocalProxyMode
+  ? ''
+  : (process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337').replace(/\/+$/, '');
 
 export const authApi = {
   /**

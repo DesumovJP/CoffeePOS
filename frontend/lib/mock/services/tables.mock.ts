@@ -21,9 +21,9 @@ export const mockTablesApi = {
     return wrapResponse(items, items.length);
   },
 
-  async getById(id: number): Promise<ApiResponse<CafeTable>> {
+  async getById(documentId: string): Promise<ApiResponse<CafeTable>> {
     await mockDelay();
-    const table = getStore().tables.find((t) => t.id === id);
+    const table = getStore().tables.find((t) => t.documentId === documentId);
     if (!table) throw { status: 404, name: 'NotFoundError', message: 'Table not found' };
     return wrapResponse(table);
   },
@@ -49,10 +49,10 @@ export const mockTablesApi = {
     return wrapResponse(table);
   },
 
-  async update(id: number, data: Partial<CafeTableInput>): Promise<ApiResponse<CafeTable>> {
+  async update(documentId: string, data: Partial<CafeTableInput>): Promise<ApiResponse<CafeTable>> {
     await mockDelay();
     const store = getStore();
-    const idx = store.tables.findIndex((t) => t.id === id);
+    const idx = store.tables.findIndex((t) => t.documentId === documentId);
     if (idx === -1) throw { status: 404, name: 'NotFoundError', message: 'Table not found' };
 
     store.tables[idx] = { ...store.tables[idx], ...data, updatedAt: nowISO() } as CafeTable;

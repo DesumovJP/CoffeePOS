@@ -72,16 +72,6 @@
   gap: var(--space-1-5);
 }
 
-.warningBanner {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-4);
-  background: var(--color-warning-bg);
-  border-radius: var(--radius-lg);
-  margin-bottom: var(--space-3);
-}
-
 @keyframes spin {
   to { transform: rotate(360deg); }
 }

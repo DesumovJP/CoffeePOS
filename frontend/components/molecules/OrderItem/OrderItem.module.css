@@ -177,3 +177,45 @@
 .compact .price {
   font-size: var(--text-xs);
 }
+
+/* ============================================
+   MOBILE: AUTO-COMPACT
+   ============================================ */
+
+@media (max-width: 480px) {
+  .item {
+    padding: var(--space-2) 0;
+    gap: var(--space-2);
+  }
+
+  .imageWrap {
+    width: 40px;
+    height: 40px;
+  }
+
+  .qtyBadge {
+    top: -4px;
+    right: -4px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    font-size: 0.625rem;
+  }
+
+  .name {
+    font-size: var(--text-xs);
+  }
+
+  .meta {
+    font-size: var(--text-xs);
+  }
+
+  .price {
+    font-size: var(--text-sm);
+  }
+
+  .controlBtn {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+}

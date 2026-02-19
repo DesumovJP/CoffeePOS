@@ -12,7 +12,7 @@ export const shiftKeys = {
   lists: () => [...shiftKeys.all, 'list'] as const,
   list: (params: GetShiftsParams) => [...shiftKeys.lists(), params] as const,
   details: () => [...shiftKeys.all, 'detail'] as const,
-  detail: (id: number) => [...shiftKeys.details(), id] as const,
+  detail: (id: string) => [...shiftKeys.details(), id] as const,
   current: () => [...shiftKeys.all, 'current'] as const,
 };
 
@@ -33,7 +33,7 @@ export function useShifts(params: GetShiftsParams = {}) {
   });
 }
 
-export function useShift(id: number) {
+export function useShift(id: string) {
   return useQuery({
     queryKey: shiftKeys.detail(id),
     queryFn: () => shiftsApi.getById(id),
@@ -58,7 +58,7 @@ export function useCloseShift() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: ShiftCloseData }) => shiftsApi.close(id, data),
+    mutationFn: ({ id, data }: { id: string; data: ShiftCloseData }) => shiftsApi.close(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: shiftKeys.current() });
       queryClient.invalidateQueries({ queryKey: shiftKeys.lists() });

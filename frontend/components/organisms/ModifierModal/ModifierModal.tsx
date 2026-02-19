@@ -203,21 +203,16 @@ export const ModifierModal = forwardRef<HTMLDivElement, ModifierModalProps>(
     if (!product) return null;
 
     const footer = (
-      <>
-        <Button variant="secondary" size="lg" onClick={handleClose}>
-          Скасувати
-        </Button>
-        <Button
-          variant="primary"
-          size="lg"
-          onClick={handleSubmit}
-          disabled={!canSubmit}
-          fullWidth
-        >
-          <Icon name="plus" size="md" />
-          {editMode ? 'Оновити' : 'Додати'} — {currency}{totalPrice.toFixed(2)}
-        </Button>
-      </>
+      <Button
+        variant="primary"
+        size="lg"
+        onClick={handleSubmit}
+        disabled={!canSubmit}
+        fullWidth
+      >
+        <Icon name="plus" size="md" />
+        {editMode ? 'Оновити' : 'Додати'} — {currency}{totalPrice.toFixed(2)}
+      </Button>
     );
 
     return (

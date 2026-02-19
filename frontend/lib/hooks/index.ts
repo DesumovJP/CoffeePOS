@@ -16,3 +16,5 @@ export * from './useOrders';
 export * from './useTables';
 export * from './useTasks';
 export * from './useKeyboardShortcuts';
+export * from './useActivities';
+export * from './useEmployees';

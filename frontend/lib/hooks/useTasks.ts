@@ -12,7 +12,7 @@ export const taskKeys = {
   lists: () => [...taskKeys.all, 'list'] as const,
   list: (params: GetTasksParams) => [...taskKeys.lists(), params] as const,
   details: () => [...taskKeys.all, 'detail'] as const,
-  detail: (id: number) => [...taskKeys.details(), id] as const,
+  detail: (id: string) => [...taskKeys.details(), id] as const,
 };
 
 export function useTasks(params: GetTasksParams = {}) {
@@ -23,12 +23,12 @@ export function useTasks(params: GetTasksParams = {}) {
   });
 }
 
-export function useTask(id: number) {
+export function useTask(documentId: string) {
   return useQuery({
-    queryKey: taskKeys.detail(id),
-    queryFn: () => tasksApi.getById(id),
+    queryKey: taskKeys.detail(documentId),
+    queryFn: () => tasksApi.getById(documentId),
     select: (data) => data.data,
-    enabled: !!id,
+    enabled: !!documentId,
   });
 }
 
@@ -47,7 +47,7 @@ export function useUpdateTask() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: TaskUpdateData }) => tasksApi.update(id, data),
+    mutationFn: ({ id, data }: { id: string; data: TaskUpdateData }) => tasksApi.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: taskKeys.lists() });
     },
@@ -58,7 +58,7 @@ export function useCompleteTask() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, completedBy }: { id: number; completedBy: string }) =>
+    mutationFn: ({ id, completedBy }: { id: string; completedBy: string }) =>
       tasksApi.complete(id, completedBy),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: taskKeys.lists() });
@@ -70,7 +70,7 @@ export function useDeleteTask() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) => tasksApi.delete(id),
+    mutationFn: (id: string) => tasksApi.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: taskKeys.lists() });
     },

@@ -33,7 +33,7 @@ export const ingredientKeys = {
   lists: () => [...ingredientKeys.all, 'list'] as const,
   list: (params: GetIngredientsParams) => [...ingredientKeys.lists(), params] as const,
   details: () => [...ingredientKeys.all, 'detail'] as const,
-  detail: (id: number) => [...ingredientKeys.details(), id] as const,
+  detail: (id: string) => [...ingredientKeys.details(), id] as const,
   lowStock: () => [...ingredientKeys.all, 'low-stock'] as const,
 };
 
@@ -42,7 +42,7 @@ export const ingredientCategoryKeys = {
   lists: () => [...ingredientCategoryKeys.all, 'list'] as const,
   list: (params: GetIngredientCategoriesParams) => [...ingredientCategoryKeys.lists(), params] as const,
   details: () => [...ingredientCategoryKeys.all, 'detail'] as const,
-  detail: (id: number) => [...ingredientCategoryKeys.details(), id] as const,
+  detail: (id: string) => [...ingredientCategoryKeys.details(), id] as const,
 };
 
 export const inventoryTransactionKeys = {
@@ -69,7 +69,7 @@ export function useIngredients(params: GetIngredientsParams = {}) {
 /**
  * Hook to fetch a single ingredient by ID
  */
-export function useIngredient(id: number) {
+export function useIngredient(id: string) {
   return useQuery({
     queryKey: ingredientKeys.detail(id),
     queryFn: () => ingredientsApi.getById(id),
@@ -114,7 +114,7 @@ export function useUpdateIngredient() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<IngredientInput> }) =>
+    mutationFn: ({ id, data }: { id: string; data: Partial<IngredientInput> }) =>
       ingredientsApi.update(id, data),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ingredientKeys.detail(id) });
@@ -130,7 +130,7 @@ export function useDeleteIngredient() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) => ingredientsApi.delete(id),
+    mutationFn: (id: string) => ingredientsApi.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ingredientKeys.lists() });
     },
@@ -150,7 +150,7 @@ export function useAdjustIngredientQuantity() {
       type,
       notes,
     }: {
-      id: number;
+      id: string;
       adjustment: number;
       type?: InventoryTransaction['type'];
       notes?: string;
@@ -189,7 +189,7 @@ export function useActiveIngredientCategories() {
 /**
  * Hook to fetch a single ingredient category by ID
  */
-export function useIngredientCategory(id: number) {
+export function useIngredientCategory(id: string) {
   return useQuery({
     queryKey: ingredientCategoryKeys.detail(id),
     queryFn: () => ingredientCategoriesApi.getById(id),
@@ -223,7 +223,7 @@ export function useUpdateIngredientCategory() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<IngredientCategoryInput> }) =>
+    mutationFn: ({ id, data }: { id: string; data: Partial<IngredientCategoryInput> }) =>
       ingredientCategoriesApi.update(id, data),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ingredientCategoryKeys.detail(id) });
@@ -239,7 +239,7 @@ export function useDeleteIngredientCategory() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) => ingredientCategoriesApi.delete(id),
+    mutationFn: (id: string) => ingredientCategoriesApi.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ingredientCategoryKeys.lists() });
     },

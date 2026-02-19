@@ -572,6 +572,68 @@ export interface ApiCategoryCategory extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiEmployeeEmployee extends Struct.CollectionTypeSchema {
+  collectionName: 'employees';
+  info: {
+    description: 'Staff members of the cafe';
+    displayName: 'Employee';
+    pluralName: 'employees';
+    singularName: 'employee';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    cafe: Schema.Attribute.Relation<'manyToOne', 'api::cafe.cafe'>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    email: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 255;
+      }>;
+    hireDate: Schema.Attribute.Date;
+    isActive: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::employee.employee'
+    > &
+      Schema.Attribute.Private;
+    name: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 255;
+      }>;
+    notes: Schema.Attribute.Text &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 2000;
+      }>;
+    phone: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 50;
+      }>;
+    position: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 255;
+      }>;
+    publishedAt: Schema.Attribute.DateTime;
+    role: Schema.Attribute.Enumeration<['owner', 'manager', 'barista']> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'barista'>;
+    salary: Schema.Attribute.Decimal &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      >;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiIngredientCategoryIngredientCategory
   extends Struct.CollectionTypeSchema {
   collectionName: 'ingredient_categories';
@@ -1322,6 +1384,7 @@ export interface ApiShiftShift extends Struct.CollectionTypeSchema {
     draftAndPublish: false;
   };
   attributes: {
+    activities: Schema.Attribute.JSON;
     cafe: Schema.Attribute.Relation<'manyToOne', 'api::cafe.cafe'>;
     cardSales: Schema.Attribute.Decimal &
       Schema.Attribute.SetMinMax<
@@ -2098,6 +2161,7 @@ declare module '@strapi/strapi' {
       'api::cafe-table.cafe-table': ApiCafeTableCafeTable;
       'api::cafe.cafe': ApiCafeCafe;
       'api::category.category': ApiCategoryCategory;
+      'api::employee.employee': ApiEmployeeEmployee;
       'api::ingredient-category.ingredient-category': ApiIngredientCategoryIngredientCategory;
       'api::ingredient.ingredient': ApiIngredientIngredient;
       'api::inventory-transaction.inventory-transaction': ApiInventoryTransactionInventoryTransaction;

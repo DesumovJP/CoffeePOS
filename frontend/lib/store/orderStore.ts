@@ -9,6 +9,8 @@ import { devtools, persist } from 'zustand/middleware';
 import { useInventoryStore } from './inventoryStore';
 import { useNotificationStore } from './notificationStore';
 
+const IS_LIVE = process.env.NEXT_PUBLIC_API_MODE === 'live';
+
 // ============================================
 // TYPES
 // ============================================
@@ -365,28 +367,29 @@ export const useOrderStore = create<OrderState>()(
           const { currentOrder, completedOrders } = get();
           if (!currentOrder || currentOrder.items.length === 0) return;
 
-          const inventoryStore = useInventoryStore.getState();
           const notificationStore = useNotificationStore.getState();
 
-          // Process inventory deductions for each item
-          const errors: string[] = [];
-          for (const item of currentOrder.items) {
-            const result = inventoryStore.processSale(
-              item.productId,
-              item.sizeId,
-              item.quantity,
-              currentOrder.id
-            );
+          // Process inventory deductions only in mock mode
+          // In live mode, the backend handles inventory deduction in the order controller
+          if (!IS_LIVE) {
+            const inventoryStore = useInventoryStore.getState();
+            const errors: string[] = [];
+            for (const item of currentOrder.items) {
+              const result = inventoryStore.processSale(
+                item.productId,
+                item.sizeId,
+                item.quantity,
+                currentOrder.id
+              );
 
-            if (!result.success) {
-              errors.push(...result.errors);
+              if (!result.success) {
+                errors.push(...result.errors);
+              }
             }
-          }
 
-          // Log errors but don't block the sale
-          if (errors.length > 0) {
-            console.warn('Inventory deduction warnings:', errors);
-            // Could notify about inventory issues
+            if (errors.length > 0) {
+              console.warn('Inventory deduction warnings:', errors);
+            }
           }
 
           // Add to completed orders

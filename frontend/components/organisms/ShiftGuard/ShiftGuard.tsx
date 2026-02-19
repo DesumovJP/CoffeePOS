@@ -6,8 +6,8 @@
  * Wraps POS page to require an open shift before accepting orders
  */
 
-import { useState, useEffect, type ReactNode } from 'react';
-import { useShiftStore } from '@/lib/store';
+import { useState, useEffect, useRef, type ReactNode } from 'react';
+import { useShiftStore, useNotificationStore } from '@/lib/store';
 import { Text, Button, Icon, Input } from '@/components/atoms';
 import styles from './ShiftGuard.module.css';
 
@@ -28,10 +28,30 @@ export function ShiftGuard({ children }: ShiftGuardProps) {
   const [openingCash, setOpeningCash] = useState('');
   const [baristaName, setBaristaName] = useState('');
   const [isOpening, setIsOpening] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // All hooks MUST be declared before any conditional returns
+  const shiftWarningFired = useRef(false);
 
   useEffect(() => {
+    setMounted(true);
     fetchCurrentShift();
   }, [fetchCurrentShift]);
+
+  // Push shift warning into notification center (once)
+  useEffect(() => {
+    if (mounted && isShiftOpen() && shouldRemindToClose() && !shiftWarningFired.current) {
+      shiftWarningFired.current = true;
+      useNotificationStore.getState().addNotification({
+        type: 'warning',
+        priority: 'high',
+        title: 'Зміна відкрита надто довго',
+        message: 'Зміна відкрита понад 22 години. Рекомендуємо закрити зміну.',
+        actionUrl: '/profile',
+        actionLabel: 'Закрити зміну',
+      });
+    }
+  }, [mounted, isShiftOpen, shouldRemindToClose]);
 
   const handleOpenShift = async () => {
     if (!baristaName.trim()) return;
@@ -40,8 +60,8 @@ export function ShiftGuard({ children }: ShiftGuardProps) {
     setIsOpening(false);
   };
 
-  // Loading state
-  if (isShiftLoading && !currentShift) {
+  // Prevent hydration mismatch — always render loading on first server/client render
+  if (!mounted || (isShiftLoading && !currentShift)) {
     return (
       <div className={styles.loading}>
         <div className={styles.spinner} />
@@ -105,20 +125,8 @@ export function ShiftGuard({ children }: ShiftGuardProps) {
     );
   }
 
-  // Shift open - show content with optional warning
-  return (
-    <>
-      {shouldRemindToClose() && (
-        <div className={styles.warningBanner}>
-          <Icon name="warning" size="sm" color="warning" />
-          <Text variant="labelSmall" color="warning">
-            Зміна відкрита понад 22 години. Рекомендуємо закрити зміну.
-          </Text>
-        </div>
-      )}
-      {children}
-    </>
-  );
+  // Shift open - show content
+  return <>{children}</>;
 }
 
 export default ShiftGuard;

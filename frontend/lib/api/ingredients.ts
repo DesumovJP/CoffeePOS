@@ -93,8 +93,8 @@ export const ingredientsApi = {
   /**
    * Get single ingredient by ID
    */
-  async getById(id: number): Promise<ApiResponse<Ingredient>> {
-    return apiClient.get<Ingredient>(`/ingredients/${id}?populate=category,image`);
+  async getById(documentId: string): Promise<ApiResponse<Ingredient>> {
+    return apiClient.get<Ingredient>(`/ingredients/${documentId}?populate=category,image`);
   },
 
   /**
@@ -107,27 +107,27 @@ export const ingredientsApi = {
   /**
    * Update ingredient
    */
-  async update(id: number, data: Partial<IngredientInput>): Promise<ApiResponse<Ingredient>> {
-    return apiClient.put<Ingredient>(`/ingredients/${id}`, { data });
+  async update(documentId: string, data: Partial<IngredientInput>): Promise<ApiResponse<Ingredient>> {
+    return apiClient.put<Ingredient>(`/ingredients/${documentId}`, { data });
   },
 
   /**
    * Delete ingredient
    */
-  async delete(id: number): Promise<ApiResponse<Ingredient>> {
-    return apiClient.delete<Ingredient>(`/ingredients/${id}`);
+  async delete(documentId: string): Promise<ApiResponse<Ingredient>> {
+    return apiClient.delete<Ingredient>(`/ingredients/${documentId}`);
   },
 
   /**
    * Adjust ingredient quantity (quick stock update)
    */
   async adjustQuantity(
-    id: number,
+    documentId: string,
     adjustment: number,
     type: InventoryTransaction['type'] = 'adjustment',
     notes?: string
   ): Promise<ApiResponse<Ingredient>> {
-    return apiClient.post<Ingredient>(`/ingredients/${id}/adjust`, {
+    return apiClient.post<Ingredient>(`/ingredients/${documentId}/adjust`, {
       adjustment,
       type,
       notes,
@@ -170,8 +170,8 @@ export const ingredientCategoriesApi = {
   /**
    * Get single category by ID
    */
-  async getById(id: number): Promise<ApiResponse<IngredientCategory>> {
-    return apiClient.get<IngredientCategory>(`/ingredient-categories/${id}?populate=ingredients`);
+  async getById(documentId: string): Promise<ApiResponse<IngredientCategory>> {
+    return apiClient.get<IngredientCategory>(`/ingredient-categories/${documentId}?populate=ingredients`);
   },
 
   /**
@@ -185,17 +185,17 @@ export const ingredientCategoriesApi = {
    * Update category
    */
   async update(
-    id: number,
+    documentId: string,
     data: Partial<IngredientCategoryInput>
   ): Promise<ApiResponse<IngredientCategory>> {
-    return apiClient.put<IngredientCategory>(`/ingredient-categories/${id}`, { data });
+    return apiClient.put<IngredientCategory>(`/ingredient-categories/${documentId}`, { data });
   },
 
   /**
    * Delete category
    */
-  async delete(id: number): Promise<ApiResponse<IngredientCategory>> {
-    return apiClient.delete<IngredientCategory>(`/ingredient-categories/${id}`);
+  async delete(documentId: string): Promise<ApiResponse<IngredientCategory>> {
+    return apiClient.delete<IngredientCategory>(`/ingredient-categories/${documentId}`);
   },
 };
 

@@ -3,14 +3,18 @@
 /**
  * CoffeePOS - Tasks (Kanban) Page
  *
- * Kanban board with 3 columns: todo, in_progress, done
+ * Production-ready Kanban board with CRUD, filtering, search, role-based views.
+ * 3 columns: todo, in_progress, done
  */
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import { Text, Icon, Badge, Button, GlassCard, Input } from '@/components/atoms';
-import { Modal } from '@/components/atoms';
-import { useTasks, useCreateTask, useUpdateTask, useCompleteTask } from '@/lib/hooks';
-import type { Task, TaskStatus, TaskPriority, TaskType, TaskCreateData } from '@/lib/api';
+import { Text, Icon, Badge, Button, GlassCard, Modal } from '@/components/atoms';
+import { SearchInput, CategoryTabs, type Category } from '@/components/molecules';
+import { TaskFormModal } from '@/components/organisms';
+import { useToast } from '@/components/atoms';
+import { useTasks, useUpdateTask, useCompleteTask, useDeleteTask } from '@/lib/hooks';
+import { useAuth } from '@/lib/providers/AuthProvider';
+import type { Task, TaskStatus, TaskPriority, TaskType, GetTasksParams } from '@/lib/api';
 import styles from './page.module.css';
 
 // ============================================
@@ -40,128 +44,11 @@ const TYPE_LABELS: Record<TaskType, string> = {
   task: 'Завдання',
 };
 
-// ============================================
-// CREATE TASK MODAL
-// ============================================
-
-interface CreateTaskModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSubmit: (data: TaskCreateData) => void;
-  isSubmitting: boolean;
-}
-
-function CreateTaskModal({ isOpen, onClose, onSubmit, isSubmitting }: CreateTaskModalProps) {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [priority, setPriority] = useState<TaskPriority>('medium');
-  const [type, setType] = useState<TaskType>('task');
-  const [dueDate, setDueDate] = useState('');
-  const [assignedTo, setAssignedTo] = useState('');
-
-  const handleSubmit = () => {
-    if (!title.trim()) return;
-    onSubmit({
-      title: title.trim(),
-      description: description.trim() || undefined,
-      priority,
-      type,
-      dueDate: dueDate || undefined,
-      assignedTo: assignedTo.trim() || undefined,
-    });
-    setTitle('');
-    setDescription('');
-    setPriority('medium');
-    setType('task');
-    setDueDate('');
-    setAssignedTo('');
-  };
-
-  return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Нове завдання" icon="check" size="md">
-      <div className={styles.modalContent}>
-        <div className={styles.field}>
-          <Input
-            label="Назва"
-            type="text"
-            fullWidth
-            placeholder="Назва завдання..."
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-        </div>
-
-        <div className={styles.field}>
-          <Text variant="labelMedium" weight="medium">Опис (необов&apos;язково)</Text>
-          <textarea
-            className={styles.textarea}
-            placeholder="Опис завдання..."
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={3}
-          />
-        </div>
-
-        <div className={styles.fieldRow}>
-          <div className={styles.field}>
-            <Text variant="labelMedium" weight="medium">Пріоритет</Text>
-            <select
-              className={styles.select}
-              value={priority}
-              onChange={(e) => setPriority(e.target.value as TaskPriority)}
-            >
-              <option value="low">Низький</option>
-              <option value="medium">Середній</option>
-              <option value="high">Високий</option>
-            </select>
-          </div>
-          <div className={styles.field}>
-            <Text variant="labelMedium" weight="medium">Тип</Text>
-            <select
-              className={styles.select}
-              value={type}
-              onChange={(e) => setType(e.target.value as TaskType)}
-            >
-              <option value="task">Завдання</option>
-              <option value="daily">Щоденне</option>
-            </select>
-          </div>
-        </div>
-
-        <div className={styles.fieldRow}>
-          <div className={styles.field}>
-            <Input
-              label="Дата виконання"
-              type="date"
-              fullWidth
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
-            />
-          </div>
-          <div className={styles.field}>
-            <Input
-              label="Виконавець"
-              type="text"
-              fullWidth
-              placeholder="Ім'я..."
-              value={assignedTo}
-              onChange={(e) => setAssignedTo(e.target.value)}
-            />
-          </div>
-        </div>
-
-        <Button
-          variant="primary"
-          size="lg"
-          onClick={handleSubmit}
-          disabled={!title.trim() || isSubmitting}
-        >
-          {isSubmitting ? 'Створення...' : 'Створити завдання'}
-        </Button>
-      </div>
-    </Modal>
-  );
-}
+const FILTER_CATEGORIES: Category[] = [
+  { id: 'all', name: 'Всі' },
+  { id: 'mine', name: 'Мої завдання' },
+  { id: 'high', name: 'Високий пріоритет' },
+];
 
 // ============================================
 // TASK CARD
@@ -169,20 +56,24 @@ function CreateTaskModal({ isOpen, onClose, onSubmit, isSubmitting }: CreateTask
 
 interface TaskCardProps {
   task: Task;
-  onStart: (id: number) => void;
-  onComplete: (id: number) => void;
+  canManage: boolean;
+  onStart: (documentId: string) => void;
+  onComplete: (documentId: string) => void;
+  onEdit: (task: Task) => void;
+  onDelete: (task: Task) => void;
 }
 
-function TaskCard({ task, onStart, onComplete }: TaskCardProps) {
+function TaskCard({ task, canManage, onStart, onComplete, onEdit, onDelete }: TaskCardProps) {
   const priorityClass = {
     high: styles.priorityHigh,
     medium: styles.priorityMedium,
     low: styles.priorityLow,
   }[task.priority];
 
+  const showCreatedBy = task.createdBy && task.createdBy !== task.assignedTo;
+
   return (
     <GlassCard className={`${styles.taskCard} ${priorityClass}`}>
-      {/* Body: title + description */}
       <div className={styles.taskBody}>
         <Text variant="labelLarge" weight="semibold">{task.title}</Text>
         {task.description && (
@@ -192,7 +83,6 @@ function TaskCard({ task, onStart, onComplete }: TaskCardProps) {
         )}
       </div>
 
-      {/* Meta block: tags + info in a grouped panel */}
       <div className={styles.taskMeta}>
         <div className={styles.taskTags}>
           <Badge variant={PRIORITY_VARIANTS[task.priority]} size="sm">
@@ -203,7 +93,7 @@ function TaskCard({ task, onStart, onComplete }: TaskCardProps) {
           </Badge>
         </div>
 
-        {(task.dueDate || task.assignedTo) && (
+        {(task.dueDate || task.assignedTo || showCreatedBy) && (
           <div className={styles.taskDetails}>
             {task.dueDate && (
               <div className={styles.detailItem}>
@@ -221,34 +111,54 @@ function TaskCard({ task, onStart, onComplete }: TaskCardProps) {
             )}
           </div>
         )}
+
+        {showCreatedBy && (
+          <Text variant="caption" color="tertiary" className={styles.createdByLabel}>
+            Від: {task.createdBy}
+          </Text>
+        )}
       </div>
 
       {/* Actions */}
-      {task.status !== 'done' && (
-        <div className={styles.taskActions}>
-          {task.status === 'todo' && (
-            <Button variant="ghost" size="sm" onClick={() => onStart(task.id)}>
-              <Icon name="clock" size="sm" />
-              Почати
+      <div className={styles.taskActions}>
+        {task.status !== 'done' && (
+          <>
+            {task.status === 'todo' && (
+              <Button variant="ghost" size="sm" onClick={() => onStart(task.documentId)}>
+                <Icon name="clock" size="sm" />
+                Почати
+              </Button>
+            )}
+            <Button variant="ghost" size="sm" onClick={() => onComplete(task.documentId)}>
+              <Icon name="check" size="sm" />
+              Виконано
             </Button>
-          )}
-          <Button variant="ghost" size="sm" onClick={() => onComplete(task.id)}>
-            <Icon name="check" size="sm" />
-            Виконано
-          </Button>
-        </div>
-      )}
+          </>
+        )}
 
-      {task.status === 'done' && task.completedAt && (
-        <div className={styles.taskCompleted}>
-          <Icon name="check" size="xs" color="success" />
-          <Text variant="caption" color="tertiary">
-            {new Date(task.completedAt).toLocaleString('uk-UA', {
-              day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
-            })}
-          </Text>
-        </div>
-      )}
+        {task.status === 'done' && task.completedAt && (
+          <div className={styles.taskCompleted}>
+            <Icon name="check" size="xs" color="success" />
+            <Text variant="caption" color="tertiary">
+              {new Date(task.completedAt).toLocaleString('uk-UA', {
+                day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
+              })}
+              {task.completedBy && ` — ${task.completedBy}`}
+            </Text>
+          </div>
+        )}
+
+        {canManage && (
+          <div className={styles.taskManageActions}>
+            <Button variant="ghost" size="sm" onClick={() => onEdit(task)}>
+              <Icon name="settings" size="sm" />
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => onDelete(task)}>
+              <Icon name="close" size="sm" />
+            </Button>
+          </div>
+        )}
+      </div>
     </GlassCard>
   );
 }
@@ -258,19 +168,63 @@ function TaskCard({ task, onStart, onComplete }: TaskCardProps) {
 // ============================================
 
 export default function TasksPage() {
-  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const { user } = useAuth();
+  const { addToast } = useToast();
 
-  // Listen for AppShell header action button
+  const currentUserName = user?.username || '';
+  const currentUserRole = user?.role?.type || 'barista';
+  const isAdmin = currentUserRole === 'owner' || currentUserRole === 'manager';
+
+  // UI state
+  const [formModalOpen, setFormModalOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [deleteTask, setDeleteTask] = useState<Task | null>(null);
+  const [activeFilter, setActiveFilter] = useState<string | null>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+
+  // Listen for AppShell events
   useEffect(() => {
-    const handler = () => setCreateModalOpen(true);
-    window.addEventListener('appshell:action', handler);
-    return () => window.removeEventListener('appshell:action', handler);
+    const actionHandler = () => {
+      setEditingTask(null);
+      setFormModalOpen(true);
+    };
+    window.addEventListener('appshell:action', actionHandler);
+    return () => window.removeEventListener('appshell:action', actionHandler);
   }, []);
 
-  const { data: tasks } = useTasks();
-  const createMutation = useCreateTask();
+  useEffect(() => {
+    const searchHandler = () => setMobileSearchOpen(true);
+    window.addEventListener('appshell:search', searchHandler);
+    return () => window.removeEventListener('appshell:search', searchHandler);
+  }, []);
+
+  // Build query params based on filter + role
+  const queryParams = useMemo<GetTasksParams>(() => {
+    const params: GetTasksParams = {};
+
+    // Barista always sees only their own tasks
+    if (!isAdmin) {
+      params.assignedTo = currentUserName;
+    } else if (activeFilter === 'mine') {
+      params.assignedTo = currentUserName;
+    }
+
+    if (activeFilter === 'high') {
+      params.priority = 'high';
+    }
+
+    if (searchQuery.trim()) {
+      params.search = searchQuery.trim();
+    }
+
+    return params;
+  }, [activeFilter, searchQuery, isAdmin, currentUserName]);
+
+  const { data: tasks } = useTasks(queryParams);
   const updateMutation = useUpdateTask();
   const completeMutation = useCompleteTask();
+  const deleteMutation = useDeleteTask();
 
   const tasksByStatus = useMemo(() => {
     const grouped: Record<TaskStatus, Task[]> = { todo: [], in_progress: [], done: [] };
@@ -281,22 +235,78 @@ export default function TasksPage() {
     return grouped;
   }, [tasks]);
 
-  const handleCreate = useCallback((data: TaskCreateData) => {
-    createMutation.mutate(data, {
-      onSuccess: () => setCreateModalOpen(false),
-    });
-  }, [createMutation]);
-
-  const handleStart = useCallback((id: number) => {
+  const handleStart = useCallback((id: string) => {
     updateMutation.mutate({ id, data: { status: 'in_progress' } });
   }, [updateMutation]);
 
-  const handleComplete = useCallback((id: number) => {
-    completeMutation.mutate({ id, completedBy: 'Олена Коваленко' });
-  }, [completeMutation]);
+  const handleComplete = useCallback((id: string) => {
+    completeMutation.mutate(
+      { id, completedBy: currentUserName },
+      { onSuccess: () => addToast({ type: 'success', title: 'Завдання виконано' }) }
+    );
+  }, [completeMutation, currentUserName, addToast]);
+
+  const handleEdit = useCallback((task: Task) => {
+    setEditingTask(task);
+    setFormModalOpen(true);
+  }, []);
+
+  const handleDeleteRequest = useCallback((task: Task) => {
+    setDeleteTask(task);
+  }, []);
+
+  const handleDeleteConfirm = useCallback(() => {
+    if (!deleteTask) return;
+    deleteMutation.mutate(deleteTask.documentId, {
+      onSuccess: () => {
+        addToast({ type: 'success', title: 'Завдання видалено' });
+        setDeleteTask(null);
+      },
+    });
+  }, [deleteTask, deleteMutation, addToast]);
+
+  const closeMobileSearch = useCallback(() => {
+    setMobileSearchOpen(false);
+    setSearchQuery('');
+  }, []);
+
+  const canManageTask = useCallback((task: Task) => {
+    return isAdmin || task.assignedTo === currentUserName;
+  }, [isAdmin, currentUserName]);
 
   return (
     <div className={styles.page}>
+      {/* Toolbar */}
+      <div className={styles.toolbar}>
+        <CategoryTabs
+          categories={FILTER_CATEGORIES}
+          value={activeFilter}
+          onChange={setActiveFilter}
+          showAll={false}
+        />
+        {mobileSearchOpen && (
+          <div className={styles.mobileSearchBar}>
+            <SearchInput
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder="Пошук завдань..."
+              variant="glass"
+              autoFocus
+            />
+            <Button
+              variant="ghost"
+              size="sm"
+              iconOnly
+              onClick={closeMobileSearch}
+              aria-label="Закрити пошук"
+            >
+              <Icon name="close" size="md" />
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {/* Kanban Board */}
       <div className={styles.board}>
         {COLUMNS.map((col) => {
           const columnTasks = tasksByStatus[col.id];
@@ -315,10 +325,13 @@ export default function TasksPage() {
                 ) : (
                   columnTasks.map((task) => (
                     <TaskCard
-                      key={task.id}
+                      key={task.documentId}
                       task={task}
+                      canManage={canManageTask(task)}
                       onStart={handleStart}
                       onComplete={handleComplete}
+                      onEdit={handleEdit}
+                      onDelete={handleDeleteRequest}
                     />
                   ))
                 )}
@@ -328,12 +341,42 @@ export default function TasksPage() {
         })}
       </div>
 
-      <CreateTaskModal
-        isOpen={createModalOpen}
-        onClose={() => setCreateModalOpen(false)}
-        onSubmit={handleCreate}
-        isSubmitting={createMutation.isPending}
+      {/* TaskFormModal (create/edit) */}
+      <TaskFormModal
+        isOpen={formModalOpen}
+        onClose={() => setFormModalOpen(false)}
+        task={editingTask}
+        onSuccess={() => {}}
+        currentUserName={currentUserName}
+        currentUserRole={currentUserRole}
       />
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        open={!!deleteTask}
+        onClose={() => setDeleteTask(null)}
+        title="Видалити завдання?"
+        icon="close"
+        size="sm"
+      >
+        <div className={styles.deleteContent}>
+          <Text variant="bodyMedium" color="secondary">
+            Ви впевнені, що хочете видалити завдання &laquo;{deleteTask?.title}&raquo;?
+          </Text>
+          <div className={styles.deleteFooter}>
+            <Button variant="ghost" onClick={() => setDeleteTask(null)}>
+              Скасувати
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleDeleteConfirm}
+              loading={deleteMutation.isPending}
+            >
+              Видалити
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

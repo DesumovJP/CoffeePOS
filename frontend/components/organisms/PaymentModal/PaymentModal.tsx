@@ -187,24 +187,19 @@ export const PaymentModal = forwardRef<HTMLDivElement, PaymentModalProps>(
 
     // PAYMENT FORM STATE
     const footer = (
-      <>
-        <Button variant="secondary" size="lg" onClick={handleClose}>
-          Скасувати
-        </Button>
-        <Button
-          variant="success"
-          size="lg"
-          onClick={handleComplete}
-          disabled={!canComplete}
-          loading={processing}
-          fullWidth
-        >
-          <Icon name="check" size="md" />
-          {selectedMethod === 'cash'
-            ? `Завершити (решта ${formatPrice(Math.max(0, change), currency)})`
-            : 'Підтвердити оплату'}
-        </Button>
-      </>
+      <Button
+        variant="success"
+        size="lg"
+        onClick={handleComplete}
+        disabled={!canComplete}
+        loading={processing}
+        fullWidth
+      >
+        <Icon name="check" size="md" />
+        {selectedMethod === 'cash'
+          ? `Завершити (решта ${formatPrice(Math.max(0, change), currency)})`
+          : 'Підтвердити оплату'}
+      </Button>
     );
 
     return (
