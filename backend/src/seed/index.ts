@@ -211,7 +211,7 @@ export default async function seed({ strapi }: StrapiContext) {
     strapi.log.info(`  ✓ Created ${recipeCount} recipes`);
 
     // ============================================
-    // DEMO OPERATIONAL DATA
+    // DEMO OPERATIONAL DATA (14 days)
     // ============================================
 
     const now = new Date();
@@ -222,15 +222,39 @@ export default async function seed({ strapi }: StrapiContext) {
       return dt.toISOString();
     };
 
-    // --- Shifts (5 closed + reference for orders) ---
-    strapi.log.info('Seeding demo shifts...');
-    const shiftsData = [
-      { openedAt: day(-3, 8), closedAt: day(-3, 16), openedBy: 'Олена Коваленко', closedBy: 'Олена Коваленко', openingCash: 500, closingCash: 2870, status: 'closed' as const, cashSales: 2370, cardSales: 1080, totalSales: 3450, ordersCount: 15, writeOffsTotal: 45, suppliesTotal: 0 },
-      { openedAt: day(-3, 16), closedAt: day(-3, 23), openedBy: 'Марія Петренко', closedBy: 'Марія Петренко', openingCash: 2870, closingCash: 6250, status: 'closed' as const, cashSales: 3380, cardSales: 2400, totalSales: 5780, ordersCount: 22, writeOffsTotal: 0, suppliesTotal: 1250 },
-      { openedAt: day(-2, 8), closedAt: day(-2, 16), openedBy: 'Андрій Мельник', closedBy: 'Андрій Мельник', openingCash: 500, closingCash: 2650, status: 'closed' as const, cashSales: 2150, cardSales: 1970, totalSales: 4120, ordersCount: 18, writeOffsTotal: 120, suppliesTotal: 0 },
-      { openedAt: day(-2, 16), closedAt: day(-2, 23), openedBy: 'Олена Коваленко', closedBy: 'Олена Коваленко', openingCash: 2650, closingCash: 5430, status: 'closed' as const, cashSales: 2780, cardSales: 2450, totalSales: 5230, ordersCount: 20, writeOffsTotal: 0, suppliesTotal: 890 },
-      { openedAt: day(-1, 8), closedAt: day(-1, 16), openedBy: 'Софія Бондаренко', closedBy: 'Софія Бондаренко', openingCash: 500, closingCash: 1890, status: 'closed' as const, cashSales: 1390, cardSales: 1500, totalSales: 2890, ordersCount: 12, writeOffsTotal: 65, suppliesTotal: 0 },
-    ];
+    const baristas = ['Олена Бондаренко', 'Андрій Мельник', 'Софія Ткаченко', 'Дмитро Козлов', 'Вікторія Литвин'];
+
+    // --- Shifts (26 closed over 14 days) ---
+    strapi.log.info('Seeding demo shifts (14 days)...');
+    const shiftsData: any[] = [];
+    for (let d = -14; d <= -1; d++) {
+      const morningBarista = baristas[(d + 14) % baristas.length];
+      const eveningBarista = baristas[(d + 15) % baristas.length];
+      const isWeekend = [0, 6].includes(new Date(now.getTime() + d * 86400000).getDay());
+      const mOrders = isWeekend ? 18 + Math.floor(Math.abs(d * 3) % 8) : 12 + Math.floor(Math.abs(d * 7) % 6);
+      const eOrders = isWeekend ? 22 + Math.floor(Math.abs(d * 5) % 10) : 15 + Math.floor(Math.abs(d * 3) % 8);
+      const mCash = 1200 + mOrders * 85 + (Math.abs(d * 37) % 400);
+      const mCard = 800 + mOrders * 65 + (Math.abs(d * 23) % 300);
+      const eCash = 1500 + eOrders * 90 + (Math.abs(d * 41) % 500);
+      const eCard = 1200 + eOrders * 75 + (Math.abs(d * 19) % 400);
+      const mWo = d % 3 === 0 ? 45 + (Math.abs(d * 13) % 80) : 0;
+      const eWo = d % 4 === 0 ? 60 + (Math.abs(d * 11) % 100) : 0;
+
+      shiftsData.push({
+        openedAt: day(d, isWeekend ? 9 : 8), closedAt: day(d, 16),
+        openedBy: morningBarista, closedBy: morningBarista,
+        openingCash: 500, closingCash: 500 + mCash, status: 'closed',
+        cashSales: mCash, cardSales: mCard, totalSales: mCash + mCard,
+        ordersCount: mOrders, writeOffsTotal: mWo, suppliesTotal: 0,
+      });
+      shiftsData.push({
+        openedAt: day(d, 16), closedAt: day(d, isWeekend ? 23 : 22),
+        openedBy: eveningBarista, closedBy: eveningBarista,
+        openingCash: 500 + mCash, closingCash: 500 + mCash + eCash, status: 'closed',
+        cashSales: eCash, cardSales: eCard, totalSales: eCash + eCard,
+        ordersCount: eOrders, writeOffsTotal: eWo, suppliesTotal: 0,
+      });
+    }
 
     const shiftIds: number[] = [];
     for (const s of shiftsData) {
@@ -239,137 +263,123 @@ export default async function seed({ strapi }: StrapiContext) {
     }
     strapi.log.info(`  ✓ Created ${shiftIds.length} demo shifts`);
 
-    // --- Orders (12 completed orders across shifts) ---
+    // --- Orders (72 completed across last 14 days) ---
     strapi.log.info('Seeding demo orders...');
-    const espressoId = productMap['espresso'];
-    const americanoId = productMap['americano'];
-    const cappuccinoId = productMap['cappuccino'];
-    const latteId = productMap['latte'];
-    const cheesecakeId = productMap['cheesecake'];
-    const croissantId = productMap['croissant'];
-    const blackTeaId = productMap['black-tea'];
-    const lemonadeId = productMap['lemonade'];
 
-    const ordersData = [
-      { num: 'P-1001', shift: 0, time: day(-3, 8, 25), items: [{ pid: espressoId, name: 'Еспресо', qty: 2, price: 45 }, { pid: croissantId, name: 'Круасан', qty: 1, price: 55 }], method: 'cash' as const, received: 200 },
-      { num: 'P-1002', shift: 0, time: day(-3, 9, 10), items: [{ pid: cappuccinoId, name: 'Капучіно', qty: 1, price: 75 }, { pid: cheesecakeId, name: 'Чізкейк', qty: 1, price: 95 }], method: 'card' as const },
-      { num: 'P-1003', shift: 0, time: day(-3, 10, 45), items: [{ pid: latteId, name: 'Латте', qty: 2, price: 85 }], method: 'cash' as const, received: 200 },
-      { num: 'P-1004', shift: 1, time: day(-3, 17, 30), items: [{ pid: americanoId, name: 'Американо', qty: 3, price: 55 }, { pid: croissantId, name: 'Круасан', qty: 2, price: 55 }], method: 'card' as const },
-      { num: 'P-1005', shift: 1, time: day(-3, 19, 15), items: [{ pid: blackTeaId, name: 'Чорний чай', qty: 2, price: 45 }, { pid: cheesecakeId, name: 'Чізкейк', qty: 1, price: 95 }], method: 'cash' as const, received: 200 },
-      { num: 'P-1006', shift: 2, time: day(-2, 8, 40), items: [{ pid: espressoId, name: 'Еспресо', qty: 1, price: 45 }, { pid: americanoId, name: 'Американо', qty: 1, price: 55 }], method: 'cash' as const, received: 100 },
-      { num: 'P-1007', shift: 2, time: day(-2, 11, 20), items: [{ pid: cappuccinoId, name: 'Капучіно', qty: 2, price: 75 }, { pid: lemonadeId, name: 'Лимонад', qty: 1, price: 65 }], method: 'card' as const },
-      { num: 'P-1008', shift: 3, time: day(-2, 17, 50), items: [{ pid: latteId, name: 'Латте', qty: 1, price: 85 }, { pid: croissantId, name: 'Круасан', qty: 2, price: 55 }], method: 'cash' as const, received: 200 },
-      { num: 'P-1009', shift: 3, time: day(-2, 20, 5), items: [{ pid: cappuccinoId, name: 'Капучіно', qty: 1, price: 75 }, { pid: cheesecakeId, name: 'Чізкейк', qty: 2, price: 95 }], method: 'card' as const },
-      { num: 'P-1010', shift: 4, time: day(-1, 9, 0), items: [{ pid: espressoId, name: 'Еспресо', qty: 3, price: 45 }], method: 'cash' as const, received: 150 },
-      { num: 'P-1011', shift: 4, time: day(-1, 12, 30), items: [{ pid: latteId, name: 'Латте', qty: 2, price: 85 }, { pid: cheesecakeId, name: 'Чізкейк', qty: 1, price: 95 }], method: 'card' as const },
-      { num: 'P-1012', shift: 4, time: day(-1, 14, 45), items: [{ pid: americanoId, name: 'Американо', qty: 2, price: 55 }, { pid: croissantId, name: 'Круасан', qty: 1, price: 55 }], method: 'cash' as const, received: 200 },
+    // Menu items pool for order generation
+    const menu = [
+      { slug: 'espresso', name: 'Еспресо', price: 45 },
+      { slug: 'doppio', name: 'Допіо', price: 65 },
+      { slug: 'americano', name: 'Американо', price: 55 },
+      { slug: 'cappuccino', name: 'Капучіно', price: 75 },
+      { slug: 'latte', name: 'Латте', price: 85 },
+      { slug: 'flat-white', name: 'Флет Вайт', price: 75 },
+      { slug: 'raf', name: 'Раф', price: 100 },
+      { slug: 'mocha', name: 'Мокко', price: 80 },
+      { slug: 'iced-latte', name: 'Айс Латте', price: 75 },
+      { slug: 'lavender-latte', name: 'Лавандовий Латте', price: 95 },
+      { slug: 'bumble', name: 'Бамбл', price: 90 },
+      { slug: 'caramel-macchiato', name: 'Карамель Макіато', price: 95 },
+      { slug: 'black-tea', name: 'Чорний чай', price: 40 },
+      { slug: 'matcha-latte', name: 'Матча Латте', price: 85 },
+      { slug: 'chai-latte', name: 'Чай Латте', price: 80 },
+      { slug: 'cheesecake', name: 'Чізкейк', price: 95 },
+      { slug: 'tiramisu', name: 'Тірамісу', price: 110 },
+      { slug: 'brownie', name: 'Брауні', price: 75 },
+      { slug: 'medovik', name: 'Медовик', price: 90 },
+      { slug: 'croissant', name: 'Круасан', price: 55 },
+      { slug: 'chocolate-croissant', name: 'Круасан з шоколадом', price: 65 },
+      { slug: 'muffin', name: 'Маффін', price: 45 },
+      { slug: 'cinnamon-roll', name: 'Булочка з корицею', price: 55 },
+      { slug: 'bagel', name: 'Бейгл з вершковим сиром', price: 75 },
+      { slug: 'chicken-sandwich', name: 'Сендвіч з куркою', price: 120 },
+      { slug: 'salmon-sandwich', name: 'Сендвіч з лососем', price: 145 },
+      { slug: 'caesar-salad', name: 'Салат Цезар', price: 135 },
+      { slug: 'avocado-toast', name: 'Тост з авокадо', price: 125 },
+      { slug: 'granola-bowl', name: 'Гранола боул', price: 95 },
+      { slug: 'syrnyky', name: 'Сирники', price: 110 },
+      { slug: 'lemonade', name: 'Лимонад', price: 55 },
+      { slug: 'orange-fresh', name: 'Фреш апельсин', price: 75 },
+      { slug: 'berry-smoothie', name: 'Смузі ягідний', price: 85 },
+      { slug: 'virgin-mojito', name: 'Мохіто безалк.', price: 65 },
     ];
 
+    // Generate 72 orders across all shifts
+    const types = ['dine_in', 'dine_in', 'dine_in', 'takeaway', 'takeaway'] as const;
+    const methods = ['cash', 'cash', 'card', 'card', 'card', 'qr'] as const;
     let orderCount = 0;
-    for (const o of ordersData) {
-      const subtotal = o.items.reduce((s, i) => s + i.qty * i.price, 0);
-      const order = await strapi.db.query('api::order.order').create({
-        data: {
-          orderNumber: o.num,
-          status: 'completed',
-          type: 'dine_in',
-          subtotal,
-          discountAmount: 0,
-          total: subtotal,
-          completedAt: o.time,
-          shift: shiftIds[o.shift],
-          cafe: cafeId,
-        },
-      });
 
-      for (const item of o.items) {
-        await strapi.db.query('api::order-item.order-item').create({
+    for (let si = 0; si < shiftIds.length; si++) {
+      const isEvening = si % 2 === 1;
+      const ordersInShift = isEvening ? 3 : 2; // ~2-3 orders per shift seeded as examples
+
+      for (let oi = 0; oi < ordersInShift; oi++) {
+        const shiftDay = Math.floor(si / 2);
+        const h = isEvening ? 17 + oi * 2 : 8 + oi * 2;
+        const m = 10 + (si * 7 + oi * 13) % 50;
+
+        // Pick 2-4 items from menu
+        const numItems = 2 + ((si + oi) % 3);
+        const orderItems: { pid: number | undefined; name: string; qty: number; price: number }[] = [];
+        for (let ii = 0; ii < numItems; ii++) {
+          const mi = (si * 5 + oi * 7 + ii * 11) % menu.length;
+          const item = menu[mi];
+          const qty = ii === 0 ? 1 + ((si + oi) % 2) : 1;
+          orderItems.push({ pid: productMap[item.slug], name: item.name, qty, price: item.price });
+        }
+
+        const subtotal = orderItems.reduce((s, i) => s + i.qty * i.price, 0);
+        const method = methods[(si + oi) % methods.length];
+        const orderType = types[(si + oi) % types.length];
+        const orderNum = `P-${1001 + orderCount}`;
+        const orderTime = day(-14 + shiftDay, h, m);
+
+        const order = await strapi.db.query('api::order.order').create({
           data: {
-            order: order.id,
-            product: item.pid,
-            productName: item.name,
-            quantity: item.qty,
-            unitPrice: item.price,
-            totalPrice: item.qty * item.price,
-            status: 'served',
+            orderNumber: orderNum, status: 'completed', type: orderType,
+            subtotal, discountAmount: 0, total: subtotal, completedAt: orderTime,
+            shift: shiftIds[si], cafe: cafeId,
           },
         });
-      }
 
-      const changeAmount = o.received ? o.received - subtotal : 0;
-      await strapi.db.query('api::payment.payment').create({
-        data: {
-          order: order.id,
-          method: o.method,
-          status: 'completed',
-          amount: subtotal,
-          receivedAmount: o.received || subtotal,
-          changeAmount: changeAmount > 0 ? changeAmount : 0,
-          processedAt: o.time,
-        },
-      });
-      orderCount++;
+        for (const item of orderItems) {
+          await strapi.db.query('api::order-item.order-item').create({
+            data: {
+              order: order.id, product: item.pid || undefined,
+              productName: item.name, quantity: item.qty,
+              unitPrice: item.price, totalPrice: item.qty * item.price, status: 'served',
+            },
+          });
+        }
+
+        const received = method === 'cash' ? Math.ceil(subtotal / 50) * 50 : subtotal;
+        await strapi.db.query('api::payment.payment').create({
+          data: {
+            order: order.id, method, status: 'completed', amount: subtotal,
+            receivedAmount: received, changeAmount: Math.max(0, received - subtotal),
+            processedAt: orderTime,
+          },
+        });
+        orderCount++;
+      }
     }
     strapi.log.info(`  ✓ Created ${orderCount} demo orders with items & payments`);
 
-    // --- Supplies (4) ---
+    // --- Supplies (12) ---
     strapi.log.info('Seeding demo supplies...');
     const suppliesData = [
-      {
-        supplierName: 'Кава Україна',
-        status: 'received' as const,
-        items: [
-          { name: 'Арабіка Ефіопія 1кг', quantity: 5, unitCost: 480, totalCost: 2400 },
-          { name: 'Робуста Уганда 1кг', quantity: 3, unitCost: 320, totalCost: 960 },
-        ],
-        totalCost: 3360,
-        orderedAt: day(-4, 10),
-        shippedAt: day(-3, 14),
-        receivedAt: day(-3, 17, 30),
-        createdBy_barista: 'Марія Петренко',
-        receivedBy: 'Марія Петренко',
-        shift: shiftIds[1],
-      },
-      {
-        supplierName: 'Молочна Ферма «Зоря»',
-        status: 'received' as const,
-        items: [
-          { name: 'Молоко 2.5% 10л', quantity: 2, unitCost: 145, totalCost: 290 },
-          { name: 'Вершки 33% 1л', quantity: 5, unitCost: 98, totalCost: 490 },
-          { name: 'Молоко вівсяне 1л', quantity: 4, unitCost: 75, totalCost: 300 },
-        ],
-        totalCost: 1080,
-        orderedAt: day(-3, 9),
-        shippedAt: day(-2, 8),
-        receivedAt: day(-2, 17, 15),
-        createdBy_barista: 'Олена Коваленко',
-        receivedBy: 'Олена Коваленко',
-        shift: shiftIds[3],
-      },
-      {
-        supplierName: 'Пекарня «Добра»',
-        status: 'shipped' as const,
-        items: [
-          { name: 'Круасан масляний (10шт)', quantity: 3, unitCost: 180, totalCost: 540 },
-          { name: 'Маффін шоколадний (6шт)', quantity: 2, unitCost: 150, totalCost: 300 },
-        ],
-        totalCost: 840,
-        orderedAt: day(-1, 11),
-        shippedAt: day(0, 7),
-        createdBy_barista: 'Андрій Мельник',
-      },
-      {
-        supplierName: 'Фреш Маркет',
-        status: 'ordered' as const,
-        items: [
-          { name: 'Лимон 1кг', quantity: 3, unitCost: 65, totalCost: 195 },
-          { name: 'Апельсин 1кг', quantity: 5, unitCost: 58, totalCost: 290 },
-          { name: "М'ята свіжа (пучок)", quantity: 10, unitCost: 25, totalCost: 250 },
-        ],
-        totalCost: 735,
-        orderedAt: day(0, 9),
-        createdBy_barista: 'Софія Бондаренко',
-      },
+      { supplierName: 'Кава Україна', status: 'received', items: [{ name: 'Арабіка Ефіопія 1кг', quantity: 5, unitCost: 480, totalCost: 2400 }, { name: 'Декаф 0.5кг', quantity: 2, unitCost: 520, totalCost: 1040 }], totalCost: 3440, orderedAt: day(-14, 10), shippedAt: day(-13, 9), receivedAt: day(-13, 16), createdBy_barista: 'Марія Коваленко', receivedBy: 'Олена Бондаренко' },
+      { supplierName: 'Молочна Ферма «Зоря»', status: 'received', items: [{ name: 'Молоко 2.5% 10л', quantity: 3, unitCost: 145, totalCost: 435 }, { name: 'Вершки 33% 1л', quantity: 6, unitCost: 98, totalCost: 588 }, { name: 'Безлактозне 1л', quantity: 4, unitCost: 62, totalCost: 248 }], totalCost: 1271, orderedAt: day(-13, 9), shippedAt: day(-12, 7), receivedAt: day(-12, 8, 30), createdBy_barista: 'Олена Бондаренко', receivedBy: 'Андрій Мельник' },
+      { supplierName: 'Alpro', status: 'received', items: [{ name: 'Молоко вівсяне 1л', quantity: 8, unitCost: 75, totalCost: 600 }, { name: 'Молоко мигдальне 1л', quantity: 4, unitCost: 89, totalCost: 356 }, { name: 'Молоко кокосове 1л', quantity: 4, unitCost: 95, totalCost: 380 }], totalCost: 1336, orderedAt: day(-12, 11), shippedAt: day(-11, 10), receivedAt: day(-10, 9), createdBy_barista: 'Марія Коваленко', receivedBy: 'Софія Ткаченко' },
+      { supplierName: 'Пекарня «Добра»', status: 'received', items: [{ name: 'Круасан масляний (10шт)', quantity: 4, unitCost: 180, totalCost: 720 }, { name: 'Круасан шоколадний (10шт)', quantity: 3, unitCost: 210, totalCost: 630 }, { name: 'Маффін шоколадний (6шт)', quantity: 3, unitCost: 150, totalCost: 450 }, { name: 'Булочка з корицею (6шт)', quantity: 2, unitCost: 140, totalCost: 280 }], totalCost: 2080, orderedAt: day(-11, 14), shippedAt: day(-10, 6), receivedAt: day(-10, 8), createdBy_barista: 'Андрій Мельник', receivedBy: 'Андрій Мельник' },
+      { supplierName: 'Monin', status: 'received', items: [{ name: 'Сироп ваніль 0.7л', quantity: 3, unitCost: 285, totalCost: 855 }, { name: 'Сироп карамель 0.7л', quantity: 3, unitCost: 285, totalCost: 855 }, { name: 'Сироп лаванда 0.7л', quantity: 2, unitCost: 310, totalCost: 620 }, { name: 'Соус карамельний 0.5л', quantity: 2, unitCost: 245, totalCost: 490 }], totalCost: 2820, orderedAt: day(-10, 10), shippedAt: day(-8, 12), receivedAt: day(-8, 17), createdBy_barista: 'Марія Коваленко', receivedBy: 'Дмитро Козлов' },
+      { supplierName: 'Фреш Маркет', status: 'received', items: [{ name: 'Апельсин 1кг', quantity: 8, unitCost: 58, totalCost: 464 }, { name: 'Банан 1кг', quantity: 5, unitCost: 42, totalCost: 210 }, { name: 'Мікс ягід заморож. 0.5кг', quantity: 6, unitCost: 125, totalCost: 750 }], totalCost: 1424, orderedAt: day(-9, 8), shippedAt: day(-8, 7), receivedAt: day(-8, 8, 15), createdBy_barista: 'Олена Бондаренко', receivedBy: 'Олена Бондаренко' },
+      { supplierName: 'Callebaut', status: 'received', items: [{ name: 'Шоколад темний 1кг', quantity: 2, unitCost: 420, totalCost: 840 }, { name: 'Шоколад білий 0.5кг', quantity: 2, unitCost: 380, totalCost: 760 }], totalCost: 1600, orderedAt: day(-7, 10), shippedAt: day(-5, 11), receivedAt: day(-5, 16), createdBy_barista: 'Марія Коваленко', receivedBy: 'Вікторія Литвин' },
+      { supplierName: 'Пакувальник', status: 'received', items: [{ name: 'Стакан 250мл (100шт)', quantity: 3, unitCost: 250, totalCost: 750 }, { name: 'Стакан 350мл (100шт)', quantity: 3, unitCost: 300, totalCost: 900 }, { name: 'Стакан 450мл (100шт)', quantity: 2, unitCost: 350, totalCost: 700 }, { name: 'Кришка (200шт)', quantity: 3, unitCost: 160, totalCost: 480 }, { name: 'Трубочка (200шт)', quantity: 2, unitCost: 100, totalCost: 200 }], totalCost: 3030, orderedAt: day(-6, 9), shippedAt: day(-4, 8), receivedAt: day(-4, 9, 30), createdBy_barista: 'Софія Ткаченко', receivedBy: 'Андрій Мельник' },
+      { supplierName: 'Кава Україна', status: 'received', items: [{ name: 'Арабіка Колумбія 1кг', quantity: 4, unitCost: 510, totalCost: 2040 }], totalCost: 2040, orderedAt: day(-5, 10), shippedAt: day(-3, 11), receivedAt: day(-3, 16), createdBy_barista: 'Марія Коваленко', receivedBy: 'Олена Бондаренко' },
+      { supplierName: 'Молочна Ферма «Зоря»', status: 'received', items: [{ name: 'Молоко 2.5% 10л', quantity: 2, unitCost: 145, totalCost: 290 }, { name: 'Вершки 33% 1л', quantity: 4, unitCost: 98, totalCost: 392 }], totalCost: 682, orderedAt: day(-3, 8), shippedAt: day(-2, 7), receivedAt: day(-2, 8, 20), createdBy_barista: 'Андрій Мельник', receivedBy: 'Дмитро Козлов' },
+      { supplierName: 'Пекарня «Добра»', status: 'shipped', items: [{ name: 'Круасан масляний (10шт)', quantity: 3, unitCost: 180, totalCost: 540 }, { name: 'Круасан шоколадний (10шт)', quantity: 3, unitCost: 210, totalCost: 630 }, { name: 'Бейгл (10шт)', quantity: 2, unitCost: 200, totalCost: 400 }], totalCost: 1570, orderedAt: day(-1, 11), shippedAt: day(0, 6), createdBy_barista: 'Софія Ткаченко' },
+      { supplierName: 'Фреш Маркет', status: 'ordered', items: [{ name: 'Апельсин 1кг', quantity: 10, unitCost: 58, totalCost: 580 }, { name: 'Лимон 1кг', quantity: 3, unitCost: 65, totalCost: 195 }, { name: "М'ята свіжа (пучок)", quantity: 10, unitCost: 25, totalCost: 250 }], totalCost: 1025, orderedAt: day(0, 9), createdBy_barista: 'Олена Бондаренко' },
     ];
 
     for (const sup of suppliesData) {
@@ -377,42 +387,17 @@ export default async function seed({ strapi }: StrapiContext) {
     }
     strapi.log.info(`  ✓ Created ${suppliesData.length} demo supplies`);
 
-    // --- Write-offs (3) ---
+    // --- Write-offs (8) ---
     strapi.log.info('Seeding demo write-offs...');
     const writeoffsData = [
-      {
-        type: 'expired' as const,
-        items: [
-          { name: 'Молоко 2.5%', quantity: 2, unit: 'л', costPerUnit: 29, totalCost: 58 },
-          { name: 'Вершки 33%', quantity: 0.5, unit: 'л', costPerUnit: 98, totalCost: 49 },
-        ],
-        totalCost: 107,
-        reason: 'Закінчився термін придатності (перевірка холодильника)',
-        performedBy: 'Олена Коваленко',
-        shift: shiftIds[0],
-      },
-      {
-        type: 'damaged' as const,
-        items: [
-          { name: 'Стакан паперовий 350мл', quantity: 15, unit: 'шт', costPerUnit: 3.5, totalCost: 52.5 },
-          { name: 'Кришка для стакану', quantity: 15, unit: 'шт', costPerUnit: 1.2, totalCost: 18 },
-        ],
-        totalCost: 70.5,
-        reason: 'Пошкоджена упаковка при розвантаженні',
-        performedBy: 'Андрій Мельник',
-        shift: shiftIds[2],
-      },
-      {
-        type: 'other' as const,
-        items: [
-          { name: 'Круасан масляний', quantity: 3, unit: 'шт', costPerUnit: 18, totalCost: 54 },
-          { name: 'Маффін шоколадний', quantity: 2, unit: 'шт', costPerUnit: 25, totalCost: 50 },
-        ],
-        totalCost: 104,
-        reason: 'Залишки з вітрини на кінець дня (не продано)',
-        performedBy: 'Софія Бондаренко',
-        shift: shiftIds[4],
-      },
+      { type: 'expired', items: [{ name: 'Молоко 2.5%', quantity: 1.5, unit: 'л', costPerUnit: 32, totalCost: 48 }, { name: 'Вершки 33%', quantity: 0.3, unit: 'л', costPerUnit: 120, totalCost: 36 }], totalCost: 84, reason: 'Закінчився термін придатності', performedBy: 'Олена Бондаренко', shift: shiftIds[0] },
+      { type: 'other', items: [{ name: 'Круасан масляний', quantity: 4, unit: 'шт', costPerUnit: 18, totalCost: 72 }, { name: 'Маффін', quantity: 2, unit: 'шт', costPerUnit: 25, totalCost: 50 }], totalCost: 122, reason: 'Залишки з вітрини (кінець дня)', performedBy: 'Андрій Мельник', shift: shiftIds[3] },
+      { type: 'damaged', items: [{ name: 'Стакан 350мл', quantity: 20, unit: 'шт', costPerUnit: 3, totalCost: 60 }, { name: 'Кришка', quantity: 20, unit: 'шт', costPerUnit: 0.8, totalCost: 16 }], totalCost: 76, reason: 'Пом\'ята коробка при доставці', performedBy: 'Софія Ткаченко', shift: shiftIds[6] },
+      { type: 'expired', items: [{ name: 'Молоко вівсяне', quantity: 1, unit: 'л', costPerUnit: 80, totalCost: 80 }, { name: 'Молоко мигдальне', quantity: 0.5, unit: 'л', costPerUnit: 100, totalCost: 50 }], totalCost: 130, reason: 'Прострочено — перевірка запасів', performedBy: 'Дмитро Козлов', shift: shiftIds[10] },
+      { type: 'other', items: [{ name: 'Булочка з корицею', quantity: 3, unit: 'шт', costPerUnit: 16, totalCost: 48 }, { name: 'Круасан з шоколадом', quantity: 2, unit: 'шт', costPerUnit: 22, totalCost: 44 }, { name: 'Бейгл', quantity: 1, unit: 'шт', costPerUnit: 28, totalCost: 28 }], totalCost: 120, reason: 'Непродана випічка за день', performedBy: 'Вікторія Литвин', shift: shiftIds[15] },
+      { type: 'damaged', items: [{ name: 'Сироп ваніль', quantity: 1, unit: 'пляшка', costPerUnit: 285, totalCost: 285 }], totalCost: 285, reason: 'Розбита пляшка при переміщенні', performedBy: 'Андрій Мельник', shift: shiftIds[18] },
+      { type: 'expired', items: [{ name: 'Молоко 2.5%', quantity: 2, unit: 'л', costPerUnit: 32, totalCost: 64 }, { name: 'Вершки 33%', quantity: 0.5, unit: 'л', costPerUnit: 120, totalCost: 60 }], totalCost: 124, reason: 'Протерміноване (понеділкова інвентаризація)', performedBy: 'Олена Бондаренко', shift: shiftIds[22] },
+      { type: 'other', items: [{ name: 'Круасан масляний', quantity: 5, unit: 'шт', costPerUnit: 18, totalCost: 90 }, { name: 'Маффін', quantity: 3, unit: 'шт', costPerUnit: 25, totalCost: 75 }], totalCost: 165, reason: 'Вечірні залишки вітрини', performedBy: 'Софія Ткаченко', shift: shiftIds[25] },
     ];
 
     for (const wo of writeoffsData) {
