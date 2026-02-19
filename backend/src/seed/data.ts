@@ -488,6 +488,63 @@ export const ingredients: SeedIngredient[] = [
 ];
 
 // ============================================
+// EMPLOYEES
+// ============================================
+
+export const employees = [
+  {
+    name: 'Іван Шевченко',
+    email: 'owner@coffeepos.com',
+    phone: '+380501234567',
+    role: 'owner',
+    position: 'Власник',
+    isActive: true,
+    hireDate: '2023-01-15',
+    salary: 50000,
+  },
+  {
+    name: 'Марія Коваленко',
+    email: 'manager@coffeepos.com',
+    phone: '+380502345678',
+    role: 'manager',
+    position: 'Старший менеджер',
+    isActive: true,
+    hireDate: '2023-03-01',
+    salary: 35000,
+  },
+  {
+    name: 'Олена Бондаренко',
+    email: 'barista@coffeepos.com',
+    phone: '+380503456789',
+    role: 'barista',
+    position: 'Бариста',
+    isActive: true,
+    hireDate: '2023-06-15',
+    salary: 22000,
+  },
+  {
+    name: 'Андрій Мельник',
+    email: 'andriy@coffeepos.com',
+    phone: '+380504567890',
+    role: 'barista',
+    position: 'Бариста',
+    isActive: true,
+    hireDate: '2023-09-01',
+    salary: 20000,
+  },
+  {
+    name: 'Софія Ткаченко',
+    email: 'sofia@coffeepos.com',
+    phone: '+380505678901',
+    role: 'barista',
+    position: 'Бариста-стажер',
+    isActive: true,
+    hireDate: '2024-01-10',
+    salary: 18000,
+  },
+];
+
+// ============================================
 // CAFE TABLES
 // ============================================
 

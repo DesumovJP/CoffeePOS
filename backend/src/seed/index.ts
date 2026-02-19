@@ -4,7 +4,7 @@
  * Run with: npm run seed
  */
 
-import { cafes, categories, modifierGroups, modifiers, products, ingredientCategories, ingredients, recipes, cafeTables } from './data';
+import { cafes, categories, modifierGroups, modifiers, products, ingredientCategories, ingredients, recipes, cafeTables, employees } from './data';
 
 interface StrapiContext {
   strapi: {
@@ -43,6 +43,7 @@ export default async function seed({ strapi }: StrapiContext) {
     await strapi.db.query('api::product.product').deleteMany({ where: {} });
     await strapi.db.query('api::ingredient.ingredient').deleteMany({ where: {} });
     await strapi.db.query('api::ingredient-category.ingredient-category').deleteMany({ where: {} });
+    await strapi.db.query('api::employee.employee').deleteMany({ where: {} });
     await strapi.db.query('api::cafe-table.cafe-table').deleteMany({ where: {} });
     await strapi.db.query('api::category.category').deleteMany({ where: {} });
     await strapi.db.query('api::cafe.cafe').deleteMany({ where: {} });
@@ -104,6 +105,17 @@ export default async function seed({ strapi }: StrapiContext) {
         });
         strapi.log.info(`  ✓ Created modifier: ${modifier.displayName}`);
       }
+    }
+
+    // Seed employees
+    strapi.log.info('Seeding employees...');
+    await strapi.db.query('api::employee.employee').deleteMany({ where: {} });
+    const cafeId = Object.values(cafeMap)[0];
+    for (const emp of employees) {
+      await strapi.db.query('api::employee.employee').create({
+        data: { ...emp, cafe: cafeId },
+      });
+      strapi.log.info(`  ✓ Created employee: ${emp.name} (${emp.role})`);
     }
 
     // Seed ingredient categories
@@ -206,6 +218,7 @@ export default async function seed({ strapi }: StrapiContext) {
     strapi.log.info(`   - ${products.length} products`);
     strapi.log.info(`   - ${recipeCount} recipes`);
     strapi.log.info(`   - ${cafeTables.length} cafe tables`);
+    strapi.log.info(`   - ${employees.length} employees`);
 
   } catch (error) {
     strapi.log.error('❌ Seed failed:');

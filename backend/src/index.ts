@@ -1,6 +1,7 @@
 import type { Core } from '@strapi/strapi';
 import seed from './seed';
 import { seedUsers } from './seed';
+import { employees } from './seed/data';
 
 export default {
   register(/* { strapi }: { strapi: Core.Strapi } */) {},
@@ -23,9 +24,43 @@ export default {
         strapi.log.info(`Database already has ${categoriesCount} categories, skipping seed.`);
         await seedUsers({ strapi });
       }
+
+      // Seed employees if missing (added after initial seed)
+      await ensureEmployees(strapi);
     }
   },
 };
+
+/**
+ * Seed employees if the table is empty.
+ */
+async function ensureEmployees(strapi: Core.Strapi) {
+  try {
+    const empQuery = strapi.db.query('api::employee.employee');
+    const count = await empQuery.count();
+
+    if (count > 0) {
+      strapi.log.info(`Employees: ${count} already exist, skipping seed.`);
+      return;
+    }
+
+    // Get first cafe for relation
+    const cafe = await strapi.db.query('api::cafe.cafe').findOne({ where: {} });
+    const cafeId = cafe?.id;
+
+    for (const emp of employees) {
+      await empQuery.create({
+        data: { ...emp, cafe: cafeId || undefined },
+      });
+      strapi.log.info(`  ✓ Created employee: ${emp.name} (${emp.role})`);
+    }
+
+    strapi.log.info(`Employees: seeded ${employees.length} employees`);
+  } catch (error) {
+    strapi.log.error('Failed to seed employees:');
+    console.error(error);
+  }
+}
 
 /**
  * Ensure all content type permissions are set for the Authenticated role.
