@@ -381,8 +381,7 @@ export default function POSPage() {
         await ordersApi.create({ order: orderPayload.order, items: orderPayload.items, payment: orderPayload.payment });
       }
     } catch {
-      // Fall back to local-only
-      console.warn('API order creation failed, using local fallback');
+      // Fall back to local-only order tracking
     }
 
     completePayment(method, received);
@@ -516,7 +515,7 @@ export default function POSPage() {
               onRemoveItem={handleRemoveItem}
               onClear={handleClearOrder}
               onCheckout={handleCheckout}
-              onAddDiscount={() => console.log('Add discount')}
+              onAddDiscount={() => {}}
             />
           </div>
         </main>

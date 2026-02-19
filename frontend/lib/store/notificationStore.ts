@@ -126,7 +126,6 @@ export const useNotificationStore = create<NotificationState>()(
         // Play sound for high priority notifications
         if (get().soundEnabled && ['critical', 'high'].includes(newNotification.priority)) {
           // Sound would be played here in a real implementation
-          console.log('🔔 Notification:', newNotification.title);
         }
 
         return id;

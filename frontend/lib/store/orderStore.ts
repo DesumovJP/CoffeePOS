@@ -420,7 +420,7 @@ export const useOrderStore = create<OrderState>()(
             `Замовлення #${currentOrder.id.split('-').pop()}: ₴${total.toFixed(2)}`
           );
 
-          console.log('Payment completed:', { method, received, order: completedOrder });
+          // Payment completed successfully
         },
 
         // Computed values
