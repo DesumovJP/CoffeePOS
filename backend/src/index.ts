@@ -14,10 +14,11 @@ export default {
     const shouldSeed = process.env.SEED_DATABASE === 'true';
 
     if (shouldSeed) {
+      const forceReseed = process.env.FORCE_RESEED === 'true';
       const productsCount = await strapi.db.query('api::product.product').count();
 
-      if (productsCount === 0) {
-        strapi.log.info('No products found, running full seed...');
+      if (productsCount === 0 || forceReseed) {
+        strapi.log.info(forceReseed ? 'Force reseed requested...' : 'No products found, running full seed...');
         await seed({ strapi } as any);
         await seedUsers({ strapi });
       } else {

@@ -8,7 +8,7 @@
     "description": "Menu products and items"
   },
   "options": {
-    "draftAndPublish": true
+    "draftAndPublish": false
   },
   "pluginOptions": {},
   "attributes": {

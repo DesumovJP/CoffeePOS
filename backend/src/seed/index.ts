@@ -171,7 +171,6 @@ export default async function seed({ strapi }: StrapiContext) {
           trackInventory: productData.trackInventory || false,
           stockQuantity: productData.stockQuantity || 0,
           lowStockThreshold: productData.lowStockThreshold || 5,
-          publishedAt: new Date(),
         },
       });
       productMap[product.slug] = created.id;
