@@ -236,7 +236,7 @@ export default function AnalyticsPage() {
   const recentOrders = useMemo(() => {
     if (!todayReport?.orders) return [];
     return todayReport.orders.slice(0, 5).map((order: any) => ({
-      id: order.id || order.documentId,
+      id: String(order.documentId || order.id),
       number: order.orderNumber || order.number || `#${order.id}`,
       time: order.createdAt
         ? new Date(order.createdAt).toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' })
