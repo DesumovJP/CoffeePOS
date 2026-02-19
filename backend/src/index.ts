@@ -24,10 +24,10 @@ export default {
         strapi.log.info(`Database already has ${categoriesCount} categories, skipping seed.`);
         await seedUsers({ strapi });
       }
-
-      // Seed employees if missing (added after initial seed)
-      await ensureEmployees(strapi);
     }
+
+    // Seed employees if missing (runs always, has own guard)
+    await ensureEmployees(strapi);
   },
 };
 
