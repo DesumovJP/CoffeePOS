@@ -18,86 +18,12 @@
 }
 
 /* ============================================
-   SHIFT CONTEXT BANNER
+   SHIFT CONTEXT — single subtle text line
    ============================================ */
 
-.shiftBanner {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  padding: var(--space-4);
+.shiftContext {
   flex-shrink: 0;
-}
-
-.shiftBannerMain {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-}
-
-.shiftBannerIcon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-md);
-  flex-shrink: 0;
-  background: color-mix(in srgb, var(--color-warning) 14%, transparent);
-  color: var(--color-warning);
-}
-
-.shiftBannerInfo {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.shiftBannerDuration {
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
-}
-
-.shiftBannerStats {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--glass-border);
-}
-
-.shiftStat {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.shiftStatDivider {
-  width: 1px;
-  height: 28px;
-  background: var(--glass-border);
-  flex-shrink: 0;
-}
-
-.shiftRevenue {
-  color: var(--color-success);
-}
-
-/* No shift banner */
-.noShiftBanner {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2-5) var(--space-4);
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-lg);
-  flex-shrink: 0;
+  padding: 0 var(--space-1);
 }
 
 /* ============================================

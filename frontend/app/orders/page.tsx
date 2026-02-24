@@ -8,7 +8,7 @@
  */
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { Text, GlassCard, Icon, Badge, Button } from '@/components';
+import { Text, GlassCard, Icon, Badge, Button } from '@/components'; // GlassCard used for emptyState
 import { SearchInput } from '@/components/molecules';
 import { useOrders } from '@/lib/hooks';
 import { useShiftStore, selectCurrentShift } from '@/lib/store';
@@ -168,52 +168,15 @@ export default function HistoryPage() {
         </div>
       )}
 
-      {/* Shift context banner */}
+      {/* Shift context — single subtle line */}
       {currentShift ? (
-        <GlassCard className={styles.shiftBanner}>
-          <div className={styles.shiftBannerMain}>
-            <div className={styles.shiftBannerIcon}>
-              <Icon name="clock" size="md" />
-            </div>
-            <div className={styles.shiftBannerInfo}>
-              <Text variant="labelMedium" weight="semibold">Поточна зміна</Text>
-              <Text variant="bodySmall" color="secondary">
-                {currentShift.openedBy} · {formatDateTime(currentShift.openedAt)}
-              </Text>
-            </div>
-            <div className={styles.shiftBannerDuration}>
-              <Text variant="labelLarge" weight="semibold">{formatDuration(shiftDuration)}</Text>
-              <Text variant="caption" color="tertiary">тривалість</Text>
-            </div>
-          </div>
-          <div className={styles.shiftBannerStats}>
-            <div className={styles.shiftStat}>
-              <Text variant="caption" color="tertiary">Замовлень</Text>
-              <Text variant="labelMedium" weight="semibold">{summary.ordersCount}</Text>
-            </div>
-            <div className={styles.shiftStatDivider} />
-            <div className={styles.shiftStat}>
-              <Text variant="caption" color="tertiary">Виручка</Text>
-              <Text variant="labelMedium" weight="semibold" className={styles.shiftRevenue}>
-                ₴{formatCurrency(summary.totalRevenue)}
-              </Text>
-            </div>
-            <div className={styles.shiftStatDivider} />
-            <div className={styles.shiftStat}>
-              <Text variant="caption" color="tertiary">Каса на відкритті</Text>
-              <Text variant="labelMedium" weight="semibold">
-                ₴{formatCurrency(currentShift.openingCash)}
-              </Text>
-            </div>
-          </div>
-        </GlassCard>
+        <Text variant="bodySmall" color="tertiary" className={styles.shiftContext}>
+          Зміна · {currentShift.openedBy} · {formatDateTime(currentShift.openedAt)} · {formatDuration(shiftDuration)}
+        </Text>
       ) : (
-        <div className={styles.noShiftBanner}>
-          <Icon name="warning" size="sm" color="tertiary" />
-          <Text variant="bodySmall" color="secondary">
-            Зміна не відкрита — показано замовлення за сьогодні
-          </Text>
-        </div>
+        <Text variant="bodySmall" color="tertiary" className={styles.shiftContext}>
+          Зміна не відкрита — замовлення за сьогодні
+        </Text>
       )}
 
       {/* Toolbar */}

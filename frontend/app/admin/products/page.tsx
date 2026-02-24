@@ -10,7 +10,7 @@
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Text, Icon, Badge, Button, Modal } from '@/components/atoms';
-import { SearchInput, CategoryTabs, type Category } from '@/components/molecules';
+import { SearchInput, CategoryTabs, SegmentedControl, type Category } from '@/components/molecules';
 import {
   DataTable,
   type Column,
@@ -602,15 +602,6 @@ export default function ProductsAdminPage() {
       },
     },
     {
-      key: 'category',
-      header: 'Категорія',
-      width: '130px',
-      hideOnMobile: true,
-      render: (ingredient) => (
-        <Text variant="bodySmall" color="secondary">{ingredient.category?.name || '—'}</Text>
-      ),
-    },
-    {
       key: 'quantity',
       header: 'Залишок',
       width: '160px',
@@ -733,23 +724,15 @@ export default function ProductsAdminPage() {
 
   return (
     <div className={styles.page}>
-      {/* View Mode Toggle — full-width segmented control */}
-      <div className={styles.viewToggle}>
-        <button
-          type="button"
-          className={`${styles.viewToggleBtn} ${viewMode === 'products' ? styles.viewToggleBtnActive : ''}`}
-          onClick={() => handleViewModeChangeWrapped('products')}
-        >
-          Продукція
-        </button>
-        <button
-          type="button"
-          className={`${styles.viewToggleBtn} ${viewMode === 'ingredients' ? styles.viewToggleBtnActive : ''}`}
-          onClick={() => handleViewModeChangeWrapped('ingredients')}
-        >
-          Інгредієнти
-        </button>
-      </div>
+      {/* View Mode Toggle */}
+      <SegmentedControl
+        options={[
+          { id: 'products', label: 'Продукція' },
+          { id: 'ingredients', label: 'Інгредієнти' },
+        ]}
+        value={viewMode}
+        onChange={(id) => handleViewModeChangeWrapped(id as ViewMode)}
+      />
 
       {/* Mobile search bar (shown when triggered from header) */}
       {mobileSearchOpen && (

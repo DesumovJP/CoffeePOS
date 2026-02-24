@@ -17,7 +17,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { Text, Button, Icon, Badge, GlassCard, Modal, Spinner } from '@/components/atoms';
-import { CategoryTabs, SearchInput, StatsGrid, EmployeeCard, type StatItem } from '@/components/molecules';
+import { SegmentedControl, SearchInput, StatsGrid, EmployeeCard, type StatItem } from '@/components/molecules';
 import { DataTable, EmployeeFormModal, EmployeeDetailModal, type Column } from '@/components/organisms';
 import {
   useEmployees,
@@ -34,8 +34,8 @@ import styles from './page.module.css';
 // ============================================
 
 const TABS = [
-  { id: 'list', name: 'Працівники' },
-  { id: 'analytics', name: 'Аналітика' },
+  { id: 'list', label: 'Працівники' },
+  { id: 'analytics', label: 'Аналітика' },
 ];
 
 const ROLE_LABELS: Record<string, string> = {
@@ -515,18 +515,15 @@ function AnalyticsTab() {
 // ============================================
 
 export default function AdminEmployeesPage() {
-  const [activeTab, setActiveTab] = useState<string | null>('list');
+  const [activeTab, setActiveTab] = useState('list');
 
   return (
     <div className={styles.page}>
-      <div className={styles.toolbar}>
-        <CategoryTabs
-          categories={TABS}
-          value={activeTab}
-          showAll={false}
-          onChange={setActiveTab}
-        />
-      </div>
+      <SegmentedControl
+        options={TABS}
+        value={activeTab}
+        onChange={setActiveTab}
+      />
 
       {activeTab === 'analytics' ? <AnalyticsTab /> : <EmployeesListTab />}
     </div>
