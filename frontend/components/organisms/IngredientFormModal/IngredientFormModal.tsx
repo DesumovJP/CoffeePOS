@@ -7,8 +7,8 @@
  * Supports both CREATE and EDIT modes.
  */
 
-import { useState, useEffect, useCallback, type FormEvent } from 'react';
-import { Text, Button, Input, Modal } from '@/components/atoms';
+import { useState, useEffect, useCallback, useRef, type FormEvent, type KeyboardEvent } from 'react';
+import { Text, Button, Input, Modal, Icon } from '@/components/atoms';
 import { ingredientsApi } from '@/lib/api';
 import type { Ingredient, IngredientInput, IngredientCategory, IngredientUnit } from '@/lib/api';
 import styles from './IngredientFormModal.module.css';
@@ -36,7 +36,6 @@ interface IngredientFormState {
   quantity: string;
   minQuantity: string;
   costPerUnit: string;
-  supplier: string;
   category: string;
   isActive: boolean;
 }
@@ -47,7 +46,6 @@ const INITIAL_STATE: IngredientFormState = {
   quantity: '0',
   minQuantity: '0',
   costPerUnit: '0',
-  supplier: '',
   category: '',
   isActive: true,
 };
@@ -78,6 +76,11 @@ export function IngredientFormModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  // Suppliers tag state
+  const [suppliers, setSuppliers] = useState<string[]>([]);
+  const [supplierInput, setSupplierInput] = useState('');
+  const supplierInputRef = useRef<HTMLInputElement>(null);
+
   // Populate form when editing
   useEffect(() => {
     if (ingredient) {
@@ -87,13 +90,19 @@ export function IngredientFormModal({
         quantity: String(ingredient.quantity ?? 0),
         minQuantity: String(ingredient.minQuantity ?? 0),
         costPerUnit: String(ingredient.costPerUnit ?? 0),
-        supplier: ingredient.supplier || '',
         category: ingredient.category?.id ? String(ingredient.category.id) : '',
         isActive: ingredient.isActive ?? true,
       });
+      setSuppliers(
+        ingredient.supplier
+          ? ingredient.supplier.split(',').map((s) => s.trim()).filter(Boolean)
+          : []
+      );
     } else {
       setForm(INITIAL_STATE);
+      setSuppliers([]);
     }
+    setSupplierInput('');
     setErrors({});
     setSubmitError(null);
   }, [ingredient, isOpen]);
@@ -112,6 +121,30 @@ export function IngredientFormModal({
         }
       },
     [errors]
+  );
+
+  const addSupplier = useCallback(() => {
+    const trimmed = supplierInput.trim();
+    if (!trimmed || suppliers.includes(trimmed)) return;
+    setSuppliers((prev) => [...prev, trimmed]);
+    setSupplierInput('');
+    supplierInputRef.current?.focus();
+  }, [supplierInput, suppliers]);
+
+  const removeSupplier = useCallback((name: string) => {
+    setSuppliers((prev) => prev.filter((s) => s !== name));
+  }, []);
+
+  const handleSupplierKeyDown = useCallback(
+    (e: KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        addSupplier();
+      } else if (e.key === 'Backspace' && !supplierInput && suppliers.length > 0) {
+        setSuppliers((prev) => prev.slice(0, -1));
+      }
+    },
+    [addSupplier, supplierInput, suppliers]
   );
 
   const validate = useCallback((): boolean => {
@@ -151,7 +184,7 @@ export function IngredientFormModal({
         quantity: form.quantity ? Number(form.quantity) : 0,
         minQuantity: form.minQuantity ? Number(form.minQuantity) : 0,
         costPerUnit: form.costPerUnit ? Number(form.costPerUnit) : 0,
-        supplier: form.supplier.trim() || undefined,
+        supplier: suppliers.length > 0 ? suppliers.join(', ') : undefined,
         category: form.category ? Number(form.category) : undefined,
         isActive: form.isActive,
       };
@@ -291,14 +324,37 @@ export function IngredientFormModal({
           fullWidth
         />
 
-        {/* Supplier */}
-        <Input
-          label="Постачальник"
-          value={form.supplier}
-          onChange={handleChange('supplier')}
-          placeholder="Назва постачальника"
-          fullWidth
-        />
+        {/* Suppliers tag input */}
+        <div className={styles.field}>
+          <label className={styles.label}>Постачальники</label>
+          <div className={styles.tagInputWrapper}>
+            {suppliers.map((name) => (
+              <span key={name} className={styles.supplierTag}>
+                {name}
+                <button
+                  type="button"
+                  className={styles.tagRemove}
+                  onClick={() => removeSupplier(name)}
+                  aria-label={`Видалити ${name}`}
+                >
+                  <Icon name="close" size="xs" />
+                </button>
+              </span>
+            ))}
+            <input
+              ref={supplierInputRef}
+              type="text"
+              className={styles.tagInput}
+              value={supplierInput}
+              onChange={(e) => setSupplierInput(e.target.value)}
+              onKeyDown={handleSupplierKeyDown}
+              placeholder={suppliers.length === 0 ? 'Введіть назву та натисніть Enter' : 'Додати ще...'}
+            />
+          </div>
+          <Text variant="caption" color="tertiary">
+            Enter — додати, Backspace — видалити останнього
+          </Text>
+        </div>
 
         {/* Active toggle */}
         <div className={styles.toggleRow}>

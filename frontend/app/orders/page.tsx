@@ -3,13 +3,15 @@
 /**
  * CoffeePOS - History Page (Історія)
  *
- * Today's order history. Each order is expandable to show items.
+ * Current-shift order history. Shows shift context banner, sequential order
+ * numbering (#1, #2, …), shift open/close events, and expandable item details.
  */
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Text, GlassCard, Icon, Badge, Button } from '@/components';
 import { SearchInput } from '@/components/molecules';
 import { useOrders } from '@/lib/hooks';
+import { useShiftStore, selectCurrentShift } from '@/lib/store';
 import styles from './page.module.css';
 
 // ============================================
@@ -24,6 +26,23 @@ function getTodayRange(): { dateFrom: string } {
 
 function formatTime(ts: string): string {
   return new Date(ts).toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
+}
+
+function formatDateTime(ts: string): string {
+  return new Date(ts).toLocaleString('uk-UA', {
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+function formatDuration(ms: number): string {
+  const totalMinutes = Math.floor(ms / 60000);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  if (hours === 0) return `${minutes} хв`;
+  return `${hours} год ${minutes} хв`;
 }
 
 function formatCurrency(value: number): string {
@@ -56,6 +75,16 @@ export default function HistoryPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
+  const [now, setNow] = useState(() => Date.now());
+
+  const currentShift = useShiftStore(selectCurrentShift);
+
+  // Tick every minute to keep duration display live
+  useEffect(() => {
+    if (!currentShift) return;
+    const timer = setInterval(() => setNow(Date.now()), 60000);
+    return () => clearInterval(timer);
+  }, [currentShift]);
 
   useEffect(() => {
     const handler = () => setMobileSearchOpen(true);
@@ -68,10 +97,26 @@ export default function HistoryPage() {
     setSearchQuery('');
   }, []);
 
-  const { data: orders = [], isLoading } = useOrders({
-    ...getTodayRange(),
+  // Use shift's openedAt as start of range; fall back to today midnight
+  const dateRange = useMemo(() => {
+    if (currentShift?.openedAt) return { dateFrom: currentShift.openedAt };
+    return getTodayRange();
+  }, [currentShift]);
+
+  const { data: ordersRaw = [], isLoading } = useOrders({
+    ...dateRange,
     pageSize: 200,
+    sort: 'createdAt:asc',
   });
+
+  // Ensure ascending order for sequential numbering
+  const orders = useMemo(
+    () =>
+      [...ordersRaw].sort(
+        (a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      ),
+    [ordersRaw]
+  );
 
   const filteredOrders = useMemo(() => {
     if (!searchQuery.trim()) return orders;
@@ -83,15 +128,16 @@ export default function HistoryPage() {
     );
   }, [orders, searchQuery]);
 
-  // Summary stats
   const summary = useMemo(() => {
-    const completedOrders = filteredOrders.filter((o: any) => o.status === 'completed');
+    const completedOrders = orders.filter((o: any) => o.status === 'completed');
     const totalRevenue = completedOrders.reduce((s: number, o: any) => s + (parseFloat(o.total) || 0), 0);
-    return {
-      ordersCount: completedOrders.length,
-      totalRevenue,
-    };
-  }, [filteredOrders]);
+    return { ordersCount: completedOrders.length, totalRevenue };
+  }, [orders]);
+
+  const shiftDuration = useMemo(() => {
+    if (!currentShift?.openedAt) return 0;
+    return now - new Date(currentShift.openedAt).getTime();
+  }, [currentShift, now]);
 
   const toggleOrder = useCallback((orderId: string) => {
     setExpandedOrderId((prev) => (prev === orderId ? null : orderId));
@@ -99,12 +145,6 @@ export default function HistoryPage() {
 
   return (
     <div className={styles.page}>
-      {/* Background */}
-      <div className={styles.background}>
-        <div className={styles.gradientOrb1} />
-        <div className={styles.gradientOrb2} />
-      </div>
-
       {/* Mobile search bar */}
       {mobileSearchOpen && (
         <div className={styles.mobileSearchBar}>
@@ -125,6 +165,54 @@ export default function HistoryPage() {
           >
             <Icon name="close" size="md" />
           </Button>
+        </div>
+      )}
+
+      {/* Shift context banner */}
+      {currentShift ? (
+        <GlassCard className={styles.shiftBanner}>
+          <div className={styles.shiftBannerMain}>
+            <div className={styles.shiftBannerIcon}>
+              <Icon name="clock" size="md" />
+            </div>
+            <div className={styles.shiftBannerInfo}>
+              <Text variant="labelMedium" weight="semibold">Поточна зміна</Text>
+              <Text variant="bodySmall" color="secondary">
+                {currentShift.openedBy} · {formatDateTime(currentShift.openedAt)}
+              </Text>
+            </div>
+            <div className={styles.shiftBannerDuration}>
+              <Text variant="labelLarge" weight="semibold">{formatDuration(shiftDuration)}</Text>
+              <Text variant="caption" color="tertiary">тривалість</Text>
+            </div>
+          </div>
+          <div className={styles.shiftBannerStats}>
+            <div className={styles.shiftStat}>
+              <Text variant="caption" color="tertiary">Замовлень</Text>
+              <Text variant="labelMedium" weight="semibold">{summary.ordersCount}</Text>
+            </div>
+            <div className={styles.shiftStatDivider} />
+            <div className={styles.shiftStat}>
+              <Text variant="caption" color="tertiary">Виручка</Text>
+              <Text variant="labelMedium" weight="semibold" className={styles.shiftRevenue}>
+                ₴{formatCurrency(summary.totalRevenue)}
+              </Text>
+            </div>
+            <div className={styles.shiftStatDivider} />
+            <div className={styles.shiftStat}>
+              <Text variant="caption" color="tertiary">Каса на відкритті</Text>
+              <Text variant="labelMedium" weight="semibold">
+                ₴{formatCurrency(currentShift.openingCash)}
+              </Text>
+            </div>
+          </div>
+        </GlassCard>
+      ) : (
+        <div className={styles.noShiftBanner}>
+          <Icon name="warning" size="sm" color="tertiary" />
+          <Text variant="bodySmall" color="secondary">
+            Зміна не відкрита — показано замовлення за сьогодні
+          </Text>
         </div>
       )}
 
@@ -154,107 +242,130 @@ export default function HistoryPage() {
         {isLoading ? (
           <GlassCard padding="xl" className={styles.emptyState}>
             <Icon name="clock" size="2xl" color="tertiary" />
-            <Text variant="bodyLarge" color="secondary">
-              Завантаження...
-            </Text>
-          </GlassCard>
-        ) : filteredOrders.length === 0 ? (
-          <GlassCard padding="xl" className={styles.emptyState}>
-            <Icon name="search" size="2xl" color="tertiary" />
-            <Text variant="bodyLarge" color="secondary">
-              Замовлень сьогодні немає
-            </Text>
-            <Text variant="caption" color="tertiary">
-              Замовлення з'являться тут після оплати
-            </Text>
+            <Text variant="bodyLarge" color="secondary">Завантаження...</Text>
           </GlassCard>
         ) : (
-          filteredOrders.map((order: any) => {
-            const orderId = order.documentId || String(order.id);
-            const isExpanded = expandedOrderId === orderId;
-            const total = parseFloat(order.total) || 0;
-            const status = statusConfig[order.status] || statusConfig.pending;
-            const items: any[] = order.items || [];
-            const paymentMethod = order.payment?.method || order.paymentMethod;
-
-            return (
-              <div key={orderId} className={styles.orderCard}>
-                {/* Accordion trigger */}
-                <button
-                  type="button"
-                  className={styles.accordionTrigger}
-                  onClick={() => toggleOrder(orderId)}
-                  aria-expanded={isExpanded}
-                >
-                  <div className={styles.activityIcon}>
-                    <Icon name="receipt" size="sm" />
-                  </div>
-                  <div className={styles.activityContent}>
-                    <div className={styles.activityHeader}>
-                      <Text variant="labelMedium" weight="semibold">
-                        {order.orderNumber || `#${order.id}`}
-                      </Text>
-                      <Text variant="caption" color="tertiary">
-                        {formatTime(order.createdAt)}
-                      </Text>
-                    </div>
-                    <div className={styles.activityMeta}>
-                      <Text variant="bodySmall" weight="semibold">
-                        ₴{formatCurrency(total)}
-                      </Text>
-                      {items.length > 0 && (
-                        <Text variant="bodySmall" color="secondary">
-                          · {items.length} поз.
-                        </Text>
-                      )}
-                      {paymentMethod && (
-                        <Text variant="bodySmall" color="secondary">
-                          · {paymentMethodLabel[paymentMethod] || paymentMethod}
-                        </Text>
-                      )}
-                      <Badge variant={status.variant} size="sm">
-                        {status.label}
-                      </Badge>
-                    </div>
-                  </div>
-                  <Icon
-                    name="chevron-right"
-                    size="sm"
-                    color="tertiary"
-                    className={isExpanded ? styles.chevronOpen : styles.chevron}
-                  />
-                </button>
-
-                {/* Expanded items list */}
-                {isExpanded && items.length > 0 && (
-                  <div className={styles.itemsList}>
-                    {items.map((item: any, idx: number) => (
-                      <div key={item.id || idx} className={styles.itemRow}>
-                        <Text variant="bodySmall" className={styles.itemName}>
-                          {item.productName}
-                          {item.notes && (
-                            <Text as="span" variant="caption" color="tertiary"> — {item.notes}</Text>
-                          )}
-                        </Text>
-                        <Text variant="bodySmall" color="secondary" className={styles.itemQty}>
-                          {item.quantity} × ₴{formatCurrency(item.unitPrice)}
-                        </Text>
-                        <Text variant="labelSmall" weight="semibold" className={styles.itemTotal}>
-                          ₴{formatCurrency(item.totalPrice)}
-                        </Text>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {isExpanded && items.length === 0 && (
-                  <div className={styles.itemsList}>
-                    <Text variant="bodySmall" color="tertiary">Деталі позицій недоступні</Text>
-                  </div>
-                )}
+          <>
+            {/* Shift open event */}
+            {currentShift && (
+              <div className={`${styles.shiftEvent} ${styles.shiftEventOpen}`}>
+                <div className={styles.shiftEventIcon}>
+                  <Icon name="check" size="sm" />
+                </div>
+                <div className={styles.shiftEventContent}>
+                  <Text variant="labelSmall" weight="semibold">Зміна відкрита</Text>
+                  <Text variant="caption" color="secondary">
+                    {currentShift.openedBy} · каса ₴{formatCurrency(currentShift.openingCash)}
+                  </Text>
+                </div>
+                <Text variant="caption" color="tertiary">{formatTime(currentShift.openedAt)}</Text>
               </div>
-            );
-          })
+            )}
+
+            {filteredOrders.length === 0 ? (
+              <GlassCard padding="xl" className={styles.emptyState}>
+                <Icon name="search" size="2xl" color="tertiary" />
+                <Text variant="bodyLarge" color="secondary">
+                  {searchQuery ? 'Нічого не знайдено' : 'Замовлень поки немає'}
+                </Text>
+                {!searchQuery && (
+                  <Text variant="caption" color="tertiary">
+                    Замовлення з'являться тут після оплати
+                  </Text>
+                )}
+              </GlassCard>
+            ) : (
+              filteredOrders.map((order: any, index: number) => {
+                const orderId = order.documentId || String(order.id);
+                const isExpanded = expandedOrderId === orderId;
+                const total = parseFloat(order.total) || 0;
+                const status = statusConfig[order.status] || statusConfig.pending;
+                const items: any[] = order.items || [];
+                const paymentMethod = order.payment?.method || order.paymentMethod;
+
+                return (
+                  <div key={orderId} className={styles.orderCard}>
+                    <button
+                      type="button"
+                      className={styles.accordionTrigger}
+                      onClick={() => toggleOrder(orderId)}
+                      aria-expanded={isExpanded}
+                    >
+                      <div className={styles.activityIcon}>
+                        <Icon name="receipt" size="sm" />
+                      </div>
+                      <div className={styles.activityContent}>
+                        <div className={styles.activityHeader}>
+                          <div className={styles.orderTitle}>
+                            <Text variant="caption" color="tertiary" className={styles.orderSeq}>
+                              #{index + 1}
+                            </Text>
+                            <Text variant="labelMedium" weight="semibold">
+                              {order.orderNumber || `ORD-${order.id}`}
+                            </Text>
+                          </div>
+                          <Text variant="caption" color="tertiary">
+                            {formatTime(order.createdAt)}
+                          </Text>
+                        </div>
+                        <div className={styles.activityMeta}>
+                          <Text variant="bodySmall" weight="semibold">
+                            ₴{formatCurrency(total)}
+                          </Text>
+                          {items.length > 0 && (
+                            <Text variant="bodySmall" color="secondary">
+                              · {items.length} поз.
+                            </Text>
+                          )}
+                          {paymentMethod && (
+                            <Text variant="bodySmall" color="secondary">
+                              · {paymentMethodLabel[paymentMethod] || paymentMethod}
+                            </Text>
+                          )}
+                          <Badge variant={status.variant} size="sm">
+                            {status.label}
+                          </Badge>
+                        </div>
+                      </div>
+                      <Icon
+                        name="chevron-right"
+                        size="sm"
+                        color="tertiary"
+                        className={isExpanded ? styles.chevronOpen : styles.chevron}
+                      />
+                    </button>
+
+                    {isExpanded && items.length > 0 && (
+                      <div className={styles.itemsList}>
+                        {items.map((item: any, idx: number) => (
+                          <div key={item.id || idx} className={styles.itemRow}>
+                            <Text variant="bodySmall" className={styles.itemName}>
+                              {item.productName}
+                              {item.notes && (
+                                <Text as="span" variant="caption" color="tertiary"> — {item.notes}</Text>
+                              )}
+                            </Text>
+                            <Text variant="bodySmall" color="secondary" className={styles.itemQty}>
+                              {item.quantity} × ₴{formatCurrency(item.unitPrice)}
+                            </Text>
+                            <Text variant="labelSmall" weight="semibold" className={styles.itemTotal}>
+                              ₴{formatCurrency(item.totalPrice)}
+                            </Text>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {isExpanded && items.length === 0 && (
+                      <div className={styles.itemsList}>
+                        <Text variant="bodySmall" color="tertiary">Деталі позицій недоступні</Text>
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </>
         )}
       </div>
     </div>

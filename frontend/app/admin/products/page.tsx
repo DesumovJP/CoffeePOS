@@ -16,6 +16,7 @@ import {
   type Column,
   ProductFormModal,
   IngredientFormModal,
+  IngredientDetailModal,
 } from '@/components/organisms';
 import {
   useProducts,
@@ -325,6 +326,7 @@ export default function ProductsAdminPage() {
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all');
   const [selectedProduct, setSelectedProduct] = useState<UnifiedProduct | null>(null);
+  const [selectedIngredient, setSelectedIngredient] = useState<Ingredient | null>(null);
 
   // CRUD modal states
   const [productModal, setProductModal] = useState<{ isOpen: boolean; product: Product | null }>({ isOpen: false, product: null });
@@ -495,125 +497,89 @@ export default function ProductsAdminPage() {
   // ============================================
 
   // Product/Recipe columns
-  const productColumns: Column<UnifiedProduct>[] = useMemo(() => {
-    const cols: Column<UnifiedProduct>[] = [
-      {
-        key: 'thumbnail',
-        header: '',
-        width: '52px',
-        render: (product) => (
-          product.image ? (
-            <img
-              src={product.image}
-              alt={product.name}
-              className={styles.thumbnail}
-            />
-          ) : (
-            <div className={styles.thumbnailPlaceholder}>
-              <Icon name="package" size="sm" color="tertiary" />
-            </div>
-          )
-        ),
-      },
-      {
-        key: 'name',
-        header: 'Назва',
-        render: (product) => (
-          <div className={styles.itemName}>
-            <Text variant="bodyMedium" weight="medium">{product.name}</Text>
-            <Text variant="caption" color="tertiary">{product.categoryName}</Text>
+  const productColumns: Column<UnifiedProduct>[] = useMemo(() => [
+    {
+      key: 'thumbnail',
+      header: '',
+      width: '52px',
+      render: (product) => (
+        product.image ? (
+          <img src={product.image} alt={product.name} className={styles.thumbnail} />
+        ) : (
+          <div className={styles.thumbnailPlaceholder}>
+            <Icon name="package" size="sm" color="tertiary" />
           </div>
-        ),
-      },
-      {
-        key: 'type',
-        header: 'Тип',
-        width: '100px',
-        hideOnMobile: true,
-        hideOnTablet: true,
-        render: (product) => (
-          <Badge variant={product.type === 'recipe' ? 'info' : 'default'} size="sm">
-            {product.type === 'recipe' ? 'Рецепт' : 'Товар'}
-          </Badge>
-        ),
-      },
-    ];
-
-    cols.push({
-      key: 'stock',
-      header: 'Залишок',
-      width: '110px',
-      hideOnMobile: true,
-      render: (product) => {
-        if (product.type === 'recipe') return <Text variant="bodySmall" color="tertiary">—</Text>;
-        const isOutOfStock = (product.quantity || 0) <= 0;
-        const isLowStock = (product.quantity || 0) > 0 && (product.quantity || 0) <= (product.minQuantity || 0);
-        if (isOutOfStock) return <Badge variant="error" size="sm">Немає</Badge>;
-        if (isLowStock) return <Badge variant="warning" size="sm">{product.quantity} шт</Badge>;
-        return <Text variant="bodySmall" color="secondary">{product.quantity} шт</Text>;
-      },
-    });
-
-    cols.push({
+        )
+      ),
+    },
+    {
+      key: 'name',
+      header: 'Назва',
+      render: (product) => (
+        <div className={styles.itemName}>
+          <Text variant="bodyMedium" weight="medium">{product.name}</Text>
+          <Text variant="caption" color="tertiary">{product.categoryName}</Text>
+        </div>
+      ),
+    },
+    {
       key: 'price',
       header: 'Ціна',
       align: 'right',
-      width: '120px',
-      hideOnMobile: true,
+      width: '80px',
       render: (product) => (
-        <div>
-          <Text variant="labelMedium" weight="semibold">₴{product.price.toFixed(0)}</Text>
-          <Text variant="caption" color="tertiary">собі: ₴{product.costPrice.toFixed(0)}</Text>
-        </div>
+        <Text variant="labelMedium" weight="semibold" className={styles.price}>
+          ₴{product.price.toFixed(0)}
+        </Text>
       ),
-    });
-
-    cols.push({
-      key: 'status',
-      header: 'Статус',
-      width: '110px',
-      hideOnMobile: true,
-      hideOnTablet: true,
-      render: (product) => (
-        <Badge variant={product.isActive ? 'success' : 'default'} size="sm">
-          {product.isActive ? 'Активний' : 'Неактивний'}
-        </Badge>
-      ),
-    });
-
-    cols.push({
-      key: 'actions',
-      header: 'Дії',
+    },
+    {
+      key: 'margin',
+      header: 'Маржа',
       align: 'right',
-      width: '90px',
+      width: '80px',
+      hideOnMobile: true,
+      render: (product) => {
+        if (!product.costPrice || product.price <= 0) {
+          return <Text variant="bodySmall" color="tertiary">—</Text>;
+        }
+        const margin = ((product.price - product.costPrice) / product.price) * 100;
+        const colorClass =
+          margin >= 50 ? styles.marginGood :
+          margin >= 30 ? styles.marginWarn :
+          styles.marginBad;
+        return (
+          <Text variant="labelSmall" weight="semibold" className={colorClass}>
+            {margin.toFixed(0)}%
+          </Text>
+        );
+      },
+    },
+    {
+      key: 'actions',
+      header: '',
+      align: 'right',
+      width: '80px',
       render: (product) => (
         <div className={styles.actions}>
           <Button
             variant="ghost"
             size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleEditProduct(product.documentId);
-            }}
+            onClick={(e) => { e.stopPropagation(); handleEditProduct(product.documentId); }}
           >
             <Icon name="edit" size="sm" />
           </Button>
           <Button
             variant="ghost"
             size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDeleteProduct(product.documentId, product.name);
-            }}
+            onClick={(e) => { e.stopPropagation(); handleDeleteProduct(product.documentId, product.name); }}
           >
             <Icon name="delete" size="sm" />
           </Button>
         </div>
       ),
-    });
-
-    return cols;
-  }, [handleEditProduct, handleDeleteProduct]);
+    },
+  ], [handleEditProduct, handleDeleteProduct]);
 
   // Ingredient columns
   const ingredientColumns: Column<Ingredient>[] = useMemo(() => [
@@ -622,10 +588,15 @@ export default function ProductsAdminPage() {
       header: 'Назва',
       render: (ingredient) => {
         const isLowStock = ingredient.quantity <= ingredient.minQuantity;
+        const isOutOfStock = ingredient.quantity <= 0;
         return (
           <div className={styles.itemName}>
             <Text variant="bodyMedium" weight="medium">{ingredient.name}</Text>
-            {isLowStock && <Badge variant="warning" size="sm">Мало</Badge>}
+            {isOutOfStock
+              ? <Badge variant="error" size="sm">Немає</Badge>
+              : isLowStock
+              ? <Badge variant="warning" size="sm">Мало</Badge>
+              : null}
           </div>
         );
       },
@@ -642,27 +613,29 @@ export default function ProductsAdminPage() {
     {
       key: 'quantity',
       header: 'Залишок',
-      width: '110px',
+      width: '160px',
       render: (ingredient) => {
         const isLowStock = ingredient.quantity <= ingredient.minQuantity;
+        const isOutOfStock = ingredient.quantity <= 0;
+        // Progress: current vs 2× minimum (so "full" = 2× min)
+        const max = (ingredient.minQuantity || 1) * 2;
+        const pct = Math.min(100, (ingredient.quantity / max) * 100);
+        const fillClass = isOutOfStock
+          ? styles.stockBarFillCritical
+          : isLowStock
+          ? styles.stockBarFillLow
+          : styles.stockBarFill;
         return (
-          <Text variant="bodyMedium" weight="semibold" color={isLowStock ? 'error' : 'primary'}>
-            {formatQuantity(ingredient.quantity, ingredient.unit)}
-          </Text>
+          <div className={styles.stockCell}>
+            <Text variant="bodySmall" weight="semibold" color={isOutOfStock ? 'error' : isLowStock ? 'warning' : 'primary'}>
+              {formatQuantity(ingredient.quantity, ingredient.unit)}
+            </Text>
+            <div className={styles.stockBar}>
+              <div className={`${styles.stockBarFillBase} ${fillClass}`} style={{ width: `${pct}%` }} />
+            </div>
+          </div>
         );
       },
-    },
-    {
-      key: 'minQuantity',
-      header: 'Мін. запас',
-      width: '100px',
-      hideOnMobile: true,
-      hideOnTablet: true,
-      render: (ingredient) => (
-        <Text variant="bodySmall" color="tertiary">
-          {formatQuantity(ingredient.minQuantity, ingredient.unit)}
-        </Text>
-      ),
     },
     {
       key: 'costPerUnit',
@@ -670,43 +643,29 @@ export default function ProductsAdminPage() {
       width: '110px',
       hideOnMobile: true,
       render: (ingredient) => (
-        <Text variant="bodySmall">₴{ingredient.costPerUnit.toFixed(2)}/{UNIT_LABELS[ingredient.unit]}</Text>
-      ),
-    },
-    {
-      key: 'supplier',
-      header: 'Постачальник',
-      width: '140px',
-      hideOnMobile: true,
-      hideOnTablet: true,
-      render: (ingredient) => (
-        <Text variant="bodySmall" color="secondary">{ingredient.supplier || '—'}</Text>
+        <Text variant="bodySmall" color="secondary">
+          ₴{ingredient.costPerUnit.toFixed(2)}/{UNIT_LABELS[ingredient.unit]}
+        </Text>
       ),
     },
     {
       key: 'actions',
-      header: 'Дії',
+      header: '',
       align: 'right',
-      width: '90px',
+      width: '80px',
       render: (ingredient) => (
         <div className={styles.actions}>
           <Button
             variant="ghost"
             size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleEditIngredient(ingredient);
-            }}
+            onClick={(e) => { e.stopPropagation(); handleEditIngredient(ingredient); }}
           >
             <Icon name="edit" size="sm" />
           </Button>
           <Button
             variant="ghost"
             size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDeleteIngredient(ingredient.documentId, ingredient.name);
-            }}
+            onClick={(e) => { e.stopPropagation(); handleDeleteIngredient(ingredient.documentId, ingredient.name); }}
           >
             <Icon name="delete" size="sm" />
           </Button>
@@ -721,6 +680,10 @@ export default function ProductsAdminPage() {
 
   const handleProductClick = useCallback((product: UnifiedProduct) => {
     setSelectedProduct(product);
+  }, []);
+
+  const handleIngredientClick = useCallback((ingredient: Ingredient) => {
+    setSelectedIngredient(ingredient);
   }, []);
 
   const isLoading = viewMode === 'ingredients' ? ingredientsLoading : productsLoading;
@@ -832,6 +795,7 @@ export default function ProductsAdminPage() {
           data={filteredIngredients}
           getRowKey={(ing) => String(ing.id)}
           getRowClassName={getIngredientRowClassName}
+          onRowClick={handleIngredientClick}
           emptyState={{ icon: 'search', title: 'Інгредієнти не знайдено' }}
         />
       ) : (
@@ -855,6 +819,16 @@ export default function ProductsAdminPage() {
           onClose={() => setSelectedProduct(null)}
         />
       )}
+
+      {/* Ingredient Detail Modal */}
+      <IngredientDetailModal
+        ingredient={selectedIngredient}
+        onClose={() => setSelectedIngredient(null)}
+        onEdit={(ing) => {
+          setSelectedIngredient(null);
+          setIngredientModal({ isOpen: true, ingredient: ing });
+        }}
+      />
 
       {/* CRUD Modals */}
       <ProductFormModal

@@ -171,14 +171,62 @@
 
 /* Price display */
 .price {
-  font-weight: var(--font-semibold);
-  color: var(--text-primary);
   font-variant-numeric: tabular-nums;
 }
 
-.cost {
-  font-size: var(--text-xs);
-  color: var(--text-tertiary);
+/* Margin column */
+.marginGood {
+  color: var(--color-success);
+  font-variant-numeric: tabular-nums;
+}
+
+.marginWarn {
+  color: var(--color-warning);
+  font-variant-numeric: tabular-nums;
+}
+
+.marginBad {
+  color: var(--color-error);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================
+   STOCK PROGRESS BAR (ingredient table)
+   ============================================ */
+
+.stockCell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.stockBar {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--glass-bg-elevated);
+  border: 1px solid var(--glass-border);
+  overflow: hidden;
+  width: 100%;
+  max-width: 100px;
+}
+
+.stockBarFillBase {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.stockBarFill {
+  background: var(--color-success);
+}
+
+.stockBarFillLow {
+  background: var(--color-warning);
+}
+
+.stockBarFillCritical {
+  background: var(--color-error);
 }
 
 /* ============================================

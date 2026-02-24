@@ -1,0 +1,112 @@
+/**
+ * IngredientDetailModal Styles
+ */
+
+/* ============================================
+   SECTIONS
+   ============================================ */
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-bottom: var(--space-4);
+  margin-bottom: var(--space-4);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.section:last-child {
+  padding-bottom: 0;
+  margin-bottom: 0;
+  border-bottom: none;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-1);
+}
+
+.sectionTitle {
+  letter-spacing: 0.06em;
+}
+
+/* ============================================
+   ROWS
+   ============================================ */
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-1-5) 0;
+}
+
+.valueHighlight {
+  color: var(--color-success);
+}
+
+/* ============================================
+   STOCK BAR
+   ============================================ */
+
+.stockBarContainer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) 0;
+}
+
+.stockBarTrack {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--glass-bg-elevated);
+  border: 1px solid var(--glass-border);
+  overflow: hidden;
+}
+
+.stockBarFill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+
+.fillGood {
+  background: var(--color-success);
+}
+
+.fillLow {
+  background: var(--color-warning);
+}
+
+.fillCritical {
+  background: var(--color-error);
+}
+
+.stockBarLabel {
+  flex-shrink: 0;
+  min-width: 64px;
+  text-align: right;
+}
+
+/* ============================================
+   SUPPLIERS
+   ============================================ */
+
+.supplierList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.supplierChip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+}

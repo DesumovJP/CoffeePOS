@@ -18,12 +18,144 @@
 }
 
 /* ============================================
-   BACKGROUND — clean, no gradient orbs
+   SHIFT CONTEXT BANNER
    ============================================ */
 
-.background { display: none; }
-.gradientOrb1 { display: none; }
-.gradientOrb2 { display: none; }
+.shiftBanner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  flex-shrink: 0;
+}
+
+.shiftBannerMain {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.shiftBannerIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+  background: color-mix(in srgb, var(--color-warning) 14%, transparent);
+  color: var(--color-warning);
+}
+
+.shiftBannerInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.shiftBannerDuration {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.shiftBannerStats {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--glass-border);
+}
+
+.shiftStat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.shiftStatDivider {
+  width: 1px;
+  height: 28px;
+  background: var(--glass-border);
+  flex-shrink: 0;
+}
+
+.shiftRevenue {
+  color: var(--color-success);
+}
+
+/* No shift banner */
+.noShiftBanner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2-5) var(--space-4);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  flex-shrink: 0;
+}
+
+/* ============================================
+   SHIFT EVENTS (open / close)
+   ============================================ */
+
+.shiftEvent {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2-5) var(--space-4);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+}
+
+.shiftEventOpen .shiftEventIcon {
+  color: var(--color-success);
+  background: color-mix(in srgb, var(--color-success) 12%, transparent);
+}
+
+.shiftEventClose .shiftEventIcon {
+  color: var(--text-tertiary);
+  background: var(--glass-bg-elevated);
+}
+
+.shiftEventIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+
+.shiftEventContent {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+/* ============================================
+   ORDER TITLE — sequential # + order number
+   ============================================ */
+
+.orderTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.orderSeq {
+  font-variant-numeric: tabular-nums;
+  min-width: 20px;
+}
 
 /* ============================================
    TOOLBAR

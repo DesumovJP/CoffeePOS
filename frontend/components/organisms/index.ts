@@ -21,6 +21,7 @@ export * from './ModifierGroupFormModal';
 export * from './TableFormModal';
 export * from './ProductFormModal';
 export * from './CategoryFormModal';
+export * from './IngredientDetailModal';
 export * from './IngredientFormModal';
 export * from './ReceiptTemplate';
 export * from './ErrorBoundary';

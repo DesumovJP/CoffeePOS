@@ -97,6 +97,75 @@
 }
 
 /* ============================================
+   SUPPLIER TAG INPUT
+   ============================================ */
+
+.tagInputWrapper {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1-5);
+  min-height: 2.5rem;
+  padding: var(--space-1-5) var(--space-3);
+  background: var(--glass-bg-elevated);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  cursor: text;
+  transition: border-color var(--duration-fast) var(--ease-default);
+}
+
+.tagInputWrapper:focus-within {
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-focus);
+}
+
+.supplierTag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 2px var(--space-2);
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 30%, transparent);
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.tagRemove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--text-secondary);
+  line-height: 1;
+  transition: color var(--duration-fast) var(--ease-default);
+}
+
+.tagRemove:hover {
+  color: var(--color-error);
+}
+
+.tagInput {
+  flex: 1;
+  min-width: 120px;
+  background: none;
+  border: none;
+  outline: none;
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  color: var(--text-primary);
+  padding: 0;
+}
+
+.tagInput::placeholder {
+  color: var(--text-tertiary);
+}
+
+/* ============================================
    TOGGLES / CHECKBOXES
    ============================================ */
 

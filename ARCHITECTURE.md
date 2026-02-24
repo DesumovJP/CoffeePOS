@@ -285,6 +285,103 @@ CLOSE  → records closingCash, calculates difference, logs shift_close activity
 | manager@coffeepos.com | Password123! | Manager |
 | barista@coffeepos.com | Password123! | Barista |
 
+## Notification System
+
+### Overview
+
+Client-side notification layer — all state lives in the browser (Zustand + localStorage). No backend persistence.
+
+### NotificationStore (`frontend/lib/store/notificationStore.ts`)
+
+Zustand store persisted to `paradise-pos-notifications` localStorage key (last 50 items).
+
+**Notification shape:**
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | string | `notif-{timestamp}-{random}` |
+| `type` | NotificationType | 14 types (see below) |
+| `priority` | NotificationPriority | `critical` / `high` / `normal` / `low` / `info` |
+| `title` | string | Short heading |
+| `message` | string | Detail text |
+| `read` | boolean | false on creation |
+| `actionUrl` | string? | Navigates on click |
+| `expiresAt` | string? | ISO date; auto-cleared by `clearExpired()` |
+| `source` | string? | e.g. `'shift'` |
+| `data` | Record? | Arbitrary payload |
+
+**14 Notification types** and their default priority:
+
+| Type | Priority | Meaning |
+|---|---|---|
+| `out_of_stock` | critical | Ingredient completely out |
+| `error` | critical | App/API error |
+| `low_stock` | high | Ingredient below minimum |
+| `warning` | high | Generic warning |
+| `supply_received` | normal | Incoming supply recorded |
+| `supply_expected` | normal | Delivery expected |
+| `supply_ordered` | normal | Order sent to supplier |
+| `order_completed` | normal | Order paid (expires 30 min) |
+| `success` | normal | Generic success (expires 10 min) |
+| `high_sales` | normal | Sales milestone |
+| `system` | normal | System message |
+| `shift_action` | low | Shift open/close |
+| `info` | low | Informational |
+| `order_cancelled` | — | Order cancelled |
+
+**8 Quick creator methods:**
+
+```ts
+notifyLowStock(itemName, current, min, unit)   // → /admin/inventory
+notifyOutOfStock(itemName)                      // → /admin/inventory
+notifySupplyReceived(supplierName, totalItems)
+notifySupplyOrdered(supplierName)
+notifyShiftAction(action, performer, details?)
+notifyOrderCompleted(orderNumber, total)        // expires 30 min
+notifyError(title, message)
+notifySuccess(title, message)                   // expires 10 min
+```
+
+**Capacity:** stores up to 100 in memory, persists last 50 to localStorage. `clearExpired()` removes entries past their `expiresAt`.
+
+**Sound:** `soundEnabled` flag (default `true`); plays for `critical` / `high` priority — currently a stub (no audio file).
+
+### NotificationCenter (`frontend/components/organisms/NotificationCenter/`)
+
+Bell-icon button in AppShell header. Renders a floating dropdown panel.
+
+| Feature | Detail |
+|---|---|
+| Badge | Red count badge; hidden when 0 |
+| Panel opens | Click bell; closes on click-outside |
+| List | Shows up to `maxItems` (default 20), newest first |
+| Click notification | Marks read; navigates to `actionUrl` if present |
+| Per-item dismiss | ✕ button removes without navigating |
+| "Прочитати всі" | Marks all read in one tap |
+| "Очистити" | Removes all notifications |
+| Overflow footer | "Показано X з Y" if list is truncated |
+
+Type → icon and color mapping defined in `TYPE_ICONS` / `TYPE_COLORS` constants.
+
+### Integration points
+
+| Where | What |
+|---|---|
+| `orderStore.ts` | Calls `notifyOrderCompleted` after successful payment |
+| `ShiftGuard` / shift hooks | Calls `notifyShiftAction` on open/close |
+| `suppliesApi` mock | Calls `notifySupplyReceived` |
+| `ingredientsApi` mock | Calls `notifyLowStock` / `notifyOutOfStock` |
+
+### Selectors
+
+```ts
+selectNotifications         // all notifications array
+selectUnreadCount           // number
+selectUnreadNotifications   // unread items only
+selectCriticalNotifications // critical + unread
+selectNotificationsByType(type)
+```
+
 ## Strapi 5 Production Notes
 
 - **Route files**: must use separate `custom.ts` files, NOT `export default [customRoutes, coreRouter]` array pattern
