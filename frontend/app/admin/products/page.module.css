@@ -18,18 +18,45 @@
   margin-inline: auto;
 }
 
-/* View Mode Toggle */
+/* View Mode Toggle — full-width segmented control */
 .viewToggle {
-  display: flex;
-  justify-content: flex-start;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  min-width: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  background: var(--glass-bg-elevated);
+  backdrop-filter: blur(var(--blur-md));
+  -webkit-backdrop-filter: blur(var(--blur-md));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
 }
 
-.viewToggle::-webkit-scrollbar {
-  display: none;
+.viewToggleBtn {
+  padding: var(--space-2-5) var(--space-4);
+  border: 1px solid transparent;
+  border-radius: calc(var(--radius-lg) - 4px);
+  background: transparent;
+  cursor: pointer;
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-secondary);
+  transition: all 0.15s ease;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.viewToggleBtn:hover {
+  color: var(--text-primary);
+  background: var(--glass-bg);
+}
+
+.viewToggleBtnActive {
+  background: var(--glass-bg);
+  border-color: var(--glass-border);
+  color: var(--text-primary);
+  font-weight: var(--font-semibold);
+  box-shadow: var(--shadow-sm);
 }
 
 

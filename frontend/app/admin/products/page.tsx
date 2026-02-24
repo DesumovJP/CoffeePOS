@@ -362,12 +362,6 @@ export default function ProductsAdminPage() {
 
   const ingredientsList = apiIngredients || [];
 
-  // View mode tabs
-  const viewCategories: Category[] = [
-    { id: 'products', name: 'Продукція' },
-    { id: 'ingredients', name: 'Інгредієнти' },
-  ];
-
   // Reset filters on view mode change
   const handleViewModeChange = (mode: ViewMode) => {
     setViewMode(mode);
@@ -776,14 +770,22 @@ export default function ProductsAdminPage() {
 
   return (
     <div className={styles.page}>
-      {/* View Mode Toggle */}
+      {/* View Mode Toggle — full-width segmented control */}
       <div className={styles.viewToggle}>
-        <CategoryTabs
-          categories={viewCategories}
-          value={viewMode}
-          showAll={false}
-          onChange={(id) => id && handleViewModeChangeWrapped(id as ViewMode)}
-        />
+        <button
+          type="button"
+          className={`${styles.viewToggleBtn} ${viewMode === 'products' ? styles.viewToggleBtnActive : ''}`}
+          onClick={() => handleViewModeChangeWrapped('products')}
+        >
+          Продукція
+        </button>
+        <button
+          type="button"
+          className={`${styles.viewToggleBtn} ${viewMode === 'ingredients' ? styles.viewToggleBtnActive : ''}`}
+          onClick={() => handleViewModeChangeWrapped('ingredients')}
+        >
+          Інгредієнти
+        </button>
       </div>
 
       {/* Mobile search bar (shown when triggered from header) */}

@@ -116,7 +116,12 @@ export const employeesApi = {
     return apiClient.get<EmployeeStats>(`/employees/${documentId}/stats`, queryParams);
   },
 
-  async getPerformance(): Promise<ApiResponse<EmployeePerformance[]>> {
-    return apiClient.get<EmployeePerformance[]>('/employees/performance');
+  async getPerformance(
+    params?: { month?: number; year?: number }
+  ): Promise<ApiResponse<EmployeePerformance[]>> {
+    const queryParams: Record<string, string | number | undefined> = {};
+    if (params?.month) queryParams.month = params.month;
+    if (params?.year)  queryParams.year  = params.year;
+    return apiClient.get<EmployeePerformance[]>('/employees/performance', queryParams);
   },
 };

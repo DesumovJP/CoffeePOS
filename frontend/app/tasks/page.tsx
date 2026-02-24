@@ -9,7 +9,7 @@
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Text, Icon, Badge, Button, GlassCard, Modal } from '@/components/atoms';
-import { SearchInput, CategoryTabs, type Category } from '@/components/molecules';
+import { SearchInput } from '@/components/molecules';
 import { TaskFormModal } from '@/components/organisms';
 import { useToast } from '@/components/atoms';
 import { useTasks, useUpdateTask, useCompleteTask, useDeleteTask } from '@/lib/hooks';
@@ -44,11 +44,6 @@ const TYPE_LABELS: Record<TaskType, string> = {
   task: 'Завдання',
 };
 
-const FILTER_CATEGORIES: Category[] = [
-  { id: 'all', name: 'Всі' },
-  { id: 'mine', name: 'Мої завдання' },
-  { id: 'high', name: 'Високий пріоритет' },
-];
 
 // ============================================
 // TASK CARD
@@ -179,7 +174,6 @@ export default function TasksPage() {
   const [formModalOpen, setFormModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [deleteTask, setDeleteTask] = useState<Task | null>(null);
-  const [activeFilter, setActiveFilter] = useState<string | null>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
@@ -199,19 +193,12 @@ export default function TasksPage() {
     return () => window.removeEventListener('appshell:search', searchHandler);
   }, []);
 
-  // Build query params based on filter + role
+  // Build query params based on role only (barista sees own tasks, admins see all)
   const queryParams = useMemo<GetTasksParams>(() => {
     const params: GetTasksParams = {};
 
-    // Barista always sees only their own tasks
     if (!isAdmin) {
       params.assignedTo = currentUserName;
-    } else if (activeFilter === 'mine') {
-      params.assignedTo = currentUserName;
-    }
-
-    if (activeFilter === 'high') {
-      params.priority = 'high';
     }
 
     if (searchQuery.trim()) {
@@ -219,7 +206,7 @@ export default function TasksPage() {
     }
 
     return params;
-  }, [activeFilter, searchQuery, isAdmin, currentUserName]);
+  }, [searchQuery, isAdmin, currentUserName]);
 
   const { data: tasks } = useTasks(queryParams);
   const updateMutation = useUpdateTask();
@@ -278,12 +265,6 @@ export default function TasksPage() {
     <div className={styles.page}>
       {/* Toolbar */}
       <div className={styles.toolbar}>
-        <CategoryTabs
-          categories={FILTER_CATEGORIES}
-          value={activeFilter}
-          onChange={setActiveFilter}
-          showAll={false}
-        />
         {mobileSearchOpen && (
           <div className={styles.mobileSearchBar}>
             <SearchInput

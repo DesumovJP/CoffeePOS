@@ -125,10 +125,17 @@ export default factories.createCoreController('api::employee.employee', ({ strap
   },
 
   /**
-   * GET /api/employees/performance
-   * Returns performance data for all active employees
+   * GET /api/employees/performance?month=M&year=YYYY
+   * Returns performance data for all active employees filtered to the given month.
    */
   async performance(ctx) {
+    const now = new Date();
+    const month = parseInt((ctx.query as any).month as string) || (now.getMonth() + 1);
+    const year  = parseInt((ctx.query as any).year  as string) || now.getFullYear();
+
+    const monthStart = new Date(year, month - 1, 1);
+    const monthEnd   = new Date(year, month, 1); // exclusive
+
     const employees = await strapi.db.query('api::employee.employee').findMany({
       where: { isActive: true },
     });
@@ -138,43 +145,54 @@ export default factories.createCoreController('api::employee.employee', ({ strap
     });
 
     const allOrders = await strapi.db.query('api::order.order').findMany({
-      where: { status: 'completed' },
+      where: {
+        status: 'completed',
+        createdAt: { $gte: monthStart.toISOString(), $lt: monthEnd.toISOString() },
+      },
     });
 
     const performance = employees.map((emp) => {
-      const myShifts = allShifts.filter((s) => s.openedBy === emp.name);
+      // Shifts that overlap with the selected month
+      const myShifts = allShifts.filter((s) => {
+        const start = new Date(s.openedAt).getTime();
+        const end   = s.closedAt ? new Date(s.closedAt).getTime() : Date.now();
+        return s.openedBy === emp.name && start < monthEnd.getTime() && end >= monthStart.getTime();
+      });
 
       let totalHours = 0;
       myShifts.forEach((s) => {
-        const start = new Date(s.openedAt).getTime();
-        const end = s.closedAt ? new Date(s.closedAt).getTime() : Date.now();
-        totalHours += (end - start) / (1000 * 60 * 60);
+        const start = Math.max(new Date(s.openedAt).getTime(), monthStart.getTime());
+        const end   = Math.min(
+          s.closedAt ? new Date(s.closedAt).getTime() : Date.now(),
+          monthEnd.getTime()
+        );
+        totalHours += Math.max(0, end - start) / (1000 * 60 * 60);
       });
 
       const myOrders = allOrders.filter((o) => {
         const oTime = new Date(o.createdAt).getTime();
         return myShifts.some((s) => {
           const start = new Date(s.openedAt).getTime();
-          const end = s.closedAt ? new Date(s.closedAt).getTime() : Date.now();
+          const end   = s.closedAt ? new Date(s.closedAt).getTime() : Date.now();
           return oTime >= start && oTime <= end;
         });
       });
 
       const totalOrders = myOrders.length;
-      const totalSales = myOrders.reduce((sum, o) => sum + parseFloat(o.total || '0'), 0);
+      const totalSales  = myOrders.reduce((sum, o) => sum + parseFloat(o.total || '0'), 0);
 
       return {
         employeeId: emp.id,
         employeeName: emp.name,
         role: emp.role,
-        totalSales: Math.round(totalSales),
-        totalHours: Math.round(totalHours * 10) / 10,
+        totalSales:     Math.round(totalSales),
+        totalHours:     Math.round(totalHours * 10) / 10,
         totalOrders,
-        avgOrderValue: totalOrders > 0 ? Math.round(totalSales / totalOrders) : 0,
-        shiftsCount: myShifts.length,
+        avgOrderValue:  totalOrders > 0 ? Math.round(totalSales / totalOrders) : 0,
+        shiftsCount:    myShifts.length,
       };
     }).sort((a, b) => b.totalSales - a.totalSales);
 
-    return { data: performance };
+    return { data: performance, meta: { month, year } };
   },
 }));

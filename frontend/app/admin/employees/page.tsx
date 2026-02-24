@@ -273,9 +273,31 @@ function EmployeesListTab() {
 // ANALYTICS TAB
 // ============================================
 
+const MONTHS = [
+  'Січень', 'Лютий', 'Березень', 'Квітень', 'Травень', 'Червень',
+  'Липень', 'Серпень', 'Вересень', 'Жовтень', 'Листопад', 'Грудень',
+];
+
 function AnalyticsTab() {
+  const today = new Date();
+  const [selectedMonth, setSelectedMonth] = useState(today.getMonth() + 1);
+  const [selectedYear, setSelectedYear]   = useState(today.getFullYear());
+
+  const isCurrentMonth =
+    selectedMonth === today.getMonth() + 1 && selectedYear === today.getFullYear();
+
+  const goToPrevMonth = () => {
+    if (selectedMonth === 1) { setSelectedMonth(12); setSelectedYear((y) => y - 1); }
+    else { setSelectedMonth((m) => m - 1); }
+  };
+  const goToNextMonth = () => {
+    if (isCurrentMonth) return;
+    if (selectedMonth === 12) { setSelectedMonth(1); setSelectedYear((y) => y + 1); }
+    else { setSelectedMonth((m) => m + 1); }
+  };
+
   const { data: employees } = useEmployees();
-  const { data: performance, isLoading } = useEmployeePerformance();
+  const { data: performance, isLoading } = useEmployeePerformance({ month: selectedMonth, year: selectedYear });
 
   const [chartColors, setChartColors] = useState({
     accent: '#8B5E3C',
@@ -304,10 +326,10 @@ function AnalyticsTab() {
     const totalSales = performance?.reduce((sum, p) => sum + p.totalSales, 0) || 0;
 
     return [
-      { id: 'total', label: 'Всього працівників', value: total, icon: 'user' as const, iconColor: 'accent' as const },
+      { id: 'total', label: 'Всього', value: total, icon: 'user' as const, iconColor: 'accent' as const },
       { id: 'active', label: 'Активних', value: active, icon: 'check' as const, iconColor: 'success' as const },
-      { id: 'hours', label: 'Годин (всі)', value: totalHours.toFixed(1), icon: 'clock' as const, iconColor: 'info' as const },
-      { id: 'sales', label: 'Продажі (всі)', value: `₴${formatCurrency(totalSales)}`, icon: 'cash' as const, iconColor: 'warning' as const },
+      { id: 'hours', label: 'Годин', value: totalHours.toFixed(1), icon: 'clock' as const, iconColor: 'info' as const },
+      { id: 'sales', label: 'Продажі', value: `₴${formatCurrency(totalSales)}`, icon: 'cash' as const, iconColor: 'warning' as const },
     ];
   }, [employees, performance]);
 
@@ -391,6 +413,27 @@ function AnalyticsTab() {
 
   return (
     <div className={styles.analyticsContent}>
+      {/* Month navigation */}
+      <div className={styles.monthNav}>
+        <Button variant="ghost" size="sm" onClick={goToPrevMonth} aria-label="Попередній місяць">
+          <Icon name="chevron-left" size="md" />
+        </Button>
+        <div className={styles.monthTitle}>
+          <Text variant="labelLarge" weight="semibold">
+            {MONTHS[selectedMonth - 1]} {selectedYear}
+          </Text>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={goToNextMonth}
+          disabled={isCurrentMonth}
+          aria-label="Наступний місяць"
+        >
+          <Icon name="chevron-right" size="md" />
+        </Button>
+      </div>
+
       <StatsGrid stats={stats} columns={4} variant="bar" />
 
       {/* Charts */}
