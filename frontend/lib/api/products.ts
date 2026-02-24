@@ -34,7 +34,7 @@ export const productsApi = {
     const queryParams: Record<string, string | number | boolean | undefined> = {
       'pagination[page]': params.page,
       'pagination[pageSize]': params.pageSize || 100,
-      'populate': params.populate || 'image,category,modifierGroups',
+      'populate': params.populate || 'image,category',
       'sort': params.sort || 'sortOrder:asc,name:asc',
     };
 

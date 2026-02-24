@@ -83,8 +83,8 @@ export const ingredientsApi = {
       query.append('pagination[pageSize]', String(params.pageSize));
     }
 
-    // Populate relations
-    query.append('populate', 'category,image');
+    // Populate relations (Ingredient has no image field in schema)
+    query.append('populate', 'category');
 
     const queryString = query.toString();
     return apiClient.get<Ingredient[]>(`/ingredients${queryString ? `?${queryString}` : ''}`);
@@ -94,7 +94,9 @@ export const ingredientsApi = {
    * Get single ingredient by ID
    */
   async getById(documentId: string): Promise<ApiResponse<Ingredient>> {
-    return apiClient.get<Ingredient>(`/ingredients/${documentId}?populate=category,image`);
+    return apiClient.get<Ingredient>(`/ingredients/${documentId}`, {
+      populate: 'category',
+    });
   },
 
   /**
@@ -237,7 +239,9 @@ export const inventoryTransactionsApi = {
       query.append('pagination[pageSize]', String(params.pageSize));
     }
 
-    query.append('populate', 'ingredient,product');
+    // Strapi 5: use indexed array, not comma-separated
+    query.append('populate[0]', 'ingredient');
+    query.append('populate[1]', 'product');
 
     const queryString = query.toString();
     return apiClient.get<InventoryTransaction[]>(

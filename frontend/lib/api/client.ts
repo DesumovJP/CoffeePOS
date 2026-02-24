@@ -63,7 +63,15 @@ function buildUrl(endpoint: string, params?: Record<string, string | number | bo
   const searchParams = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined) {
-      searchParams.append(key, String(value));
+      // Strapi 5 does not support comma-separated populate (returns 400).
+      // Auto-convert to indexed array notation: populate[0]=..., populate[1]=...
+      if (key === 'populate' && typeof value === 'string' && value.includes(',')) {
+        value.split(',').forEach((item, index) => {
+          searchParams.append(`populate[${index}]`, item.trim());
+        });
+      } else {
+        searchParams.append(key, String(value));
+      }
     }
   });
 
@@ -122,8 +130,8 @@ export class ApiClient {
       if (!response.ok) {
         // Auto-logout on 401 (expired/invalid JWT)
         if (response.status === 401 && typeof window !== 'undefined') {
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
+          localStorage.removeItem('paradise-pos-token');
+          localStorage.removeItem('paradise-pos-user');
           window.location.href = '/login';
           throw { status: 401, name: 'Unauthorized', message: 'Сесія закінчилась' } as ApiError;
         }
