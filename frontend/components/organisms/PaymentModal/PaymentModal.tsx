@@ -8,7 +8,7 @@
  */
 
 import { forwardRef, useState, useEffect, type HTMLAttributes } from 'react';
-import { Text, Button, Icon, GlassCard, Input, Divider, type IconName } from '@/components/atoms';
+import { Text, Button, Icon, Divider, type IconName } from '@/components/atoms';
 import { Modal } from '@/components/atoms/Modal';
 import styles from './PaymentModal.module.css';
 
@@ -47,8 +47,6 @@ const PAYMENT_METHODS: Record<PaymentMethod, { label: string; icon: IconName; de
   qr: { label: 'QR-код', icon: 'qr', description: 'Сканувати QR' },
 };
 
-const QUICK_AMOUNTS = [50, 100, 200, 500, 1000];
-
 // ============================================
 // HELPERS
 // ============================================
@@ -78,54 +76,27 @@ export const PaymentModal = forwardRef<HTMLDivElement, PaymentModalProps>(
     ref
   ) => {
     const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('cash');
-    const [cashReceived, setCashReceived] = useState<string>('');
     const [paymentSuccess, setPaymentSuccess] = useState(false);
     const [successMethod, setSuccessMethod] = useState<PaymentMethod>('cash');
-    const [successChange, setSuccessChange] = useState(0);
-
-    const receivedAmount = parseFloat(cashReceived) || 0;
-    const change = receivedAmount - total;
-    const canComplete = selectedMethod !== 'cash' || receivedAmount >= total;
 
     // Reset state when modal closes
     useEffect(() => {
       if (!open) {
-        setCashReceived('');
         setSelectedMethod('cash');
         setPaymentSuccess(false);
       }
     }, [open]);
 
-    // Reset state when modal opens
     const handleClose = () => {
-      setCashReceived('');
       setSelectedMethod('cash');
       setPaymentSuccess(false);
       onClose();
     };
 
     const handleComplete = () => {
-      const method = selectedMethod;
-      const received = method === 'cash' ? receivedAmount : undefined;
-      const changeAmount = method === 'cash' ? Math.max(0, receivedAmount - total) : 0;
-
-      setSuccessMethod(method);
-      setSuccessChange(changeAmount);
+      setSuccessMethod(selectedMethod);
       setPaymentSuccess(true);
-
-      if (method === 'cash') {
-        onPaymentComplete('cash', receivedAmount);
-      } else {
-        onPaymentComplete(method);
-      }
-    };
-
-    const handleQuickAmount = (amount: number) => {
-      setCashReceived(amount.toString());
-    };
-
-    const handleExactAmount = () => {
-      setCashReceived(total.toFixed(2));
+      onPaymentComplete(selectedMethod);
     };
 
     // SUCCESS STATE
@@ -169,16 +140,6 @@ export const PaymentModal = forwardRef<HTMLDivElement, PaymentModalProps>(
               <Text variant="bodyMedium" color="secondary" align="center">
                 {PAYMENT_METHODS[successMethod].label}
               </Text>
-              {successMethod === 'cash' && successChange > 0 && (
-                <GlassCard intensity="subtle" padding="md" className={`${styles.changeCard} ${styles.positive}`}>
-                  <Text variant="labelMedium" color="success">
-                    Решта
-                  </Text>
-                  <Text variant="h3" color="success" weight="bold">
-                    {formatPrice(successChange, currency)}
-                  </Text>
-                </GlassCard>
-              )}
             </div>
           </div>
         </Modal>
@@ -191,14 +152,11 @@ export const PaymentModal = forwardRef<HTMLDivElement, PaymentModalProps>(
         variant="success"
         size="lg"
         onClick={handleComplete}
-        disabled={!canComplete}
         loading={processing}
         fullWidth
       >
         <Icon name="check" size="md" />
-        {selectedMethod === 'cash'
-          ? `Завершити (решта ${formatPrice(Math.max(0, change), currency)})`
-          : 'Підтвердити оплату'}
+        Підтвердити оплату
       </Button>
     );
 
@@ -254,99 +212,6 @@ export const PaymentModal = forwardRef<HTMLDivElement, PaymentModalProps>(
               ))}
             </div>
           </div>
-
-          {/* Cash input */}
-          {selectedMethod === 'cash' && (
-            <>
-              <Divider spacing="md" />
-
-              <div className={styles.cashSection}>
-                <Text variant="labelMedium" color="secondary">
-                  Отримано готівкою
-                </Text>
-
-                <Input
-                  type="number"
-                  size="lg"
-                  variant="glass"
-                  value={cashReceived}
-                  onChange={(e) => setCashReceived(e.target.value)}
-                  placeholder="0.00"
-                  className={styles.cashInput}
-                  min={0}
-                  step={0.01}
-                />
-
-                {/* Quick amounts */}
-                <div className={styles.quickAmounts}>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={handleExactAmount}
-                  >
-                    Без решти
-                  </Button>
-                  {QUICK_AMOUNTS.filter((a) => a >= total).slice(0, 4).map((amount) => (
-                    <Button
-                      key={amount}
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => handleQuickAmount(amount)}
-                    >
-                      {currency}{amount}
-                    </Button>
-                  ))}
-                </div>
-
-                {/* Change display */}
-                {receivedAmount > 0 && (
-                  <GlassCard
-                    intensity="subtle"
-                    padding="md"
-                    className={`${styles.changeCard} ${change >= 0 ? styles.positive : styles.negative}`}
-                  >
-                    <Text variant="labelMedium" color={change >= 0 ? 'success' : 'error'}>
-                      {change >= 0 ? 'Решта' : 'Недостатньо'}
-                    </Text>
-                    <Text
-                      variant="h3"
-                      color={change >= 0 ? 'success' : 'error'}
-                      weight="bold"
-                    >
-                      {formatPrice(Math.abs(change), currency)}
-                    </Text>
-                  </GlassCard>
-                )}
-              </div>
-            </>
-          )}
-
-          {/* Card/QR instructions */}
-          {selectedMethod === 'card' && (
-            <>
-              <Divider spacing="md" />
-              <GlassCard intensity="subtle" padding="lg" className={styles.instructions}>
-                <Icon name="card" size="2xl" color="accent" />
-                <Text variant="bodyMedium" color="secondary" align="center">
-                  Прикладіть або вставте картку клієнта до терміналу
-                </Text>
-              </GlassCard>
-            </>
-          )}
-
-          {selectedMethod === 'qr' && (
-            <>
-              <Divider spacing="md" />
-              <GlassCard intensity="subtle" padding="lg" className={styles.instructions}>
-                <div className={styles.qrPlaceholder}>
-                  <Icon name="qr" size="2xl" color="tertiary" />
-                </div>
-                <Text variant="bodyMedium" color="secondary" align="center">
-                  Покажіть QR-код клієнту для сканування
-                </Text>
-              </GlassCard>
-            </>
-          )}
         </div>
       </Modal>
     );
