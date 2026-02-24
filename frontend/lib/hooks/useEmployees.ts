@@ -17,7 +17,7 @@ export const employeeKeys = {
   list: (params: GetEmployeesParams) => [...employeeKeys.lists(), params] as const,
   details: () => [...employeeKeys.all, 'detail'] as const,
   detail: (id: string) => [...employeeKeys.details(), id] as const,
-  stats: (id: string) => [...employeeKeys.all, 'stats', id] as const,
+  stats: (id: string, month?: number, year?: number) => [...employeeKeys.all, 'stats', id, month, year] as const,
   performance: () => [...employeeKeys.all, 'performance'] as const,
 };
 
@@ -38,10 +38,10 @@ export function useEmployee(id: string) {
   });
 }
 
-export function useEmployeeStats(id: string) {
+export function useEmployeeStats(id: string, params?: { month?: number; year?: number }) {
   return useQuery({
-    queryKey: employeeKeys.stats(id),
-    queryFn: () => employeesApi.getStats(id),
+    queryKey: employeeKeys.stats(id, params?.month, params?.year),
+    queryFn: () => employeesApi.getStats(id, params),
     select: (data) => data.data,
     enabled: !!id,
   });

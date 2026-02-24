@@ -51,6 +51,23 @@
   border-radius: var(--radius-lg);
 }
 
+/* Month navigation */
+.monthNav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+}
+
+.monthTitle {
+  flex: 1;
+  text-align: center;
+}
+
 /* Charts */
 .chartsRow {
   display: grid;

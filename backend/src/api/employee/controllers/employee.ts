@@ -2,11 +2,19 @@ import { factories } from '@strapi/strapi';
 
 export default factories.createCoreController('api::employee.employee', ({ strapi }) => ({
   /**
-   * GET /api/employees/:id/stats
-   * Returns employee performance stats from shift and order data
+   * GET /api/employees/:id/stats?month=M&year=YYYY
+   * Returns employee performance stats filtered to the given month (defaults to current).
    */
   async stats(ctx) {
     const { id } = ctx.params;
+
+    const now = new Date();
+    const month = parseInt((ctx.query as any).month as string) || (now.getMonth() + 1);
+    const year  = parseInt((ctx.query as any).year  as string) || now.getFullYear();
+
+    // Month date range (UTC-safe: use start of day in local server time)
+    const monthStart = new Date(year, month - 1, 1);
+    const monthEnd   = new Date(year, month, 1); // exclusive
 
     const employee = await strapi.db.query('api::employee.employee').findOne({
       where: { documentId: id },
@@ -18,60 +26,83 @@ export default factories.createCoreController('api::employee.employee', ({ strap
 
     const name = employee.name;
 
-    // Get shifts by this employee
-    const shifts = await strapi.db.query('api::shift.shift').findMany({
+    // Get ALL shifts by this employee (to find open ones crossing month boundaries)
+    const allShifts = await strapi.db.query('api::shift.shift').findMany({
       where: { openedBy: name },
       orderBy: { openedAt: 'desc' },
+    });
+
+    // Filter shifts that overlap with the selected month
+    const shifts = allShifts.filter((s) => {
+      const start = new Date(s.openedAt).getTime();
+      const end   = s.closedAt ? new Date(s.closedAt).getTime() : Date.now();
+      return start < monthEnd.getTime() && end >= monthStart.getTime();
     });
 
     const totalShifts = shifts.length;
     let totalHours = 0;
     shifts.forEach((s) => {
-      const start = new Date(s.openedAt).getTime();
-      const end = s.closedAt ? new Date(s.closedAt).getTime() : Date.now();
-      totalHours += (end - start) / (1000 * 60 * 60);
+      // Clamp hours to the selected month window
+      const start = Math.max(new Date(s.openedAt).getTime(), monthStart.getTime());
+      const end   = Math.min(
+        s.closedAt ? new Date(s.closedAt).getTime() : Date.now(),
+        monthEnd.getTime()
+      );
+      totalHours += Math.max(0, end - start) / (1000 * 60 * 60);
     });
 
-    // Get orders from this employee's shifts
+    // Get completed orders within the month
     const orders = await strapi.db.query('api::order.order').findMany({
-      where: { status: 'completed' },
+      where: {
+        status: 'completed',
+        createdAt: { $gte: monthStart.toISOString(), $lt: monthEnd.toISOString() },
+      },
     });
 
-    // Filter orders that fall within this employee's shift periods
+    // Filter to orders that fall within this employee's shifts
     const myOrders = orders.filter((o) => {
       const oTime = new Date(o.createdAt).getTime();
       return shifts.some((s) => {
         const start = new Date(s.openedAt).getTime();
-        const end = s.closedAt ? new Date(s.closedAt).getTime() : Date.now();
+        const end   = s.closedAt ? new Date(s.closedAt).getTime() : Date.now();
         return oTime >= start && oTime <= end;
       });
     });
 
     const totalOrders = myOrders.length;
-    const totalSales = myOrders.reduce((sum, o) => sum + parseFloat(o.total || '0'), 0);
+    const totalSales  = myOrders.reduce((sum, o) => sum + parseFloat(o.total || '0'), 0);
     const avgOrderValue = totalOrders > 0 ? totalSales / totalOrders : 0;
 
-    // Daily breakdown for last 7 days
-    const now = new Date();
-    const dailySales = [];
-    const dailyHours = [];
+    // Daily breakdown — all days in the selected month
+    const daysInMonth = new Date(year, month, 0).getDate();
+    const dailySales: { date: string; sales: number }[]  = [];
+    const dailyHours: { date: string; hours: number }[] = [];
 
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date(now);
-      d.setDate(d.getDate() - i);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-      const shortDate = `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}`;
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dayStart = new Date(year, month - 1, day);
+      const dayEnd   = new Date(year, month - 1, day + 1);
+      const key      = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const shortDate = `${String(day).padStart(2, '0')}.${String(month).padStart(2, '0')}`;
 
       const daySales = myOrders
-        .filter((o) => o.createdAt && o.createdAt.toString().startsWith(key))
+        .filter((o) => {
+          const t = new Date(o.createdAt).getTime();
+          return t >= dayStart.getTime() && t < dayEnd.getTime();
+        })
         .reduce((sum, o) => sum + parseFloat(o.total || '0'), 0);
 
       const dayHours = shifts
-        .filter((s) => s.openedAt && s.openedAt.toString().startsWith(key))
-        .reduce((sum, s) => {
+        .filter((s) => {
           const start = new Date(s.openedAt).getTime();
-          const end = s.closedAt ? new Date(s.closedAt).getTime() : Date.now();
-          return sum + (end - start) / (1000 * 60 * 60);
+          return start >= dayStart.getTime() && start < dayEnd.getTime();
+        })
+        .reduce((sum, s) => {
+          const start = Math.max(new Date(s.openedAt).getTime(), dayStart.getTime());
+          const end   = Math.min(
+            s.closedAt ? new Date(s.closedAt).getTime() : Date.now(),
+            dayEnd.getTime()
+          );
+          return sum + Math.max(0, end - start) / (1000 * 60 * 60);
         }, 0);
 
       dailySales.push({ date: shortDate, sales: Math.round(daySales) });
@@ -81,12 +112,14 @@ export default factories.createCoreController('api::employee.employee', ({ strap
     return {
       data: {
         totalShifts,
-        totalHours: Math.round(totalHours * 10) / 10,
+        totalHours:   Math.round(totalHours * 10) / 10,
         totalOrders,
-        totalSales: Math.round(totalSales),
+        totalSales:   Math.round(totalSales),
         avgOrderValue: Math.round(avgOrderValue),
         dailySales,
         dailyHours,
+        month,
+        year,
       },
     };
   },

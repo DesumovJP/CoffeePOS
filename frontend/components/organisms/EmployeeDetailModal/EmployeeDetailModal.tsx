@@ -4,6 +4,7 @@
  * CoffeePOS - EmployeeDetailModal Component
  *
  * Detailed employee view with stats, charts, and shifts table.
+ * Stats are filtered by selected month (default: current month).
  */
 
 import { useState, useEffect, useMemo } from 'react';
@@ -35,7 +36,7 @@ export interface EmployeeDetailModalProps {
 }
 
 // ============================================
-// HELPERS
+// CONSTANTS
 // ============================================
 
 const ROLE_LABELS: Record<string, string> = {
@@ -49,6 +50,15 @@ const ROLE_VARIANTS: Record<string, 'warning' | 'info' | 'default'> = {
   manager: 'info',
   barista: 'default',
 };
+
+const MONTHS = [
+  'Січень', 'Лютий', 'Березень', 'Квітень', 'Травень', 'Червень',
+  'Липень', 'Серпень', 'Вересень', 'Жовтень', 'Листопад', 'Грудень',
+];
+
+// ============================================
+// HELPERS
+// ============================================
 
 function calculateDuration(openedAt: string, closedAt?: string): string {
   const start = new Date(openedAt).getTime();
@@ -69,7 +79,45 @@ export function EmployeeDetailModal({
   employee,
   onEdit,
 }: EmployeeDetailModalProps) {
-  const { data: stats, isLoading: statsLoading } = useEmployeeStats(employee?.documentId || '');
+  const today = new Date();
+  const [selectedMonth, setSelectedMonth] = useState(today.getMonth() + 1); // 1-12
+  const [selectedYear, setSelectedYear]   = useState(today.getFullYear());
+
+  // Reset to current month when a different employee is opened
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedMonth(today.getMonth() + 1);
+      setSelectedYear(today.getFullYear());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [employee?.documentId, isOpen]);
+
+  const isCurrentMonth =
+    selectedMonth === today.getMonth() + 1 && selectedYear === today.getFullYear();
+
+  const goToPrevMonth = () => {
+    if (selectedMonth === 1) {
+      setSelectedMonth(12);
+      setSelectedYear((y) => y - 1);
+    } else {
+      setSelectedMonth((m) => m - 1);
+    }
+  };
+
+  const goToNextMonth = () => {
+    if (isCurrentMonth) return; // cannot navigate to future
+    if (selectedMonth === 12) {
+      setSelectedMonth(1);
+      setSelectedYear((y) => y + 1);
+    } else {
+      setSelectedMonth((m) => m + 1);
+    }
+  };
+
+  const { data: stats, isLoading: statsLoading } = useEmployeeStats(
+    employee?.documentId || '',
+    { month: selectedMonth, year: selectedYear }
+  );
   const { data: allShifts } = useShifts();
 
   const [chartColors, setChartColors] = useState({
@@ -232,6 +280,27 @@ export function EmployeeDetailModal({
           </div>
         </div>
 
+        {/* Month navigation */}
+        <div className={styles.monthNav}>
+          <Button variant="ghost" size="sm" onClick={goToPrevMonth} aria-label="Попередній місяць">
+            <Icon name="chevron-left" size="md" />
+          </Button>
+          <div className={styles.monthTitle}>
+            <Text variant="labelLarge" weight="semibold">
+              {MONTHS[selectedMonth - 1]} {selectedYear}
+            </Text>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={goToNextMonth}
+            disabled={isCurrentMonth}
+            aria-label="Наступний місяць"
+          >
+            <Icon name="chevron-right" size="md" />
+          </Button>
+        </div>
+
         {/* Stats */}
         {statsLoading ? (
           <div className={styles.loading}><Spinner size="md" /></div>
@@ -242,7 +311,9 @@ export function EmployeeDetailModal({
             {/* Charts */}
             <div className={styles.chartsRow}>
               <div className={styles.chartSection}>
-                <Text variant="labelMedium" weight="semibold" color="secondary">Продажі за 7 днів</Text>
+                <Text variant="labelMedium" weight="semibold" color="secondary">
+                  Продажі за {MONTHS[selectedMonth - 1].toLowerCase()}
+                </Text>
                 <div className={styles.chartContainer}>
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={stats.dailySales} margin={{ top: 5, right: 5, left: -15, bottom: 5 }}>
@@ -256,7 +327,9 @@ export function EmployeeDetailModal({
                 </div>
               </div>
               <div className={styles.chartSection}>
-                <Text variant="labelMedium" weight="semibold" color="secondary">Години за 7 днів</Text>
+                <Text variant="labelMedium" weight="semibold" color="secondary">
+                  Години за {MONTHS[selectedMonth - 1].toLowerCase()}
+                </Text>
                 <div className={styles.chartContainer}>
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={stats.dailyHours} margin={{ top: 5, right: 5, left: -15, bottom: 5 }}>

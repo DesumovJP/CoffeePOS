@@ -3,13 +3,12 @@
 /**
  * CoffeePOS - History Page (Історія)
  *
- * Order history with date filters and search.
- * Uses real orders API (/api/orders) for live mode.
+ * Today's order history. Each order is expandable to show items.
  */
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Text, GlassCard, Icon, Badge, Button } from '@/components';
-import { SearchInput, CategoryTabs, type Category } from '@/components/molecules';
+import { SearchInput } from '@/components/molecules';
 import { useOrders } from '@/lib/hooks';
 import styles from './page.module.css';
 
@@ -17,48 +16,10 @@ import styles from './page.module.css';
 // HELPERS
 // ============================================
 
-const filterCategories: Category[] = [
-  { id: 'today', name: 'Сьогодні' },
-  { id: 'yesterday', name: 'Вчора' },
-  { id: 'week', name: 'Тиждень' },
-];
-
-function getDateRange(filter: string): { dateFrom?: string; dateTo?: string } {
+function getTodayRange(): { dateFrom: string } {
   const now = new Date();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-  if (filter === 'today') {
-    return { dateFrom: todayStart.toISOString() };
-  }
-
-  if (filter === 'yesterday') {
-    const yesterdayStart = new Date(todayStart);
-    yesterdayStart.setDate(yesterdayStart.getDate() - 1);
-    return { dateFrom: yesterdayStart.toISOString(), dateTo: todayStart.toISOString() };
-  }
-
-  if (filter === 'week') {
-    const weekAgo = new Date(todayStart);
-    weekAgo.setDate(weekAgo.getDate() - 7);
-    return { dateFrom: weekAgo.toISOString() };
-  }
-
-  return {};
-}
-
-function formatDateGroup(dateStr: string): string {
-  const date = new Date(dateStr);
-  const today = new Date();
-  const yesterday = new Date(today);
-  yesterday.setDate(yesterday.getDate() - 1);
-
-  if (date.toDateString() === today.toDateString()) {
-    return 'Сьогодні';
-  }
-  if (date.toDateString() === yesterday.toDateString()) {
-    return 'Вчора';
-  }
-  return date.toLocaleDateString('uk-UA', { weekday: 'long', day: 'numeric', month: 'long' });
+  return { dateFrom: todayStart.toISOString() };
 }
 
 function formatTime(ts: string): string {
@@ -87,38 +48,14 @@ const paymentMethodLabel: Record<string, string> = {
   qr: 'QR',
 };
 
-interface OrderGroup {
-  dateKey: string;
-  label: string;
-  orders: any[];
-}
-
-function groupOrdersByDate(orders: any[]): OrderGroup[] {
-  const groups = new Map<string, any[]>();
-
-  for (const order of orders) {
-    const dateKey = new Date(order.createdAt).toDateString();
-    if (!groups.has(dateKey)) {
-      groups.set(dateKey, []);
-    }
-    groups.get(dateKey)!.push(order);
-  }
-
-  return Array.from(groups.entries()).map(([dateKey, orders]) => ({
-    dateKey,
-    label: formatDateGroup(orders[0].createdAt),
-    orders,
-  }));
-}
-
 // ============================================
 // COMPONENT
 // ============================================
 
 export default function HistoryPage() {
-  const [selectedFilter, setSelectedFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
 
   useEffect(() => {
     const handler = () => setMobileSearchOpen(true);
@@ -131,14 +68,11 @@ export default function HistoryPage() {
     setSearchQuery('');
   }, []);
 
-  const dateRange = useMemo(() => getDateRange(selectedFilter), [selectedFilter]);
-
   const { data: orders = [], isLoading } = useOrders({
-    ...dateRange,
-    pageSize: 100,
+    ...getTodayRange(),
+    pageSize: 200,
   });
 
-  // Client-side search filter (by order number)
   const filteredOrders = useMemo(() => {
     if (!searchQuery.trim()) return orders;
     const q = searchQuery.toLowerCase().trim();
@@ -149,18 +83,19 @@ export default function HistoryPage() {
     );
   }, [orders, searchQuery]);
 
-  const grouped = useMemo(() => groupOrdersByDate(filteredOrders), [filteredOrders]);
-
   // Summary stats
   const summary = useMemo(() => {
     const completedOrders = filteredOrders.filter((o: any) => o.status === 'completed');
     const totalRevenue = completedOrders.reduce((s: number, o: any) => s + (parseFloat(o.total) || 0), 0);
     return {
-      count: filteredOrders.length,
       ordersCount: completedOrders.length,
       totalRevenue,
     };
   }, [filteredOrders]);
+
+  const toggleOrder = useCallback((orderId: string) => {
+    setExpandedOrderId((prev) => (prev === orderId ? null : orderId));
+  }, []);
 
   return (
     <div className={styles.page}>
@@ -195,12 +130,11 @@ export default function HistoryPage() {
 
       {/* Toolbar */}
       <div className={styles.toolbar}>
-        <CategoryTabs
-          categories={filterCategories}
-          value={selectedFilter === 'all' ? null : selectedFilter}
-          showAll={true}
-          allLabel="Всі"
-          onChange={(id) => setSelectedFilter(id || 'all')}
+        <SearchInput
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Пошук за номером замовлення..."
+          variant="glass"
         />
         <div className={styles.headerStats}>
           <div className={styles.statItem}>
@@ -228,69 +162,99 @@ export default function HistoryPage() {
           <GlassCard padding="xl" className={styles.emptyState}>
             <Icon name="search" size="2xl" color="tertiary" />
             <Text variant="bodyLarge" color="secondary">
-              Замовлень не знайдено
+              Замовлень сьогодні немає
             </Text>
             <Text variant="caption" color="tertiary">
-              Спробуйте змінити фільтри або пошуковий запит
+              Замовлення з'являться тут після оплати
             </Text>
           </GlassCard>
         ) : (
-          grouped.map((group) => (
-            <div key={group.dateKey} className={styles.dateGroup}>
-              <div className={styles.dateGroupHeader}>
-                <Text variant="labelMedium" weight="semibold" color="secondary">
-                  {group.label}
-                </Text>
-                <Text variant="caption" color="tertiary">
-                  {group.orders.length} зам.
-                </Text>
-              </div>
-              <div className={styles.dateGroupOrders}>
-                {group.orders.map((order: any) => {
-                  const total = parseFloat(order.total) || 0;
-                  const status = statusConfig[order.status] || statusConfig.pending;
-                  const itemCount = order.items?.length || 0;
-                  const paymentMethod = order.payment?.method || order.paymentMethod;
+          filteredOrders.map((order: any) => {
+            const orderId = order.documentId || String(order.id);
+            const isExpanded = expandedOrderId === orderId;
+            const total = parseFloat(order.total) || 0;
+            const status = statusConfig[order.status] || statusConfig.pending;
+            const items: any[] = order.items || [];
+            const paymentMethod = order.payment?.method || order.paymentMethod;
 
-                  return (
-                    <div key={order.id || order.documentId} className={styles.activityItem}>
-                      <div className={styles.activityIcon}>
-                        <Icon name="receipt" size="sm" />
-                      </div>
-                      <div className={styles.activityContent}>
-                        <div className={styles.activityHeader}>
-                          <Text variant="labelMedium" weight="semibold">
-                            {order.orderNumber || `#${order.id}`}
-                          </Text>
-                          <Text variant="caption" color="tertiary">
-                            {formatTime(order.createdAt)}
-                          </Text>
-                        </div>
-                        <div className={styles.activityMeta}>
-                          <Text variant="bodySmall" weight="semibold">
-                            ₴{formatCurrency(total)}
-                          </Text>
-                          {itemCount > 0 && (
-                            <Text variant="bodySmall" color="secondary">
-                              · {itemCount} поз.
-                            </Text>
-                          )}
-                          {paymentMethod && (
-                            <Text variant="bodySmall" color="secondary">
-                              · {paymentMethodLabel[paymentMethod] || paymentMethod}
-                            </Text>
-                          )}
-                          <Badge variant={status.variant} size="sm">
-                            {status.label}
-                          </Badge>
-                        </div>
-                      </div>
+            return (
+              <div key={orderId} className={styles.orderCard}>
+                {/* Accordion trigger */}
+                <button
+                  type="button"
+                  className={styles.accordionTrigger}
+                  onClick={() => toggleOrder(orderId)}
+                  aria-expanded={isExpanded}
+                >
+                  <div className={styles.activityIcon}>
+                    <Icon name="receipt" size="sm" />
+                  </div>
+                  <div className={styles.activityContent}>
+                    <div className={styles.activityHeader}>
+                      <Text variant="labelMedium" weight="semibold">
+                        {order.orderNumber || `#${order.id}`}
+                      </Text>
+                      <Text variant="caption" color="tertiary">
+                        {formatTime(order.createdAt)}
+                      </Text>
                     </div>
-                  );
-                })}
+                    <div className={styles.activityMeta}>
+                      <Text variant="bodySmall" weight="semibold">
+                        ₴{formatCurrency(total)}
+                      </Text>
+                      {items.length > 0 && (
+                        <Text variant="bodySmall" color="secondary">
+                          · {items.length} поз.
+                        </Text>
+                      )}
+                      {paymentMethod && (
+                        <Text variant="bodySmall" color="secondary">
+                          · {paymentMethodLabel[paymentMethod] || paymentMethod}
+                        </Text>
+                      )}
+                      <Badge variant={status.variant} size="sm">
+                        {status.label}
+                      </Badge>
+                    </div>
+                  </div>
+                  <Icon
+                    name="chevron-right"
+                    size="sm"
+                    color="tertiary"
+                    className={isExpanded ? styles.chevronOpen : styles.chevron}
+                  />
+                </button>
+
+                {/* Expanded items list */}
+                {isExpanded && items.length > 0 && (
+                  <div className={styles.itemsList}>
+                    {items.map((item: any, idx: number) => (
+                      <div key={item.id || idx} className={styles.itemRow}>
+                        <Text variant="bodySmall" className={styles.itemName}>
+                          {item.productName}
+                          {item.notes && (
+                            <Text as="span" variant="caption" color="tertiary"> — {item.notes}</Text>
+                          )}
+                        </Text>
+                        <Text variant="bodySmall" color="secondary" className={styles.itemQty}>
+                          {item.quantity} × ₴{formatCurrency(item.unitPrice)}
+                        </Text>
+                        <Text variant="labelSmall" weight="semibold" className={styles.itemTotal}>
+                          ₴{formatCurrency(item.totalPrice)}
+                        </Text>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {isExpanded && items.length === 0 && (
+                  <div className={styles.itemsList}>
+                    <Text variant="bodySmall" color="tertiary">Деталі позицій недоступні</Text>
+                  </div>
+                )}
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
     </div>

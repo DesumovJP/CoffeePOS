@@ -106,8 +106,14 @@ export const employeesApi = {
     return apiClient.delete<void>(`/employees/${documentId}`);
   },
 
-  async getStats(documentId: string): Promise<ApiResponse<EmployeeStats>> {
-    return apiClient.get<EmployeeStats>(`/employees/${documentId}/stats`);
+  async getStats(
+    documentId: string,
+    params?: { month?: number; year?: number }
+  ): Promise<ApiResponse<EmployeeStats>> {
+    const queryParams: Record<string, string | number | undefined> = {};
+    if (params?.month) queryParams.month = params.month;
+    if (params?.year)  queryParams.year  = params.year;
+    return apiClient.get<EmployeeStats>(`/employees/${documentId}/stats`, queryParams);
   },
 
   async getPerformance(): Promise<ApiResponse<EmployeePerformance[]>> {

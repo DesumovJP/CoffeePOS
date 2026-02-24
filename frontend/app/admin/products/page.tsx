@@ -56,6 +56,7 @@ interface UnifiedProduct {
   minQuantity?: number;
   isActive: boolean;
   inventoryType: string;
+  image?: string;
 }
 
 // ============================================
@@ -89,6 +90,7 @@ function productToUnified(product: Product): UnifiedProduct {
     minQuantity: product.lowStockThreshold,
     isActive: product.isActive,
     inventoryType: product.inventoryType,
+    image: product.image?.formats?.thumbnail?.url || product.image?.url,
   };
 }
 
@@ -501,6 +503,24 @@ export default function ProductsAdminPage() {
   // Product/Recipe columns
   const productColumns: Column<UnifiedProduct>[] = useMemo(() => {
     const cols: Column<UnifiedProduct>[] = [
+      {
+        key: 'thumbnail',
+        header: '',
+        width: '52px',
+        render: (product) => (
+          product.image ? (
+            <img
+              src={product.image}
+              alt={product.name}
+              className={styles.thumbnail}
+            />
+          ) : (
+            <div className={styles.thumbnailPlaceholder}>
+              <Icon name="package" size="sm" color="tertiary" />
+            </div>
+          )
+        ),
+      },
       {
         key: 'name',
         header: 'Назва',

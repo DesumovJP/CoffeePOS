@@ -118,9 +118,82 @@
 }
 
 /* ============================================
-   ACTIVITY ITEM — glass card row
+   ORDER CARD — glass card with accordion
    ============================================ */
 
+.orderCard {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--blur-md));
+  -webkit-backdrop-filter: blur(var(--blur-md));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+/* Accordion trigger button */
+.accordionTrigger {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease;
+}
+
+.accordionTrigger:hover {
+  background: var(--glass-bg-elevated);
+}
+
+/* Chevron rotation */
+.chevron {
+  flex-shrink: 0;
+  margin-top: 2px;
+  transition: transform 0.2s ease;
+}
+
+.chevronOpen {
+  flex-shrink: 0;
+  margin-top: 2px;
+  transform: rotate(90deg);
+  transition: transform 0.2s ease;
+}
+
+/* Expanded items list */
+.itemsList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-4) var(--space-3) calc(var(--space-4) + 32px + var(--space-3));
+  border-top: 1px solid var(--glass-border);
+}
+
+.itemRow {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.itemName {
+  flex: 1;
+  min-width: 0;
+}
+
+.itemQty {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.itemTotal {
+  flex-shrink: 0;
+  min-width: 48px;
+  text-align: right;
+}
+
+/* Legacy — kept for color classes below */
 .activityItem {
   display: flex;
   align-items: flex-start;
