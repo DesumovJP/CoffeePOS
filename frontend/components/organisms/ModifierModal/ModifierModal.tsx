@@ -32,6 +32,7 @@ export interface ModifierGroup {
 
 export interface ProductForModifier {
   id: string;
+  documentId?: string;
   name: string;
   basePrice: number;
   image?: string;
@@ -44,6 +45,7 @@ export interface SelectedModifiers {
 
 export interface ModifierModalResult {
   productId: string;
+  productDocumentId?: string;
   quantity: number;
   modifiers: Array<{ id: string; name: string; price: number }>;
   notes?: string;
@@ -184,6 +186,7 @@ export const ModifierModal = forwardRef<HTMLDivElement, ModifierModalProps>(
 
       onAddToOrder({
         productId: product.id,
+        productDocumentId: product.documentId,
         quantity,
         modifiers: selectedModifiersList,
         notes: notes.trim() || undefined,

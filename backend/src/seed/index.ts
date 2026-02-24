@@ -188,11 +188,15 @@ export default async function seed({ strapi }: StrapiContext) {
         continue;
       }
 
-      // Convert ingredient slugs to IDs
-      const recipeIngredients = recipe.ingredients.map((ri) => ({
-        ingredientId: ingredientMap[ri.ingredientSlug] || 0,
-        amount: ri.amount,
-      })).filter((ri) => ri.ingredientId > 0);
+      // Store slug (stable) + numeric id (for display/audit).
+      // deductInventory prefers slug so re-seeding never breaks lookups.
+      const recipeIngredients = recipe.ingredients
+        .filter((ri) => ingredientMap[ri.ingredientSlug])
+        .map((ri) => ({
+          ingredientSlug: ri.ingredientSlug,
+          ingredientId:   ingredientMap[ri.ingredientSlug],
+          amount:         ri.amount,
+        }));
 
       await strapi.db.query('api::recipe.recipe').create({
         data: {

@@ -24,6 +24,7 @@ export interface OrderItemModifier {
 export interface OrderItem {
   id: string;
   productId: string;
+  productDocumentId?: string;
   sizeId?: string;
   name: string;
   price: number;

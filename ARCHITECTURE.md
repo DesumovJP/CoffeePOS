@@ -152,6 +152,34 @@ pending → confirmed → preparing → ready → completed
 5. Create InventoryTransaction per ingredient
 6. Update Shift totals
 
+### Inventory Deduction on Sale
+
+When an order is paid, the backend deducts ingredient quantities automatically via `orderService.deductInventory(orderId, items, shiftId)` called from `order/controllers/order.ts`.
+
+**Lookup strategy (stable IDs only — numeric `id` changes on reseed):**
+
+| Entity | Stable identifier | Fallback |
+|---|---|---|
+| Product → Recipe | `productDocumentId` (Strapi UUID) | numeric `product.id` |
+| Recipe → Ingredient | `ingredientSlug` (human-readable slug) | numeric `ingredientId` |
+
+**Flow per order item:**
+1. Find Recipes where `product.documentId = item.productDocumentId`
+2. Select the Recipe matching `item.sizeId`, else the default Recipe, else the first Recipe
+3. For each `{ingredientSlug, amount}` in `recipe.ingredients`:
+   - Find Ingredient by `slug = ingredientSlug`
+   - Deduct `amount × quantity` from `ingredient.quantity` (floor at 0)
+   - Create `InventoryTransaction { type: 'sale', ingredient, product, quantity: -deducted, previousQty, newQty, reference: 'ORD-{id}' }`
+
+**Frontend → Backend data flow:**
+- `OrderItem.productDocumentId` — set in Zustand store when adding items to cart
+- Passed in `ordersApi.create()` payload under `items[].productDocumentId`
+- `sizeId` passed alongside to select the correct size Recipe
+
+**Seed data:** Recipe ingredients stored as `{ ingredientSlug, ingredientId, amount }` — slug is authoritative for lookups, `ingredientId` kept for audit/display.
+
+**Low-stock alerts:** `GET /api/ingredients/low-stock` returns ingredients where `quantity ≤ minQuantity`.
+
 ### Activity Logging
 
 Shift-scoped activity log stored as JSON array in `shift.activities` field. Each activity has `id`, `type`, `timestamp`, and `details`.

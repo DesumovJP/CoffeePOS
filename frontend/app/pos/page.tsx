@@ -145,6 +145,7 @@ function transformApiCategory(category: { id: number; slug: string; name: string
 function transformToModifierProduct(product: ApiProduct): ProductForModifier {
   return {
     id: String(product.id),
+    documentId: product.documentId,
     name: product.name,
     basePrice: product.price,
     image: product.image?.url,
@@ -308,6 +309,7 @@ export default function POSPage() {
     // Add to order with sizeId for inventory tracking
     addItem({
       productId: product.id,
+      productDocumentId: product.documentId,
       sizeId: size?.id,
       name: itemName,
       price: itemPrice,
@@ -317,6 +319,7 @@ export default function POSPage() {
   const handleModifierComplete = useCallback((result: ModifierModalResult) => {
     addItem({
       productId: result.productId,
+      productDocumentId: result.productDocumentId,
       name: selectedProductForModifier?.name || '',
       price: result.totalPrice / result.quantity,
       modifiers: result.modifiers,
@@ -362,6 +365,7 @@ export default function POSPage() {
           },
           items: currentOrder.items.map((item) => ({
             product: parseInt(item.productId) || undefined,
+            productDocumentId: item.productDocumentId,
             productName: item.name,
             quantity: item.quantity,
             unitPrice: item.price,
