@@ -53,6 +53,7 @@ interface UnifiedProduct {
   type: 'recipe' | 'simple';
   price: number;
   costPrice: number;
+  trackInventory: boolean;
   quantity?: number;
   minQuantity?: number;
   isActive: boolean;
@@ -87,12 +88,25 @@ function productToUnified(product: Product): UnifiedProduct {
     type: product.inventoryType === 'recipe' ? 'recipe' : 'simple',
     price: product.price,
     costPrice: product.costPrice || 0,
+    trackInventory: product.trackInventory ?? false,
     quantity: product.stockQuantity,
     minQuantity: product.lowStockThreshold,
     isActive: product.isActive,
     inventoryType: product.inventoryType,
     image: product.image?.formats?.thumbnail?.url || product.image?.url,
   };
+}
+
+function formatSmartCost(costPerUnit: number, unit: IngredientUnit): string {
+  switch (unit) {
+    case 'g':   return `₴${(costPerUnit * 1000).toFixed(0)}/кг`;
+    case 'ml':  return `₴${(costPerUnit * 100).toFixed(2)}/100мл`;
+    case 'kg':  return `₴${costPerUnit.toFixed(2)}/кг`;
+    case 'l':   return `₴${costPerUnit.toFixed(2)}/л`;
+    case 'pcs': return `₴${costPerUnit.toFixed(2)}/шт`;
+    case 'portion': return `₴${costPerUnit.toFixed(2)}/порц`;
+    default:    return `₴${costPerUnit.toFixed(2)}`;
+  }
 }
 
 function formatQuantity(quantity: number, unit: IngredientUnit): string {
@@ -534,25 +548,24 @@ export default function ProductsAdminPage() {
       ),
     },
     {
-      key: 'margin',
-      header: 'Маржа',
+      key: 'stock',
+      header: 'Залишок',
       align: 'right',
-      width: '80px',
+      width: '110px',
       hideOnMobile: true,
       render: (product) => {
-        if (!product.costPrice || product.price <= 0) {
+        if (!product.trackInventory) {
           return <Text variant="bodySmall" color="tertiary">—</Text>;
         }
-        const margin = ((product.price - product.costPrice) / product.price) * 100;
-        const colorClass =
-          margin >= 50 ? styles.marginGood :
-          margin >= 30 ? styles.marginWarn :
-          styles.marginBad;
-        return (
-          <Text variant="labelSmall" weight="semibold" className={colorClass}>
-            {margin.toFixed(0)}%
-          </Text>
-        );
+        const qty = product.quantity ?? 0;
+        const min = product.minQuantity ?? 0;
+        if (qty <= 0) {
+          return <Badge variant="error" size="sm">Немає</Badge>;
+        }
+        if (qty <= min) {
+          return <Badge variant="warning" size="sm">{qty} шт</Badge>;
+        }
+        return <Text variant="bodySmall" color="secondary">{qty} шт</Text>;
       },
     },
     {
@@ -583,6 +596,16 @@ export default function ProductsAdminPage() {
 
   // Ingredient columns
   const ingredientColumns: Column<Ingredient>[] = useMemo(() => [
+    {
+      key: 'thumbnail',
+      header: '',
+      width: '52px',
+      render: (_ingredient) => (
+        <div className={styles.thumbnailPlaceholder}>
+          <Icon name="package" size="sm" color="tertiary" />
+        </div>
+      ),
+    },
     {
       key: 'name',
       header: 'Назва',
@@ -635,7 +658,7 @@ export default function ProductsAdminPage() {
       hideOnMobile: true,
       render: (ingredient) => (
         <Text variant="bodySmall" color="secondary">
-          ₴{ingredient.costPerUnit.toFixed(2)}/{UNIT_LABELS[ingredient.unit]}
+          {formatSmartCost(ingredient.costPerUnit, ingredient.unit)}
         </Text>
       ),
     },

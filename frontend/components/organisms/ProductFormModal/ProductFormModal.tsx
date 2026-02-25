@@ -41,6 +41,9 @@ interface ProductFormState {
   isActive: boolean;
   isFeatured: boolean;
   preparationTime: string;
+  trackInventory: boolean;
+  stockQuantity: string;
+  lowStockThreshold: string;
 }
 
 const INITIAL_STATE: ProductFormState = {
@@ -54,6 +57,9 @@ const INITIAL_STATE: ProductFormState = {
   isActive: true,
   isFeatured: false,
   preparationTime: '',
+  trackInventory: false,
+  stockQuantity: '0',
+  lowStockThreshold: '5',
 };
 
 // ============================================
@@ -87,6 +93,9 @@ export function ProductFormModal({
         isActive: product.isActive ?? true,
         isFeatured: product.isFeatured ?? false,
         preparationTime: product.preparationTime ? String(product.preparationTime) : '',
+        trackInventory: product.trackInventory ?? false,
+        stockQuantity: String(product.stockQuantity ?? 0),
+        lowStockThreshold: String(product.lowStockThreshold ?? 5),
       });
     } else {
       setForm(INITIAL_STATE);
@@ -151,6 +160,9 @@ export function ProductFormModal({
         isActive: form.isActive,
         isFeatured: form.isFeatured,
         preparationTime: form.preparationTime ? Number(form.preparationTime) : undefined,
+        trackInventory: form.trackInventory,
+        stockQuantity: form.trackInventory ? Number(form.stockQuantity) : undefined,
+        lowStockThreshold: form.trackInventory ? Number(form.lowStockThreshold) : undefined,
       };
 
       try {
@@ -297,6 +309,43 @@ export function ProductFormModal({
           errorMessage={errors.preparationTime}
           fullWidth
         />
+
+        {/* Track Inventory */}
+        <div className={styles.toggleRow}>
+          <label className={styles.toggle}>
+            <input
+              type="checkbox"
+              checked={form.trackInventory}
+              onChange={handleChange('trackInventory')}
+              className={styles.checkbox}
+            />
+            <span className={styles.toggleLabel}>Відстежувати залишок</span>
+          </label>
+        </div>
+
+        {/* Stock fields — shown only when trackInventory is true */}
+        {form.trackInventory && (
+          <div className={styles.row}>
+            <Input
+              label="Залишок (шт)"
+              type="number"
+              min="0"
+              value={form.stockQuantity}
+              onChange={handleChange('stockQuantity')}
+              placeholder="0"
+              fullWidth
+            />
+            <Input
+              label="Мін. залишок (шт)"
+              type="number"
+              min="0"
+              value={form.lowStockThreshold}
+              onChange={handleChange('lowStockThreshold')}
+              placeholder="5"
+              fullWidth
+            />
+          </div>
+        )}
 
         {/* Toggles */}
         <div className={styles.toggleRow}>

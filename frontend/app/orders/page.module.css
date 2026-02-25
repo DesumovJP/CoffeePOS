@@ -136,7 +136,7 @@
 .ordersList {
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
+  gap: var(--space-2);
   flex: 1;
   min-height: 0;
 }
@@ -176,82 +176,9 @@
 }
 
 /* ============================================
-   ORDER CARD — glass card with accordion
+   ACTIVITY ITEM
    ============================================ */
 
-.orderCard {
-  background: var(--glass-bg);
-  backdrop-filter: blur(var(--blur-md));
-  -webkit-backdrop-filter: blur(var(--blur-md));
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-}
-
-/* Accordion trigger button */
-.accordionTrigger {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  width: 100%;
-  background: none;
-  border: none;
-  cursor: pointer;
-  text-align: left;
-  transition: background 0.15s ease;
-}
-
-.accordionTrigger:hover {
-  background: var(--glass-bg-elevated);
-}
-
-/* Chevron rotation */
-.chevron {
-  flex-shrink: 0;
-  margin-top: 2px;
-  transition: transform 0.2s ease;
-}
-
-.chevronOpen {
-  flex-shrink: 0;
-  margin-top: 2px;
-  transform: rotate(90deg);
-  transition: transform 0.2s ease;
-}
-
-/* Expanded items list */
-.itemsList {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  padding: var(--space-2) var(--space-4) var(--space-3) calc(var(--space-4) + 32px + var(--space-3));
-  border-top: 1px solid var(--glass-border);
-}
-
-.itemRow {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-2);
-}
-
-.itemName {
-  flex: 1;
-  min-width: 0;
-}
-
-.itemQty {
-  flex-shrink: 0;
-  white-space: nowrap;
-}
-
-.itemTotal {
-  flex-shrink: 0;
-  min-width: 48px;
-  text-align: right;
-}
-
-/* Legacy — kept for color classes below */
 .activityItem {
   display: flex;
   align-items: flex-start;
@@ -267,73 +194,6 @@
 
 .activityItem:hover {
   background: var(--glass-bg-elevated);
-}
-
-.activityIcon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-md);
-  flex-shrink: 0;
-  background: var(--glass-bg-elevated);
-}
-
-.activityContent {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.activityHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2);
-}
-
-.activityMeta {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1-5);
-  flex-wrap: wrap;
-}
-
-/* ============================================
-   ACTIVITY COLOR CLASSES
-   ============================================ */
-
-.activityOrder .activityIcon {
-  color: var(--color-accent);
-  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
-}
-
-.activityCancel .activityIcon {
-  color: var(--color-error);
-  background: color-mix(in srgb, var(--color-error) 12%, transparent);
-}
-
-.activityShift .activityIcon {
-  color: var(--color-warning);
-  background: color-mix(in srgb, var(--color-warning) 12%, transparent);
-}
-
-.activitySupply .activityIcon {
-  color: var(--color-success);
-  background: color-mix(in srgb, var(--color-success) 12%, transparent);
-}
-
-.activityWriteoff .activityIcon {
-  color: var(--color-error);
-  background: color-mix(in srgb, var(--color-error) 12%, transparent);
-}
-
-.activityIngredient .activityIcon {
-  color: var(--color-info, var(--color-accent));
-  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
 }
 
 /* ============================================

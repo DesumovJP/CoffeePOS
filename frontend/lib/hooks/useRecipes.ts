@@ -4,7 +4,7 @@
  * CoffeePOS - Recipes Hooks
  */
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { recipesApi, type GetRecipesParams } from '@/lib/api';
 
 export const recipeKeys = {
@@ -28,5 +28,15 @@ export function useRecipesByProduct(productId: number) {
     queryFn: () => recipesApi.getByProduct(productId),
     select: (data) => data.data,
     enabled: !!productId,
+  });
+}
+
+export function useDeleteRecipe() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (documentId: string) => recipesApi.delete(documentId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: recipeKeys.lists() });
+    },
   });
 }

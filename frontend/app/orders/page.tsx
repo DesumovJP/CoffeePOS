@@ -8,8 +8,8 @@
  */
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { Text, GlassCard, Icon, Badge, Button } from '@/components'; // GlassCard used for emptyState
-import { SearchInput } from '@/components/molecules';
+import { Text, GlassCard, Icon, Button } from '@/components'; // GlassCard used for emptyState
+import { SearchInput, OrderAccordion, type OrderData } from '@/components/molecules';
 import { useOrders } from '@/lib/hooks';
 import { useShiftStore, selectCurrentShift } from '@/lib/store';
 import styles from './page.module.css';
@@ -52,20 +52,6 @@ function formatCurrency(value: number): string {
   }).format(value);
 }
 
-const statusConfig: Record<string, { label: string; variant: 'success' | 'warning' | 'error' | 'default' }> = {
-  completed: { label: 'Готово', variant: 'success' },
-  preparing: { label: 'Готується', variant: 'warning' },
-  pending: { label: 'Очікує', variant: 'default' },
-  confirmed: { label: 'Підтверджено', variant: 'default' },
-  ready: { label: 'Готово', variant: 'success' },
-  cancelled: { label: 'Скасовано', variant: 'error' },
-};
-
-const paymentMethodLabel: Record<string, string> = {
-  cash: 'Готівка',
-  card: 'Картка',
-  qr: 'QR',
-};
 
 // ============================================
 // COMPONENT
@@ -127,6 +113,31 @@ export default function HistoryPage() {
         String(o.total || '').includes(q)
     );
   }, [orders, searchQuery]);
+
+  const filteredOrderData = useMemo((): OrderData[] =>
+    filteredOrders.map((order: any): OrderData => ({
+      id: order.orderNumber || String(order.id),
+      items: (order.items || []).map((item: any) => ({
+        id: String(item.id),
+        name: item.productName || item.name || '',
+        price: item.unitPrice || 0,
+        quantity: item.quantity || 1,
+        modifiers: (item.modifiers || []).map((m: any) => ({
+          id: String(m.id || m.name),
+          name: m.name || '',
+          price: m.price || 0,
+        })),
+      })),
+      createdAt: new Date(order.createdAt).getTime(),
+      status: order.status,
+      paymentMethod: (() => {
+        const m = order.payment?.method || order.paymentMethod;
+        if (m === 'cash' || m === 'card') return m;
+        if (m) return 'other';
+        return undefined;
+      })(),
+    })),
+  [filteredOrders]);
 
   const summary = useMemo(() => {
     const completedOrders = orders.filter((o: any) => o.status === 'completed');
@@ -225,7 +236,7 @@ export default function HistoryPage() {
               </div>
             )}
 
-            {filteredOrders.length === 0 ? (
+            {filteredOrderData.length === 0 ? (
               <GlassCard padding="xl" className={styles.emptyState}>
                 <Icon name="search" size="2xl" color="tertiary" />
                 <Text variant="bodyLarge" color="secondary">
@@ -238,95 +249,15 @@ export default function HistoryPage() {
                 )}
               </GlassCard>
             ) : (
-              filteredOrders.map((order: any, index: number) => {
-                const orderId = order.documentId || String(order.id);
-                const isExpanded = expandedOrderId === orderId;
-                const total = parseFloat(order.total) || 0;
-                const status = statusConfig[order.status] || statusConfig.pending;
-                const items: any[] = order.items || [];
-                const paymentMethod = order.payment?.method || order.paymentMethod;
-
-                return (
-                  <div key={orderId} className={styles.orderCard}>
-                    <button
-                      type="button"
-                      className={styles.accordionTrigger}
-                      onClick={() => toggleOrder(orderId)}
-                      aria-expanded={isExpanded}
-                    >
-                      <div className={styles.activityIcon}>
-                        <Icon name="receipt" size="sm" />
-                      </div>
-                      <div className={styles.activityContent}>
-                        <div className={styles.activityHeader}>
-                          <div className={styles.orderTitle}>
-                            <Text variant="caption" color="tertiary" className={styles.orderSeq}>
-                              #{index + 1}
-                            </Text>
-                            <Text variant="labelMedium" weight="semibold">
-                              {order.orderNumber || `ORD-${order.id}`}
-                            </Text>
-                          </div>
-                          <Text variant="caption" color="tertiary">
-                            {formatTime(order.createdAt)}
-                          </Text>
-                        </div>
-                        <div className={styles.activityMeta}>
-                          <Text variant="bodySmall" weight="semibold">
-                            ₴{formatCurrency(total)}
-                          </Text>
-                          {items.length > 0 && (
-                            <Text variant="bodySmall" color="secondary">
-                              · {items.length} поз.
-                            </Text>
-                          )}
-                          {paymentMethod && (
-                            <Text variant="bodySmall" color="secondary">
-                              · {paymentMethodLabel[paymentMethod] || paymentMethod}
-                            </Text>
-                          )}
-                          <Badge variant={status.variant} size="sm">
-                            {status.label}
-                          </Badge>
-                        </div>
-                      </div>
-                      <Icon
-                        name="chevron-right"
-                        size="sm"
-                        color="tertiary"
-                        className={isExpanded ? styles.chevronOpen : styles.chevron}
-                      />
-                    </button>
-
-                    {isExpanded && items.length > 0 && (
-                      <div className={styles.itemsList}>
-                        {items.map((item: any, idx: number) => (
-                          <div key={item.id || idx} className={styles.itemRow}>
-                            <Text variant="bodySmall" className={styles.itemName}>
-                              {item.productName}
-                              {item.notes && (
-                                <Text as="span" variant="caption" color="tertiary"> — {item.notes}</Text>
-                              )}
-                            </Text>
-                            <Text variant="bodySmall" color="secondary" className={styles.itemQty}>
-                              {item.quantity} × ₴{formatCurrency(item.unitPrice)}
-                            </Text>
-                            <Text variant="labelSmall" weight="semibold" className={styles.itemTotal}>
-                              ₴{formatCurrency(item.totalPrice)}
-                            </Text>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {isExpanded && items.length === 0 && (
-                      <div className={styles.itemsList}>
-                        <Text variant="bodySmall" color="tertiary">Деталі позицій недоступні</Text>
-                      </div>
-                    )}
-                  </div>
-                );
-              })
+              filteredOrderData.map((orderData) => (
+                <OrderAccordion
+                  key={orderData.id}
+                  order={orderData}
+                  isExpanded={expandedOrderId === orderData.id}
+                  onToggle={() => toggleOrder(orderData.id)}
+                  showPaymentMethod
+                />
+              ))
             )}
           </>
         )}

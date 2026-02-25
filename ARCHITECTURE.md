@@ -1,6 +1,6 @@
 # CoffeePOS — Architecture
 
-> Last updated: 2026-02-16
+> Last updated: 2026-02-24
 
 ## System Overview
 
@@ -10,7 +10,7 @@
 │  ┌────────────────────────────────────────────────────────┐  │
 │  │  Next.js 16 Frontend (React 19)                        │  │
 │  │  Zustand 5 │ React Query 5 │ CSS Modules + Tailwind v4 │  │
-│  │  13 pages │ ~50 components │ Atomic Design              │  │
+│  │  12 pages │ ~52 components │ Atomic Design              │  │
 │  └──────────────────────┬─────────────────────────────────┘  │
 │      Vercel             │ HTTPS + JWT Bearer                  │
 │  coffee-pos-ten.vercel.app                                    │
@@ -116,7 +116,7 @@
 | `GET` | `/api/reports/z-report` | End-of-shift report |
 | `GET` | `/_health` | Health check (public) |
 
-## Frontend Pages (13)
+## Frontend Pages (14)
 
 | Route | Description |
 |---|---|
@@ -124,11 +124,10 @@
 | `/login` | Auth (email + password) |
 | `/pos` | POS terminal (requires open shift) |
 | `/orders` | Order history |
-| `/tables` | Table management |
 | `/tasks` | Kanban board |
-| `/kds` | Kitchen display |
-| `/admin/dashboard` | Analytics |
-| `/admin/products` | CRUD: products, categories, ingredients, recipes, modifiers |
+| `/admin/dashboard` | Analytics (Огляд + Календар tabs via SegmentedControl) |
+| `/admin/products` | CRUD: products (with stock tracking) + ingredients |
+| `/admin/recipes` | CRUD: recipes — view/add/edit/delete recipe sizes and ingredients |
 | `/admin/reports` | Monthly calendar, X/Z reports |
 | `/admin/inventory` | Inventory overview |
 | `/profile` | User profile + shift schedule |

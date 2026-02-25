@@ -23,7 +23,7 @@ import {
   Legend,
 } from 'recharts';
 import { Text, Icon, GlassCard, Badge, Spinner, Button, Modal } from '@/components/atoms';
-import { CategoryTabs, OrderAccordion, SupplyAccordion, WriteoffAccordion, ActivityInline } from '@/components/molecules';
+import { SegmentedControl, OrderAccordion, SupplyAccordion, WriteoffAccordion, ActivityInline } from '@/components/molecules';
 import type { OrderData, SupplyAccordionData, WriteoffAccordionData } from '@/components/molecules';
 import { useDailyReport, useMonthlyReport, useCurrentShift } from '@/lib/hooks';
 import type { MonthlyDayData, ShiftActivity } from '@/lib/api';
@@ -33,9 +33,9 @@ import styles from './page.module.css';
 // TABS
 // ============================================
 
-const TABS = [
-  { id: 'overview', name: 'Огляд' },
-  { id: 'calendar', name: 'Календар' },
+const TABS_SEGMENTED = [
+  { id: 'overview', label: 'Огляд' },
+  { id: 'calendar', label: 'Календар' },
 ];
 
 // ============================================
@@ -546,15 +546,11 @@ export default function AnalyticsPage() {
   return (
     <div className={styles.page}>
       {/* Tab Switcher */}
-      <div className={styles.toolbar}>
-        <CategoryTabs
-          categories={TABS}
-          value={activeTab}
-          showAll={false}
-          onChange={(id) => setActiveTab(id || 'overview')}
-          size="md"
-        />
-      </div>
+      <SegmentedControl
+        options={TABS_SEGMENTED}
+        value={activeTab}
+        onChange={setActiveTab}
+      />
 
       {/* =========== OVERVIEW TAB =========== */}
       {activeTab === 'overview' && (
