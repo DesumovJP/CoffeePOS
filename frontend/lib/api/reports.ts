@@ -76,6 +76,7 @@ export interface MonthlyDayData {
   cashSales: number;
   cardSales: number;
   writeOffsTotal: number;
+  suppliesTotal: number;
   shiftsCount: number;
 }
 

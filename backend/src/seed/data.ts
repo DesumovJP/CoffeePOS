@@ -25,18 +25,14 @@ export const cafes = [
 ];
 
 // ============================================
-// CATEGORIES (8)
+// CATEGORIES (4)
 // ============================================
 
 export const categories = [
-  { name: 'Кава', slug: 'coffee', description: 'Класична та авторська кава', icon: 'coffee', color: '#8B4513', sortOrder: 1, isActive: true },
-  { name: 'Авторські напої', slug: 'signature', description: 'Фірмові рецепти Paradise Coffee', icon: 'star', color: '#9B59B6', sortOrder: 2, isActive: true },
-  { name: 'Чай', slug: 'tea', description: 'Чай на будь-який смак', icon: 'tea', color: '#228B22', sortOrder: 3, isActive: true },
-  { name: 'Десерти', slug: 'desserts', description: 'Торти, тістечка та солодощі', icon: 'cake', color: '#FF69B4', sortOrder: 4, isActive: true },
-  { name: 'Випічка', slug: 'pastry', description: 'Свіжа випічка щодня', icon: 'croissant', color: '#D2691E', sortOrder: 5, isActive: true },
-  { name: 'Сендвічі та салати', slug: 'food', description: 'Перекуси та основні страви', icon: 'utensils', color: '#FF6347', sortOrder: 6, isActive: true },
-  { name: 'Сніданки', slug: 'breakfast', description: 'Сніданки з 8:00 до 12:00', icon: 'sunrise', color: '#FFA500', sortOrder: 7, isActive: true },
-  { name: 'Напої', slug: 'drinks', description: 'Холодні напої, фреші, смузі', icon: 'glass', color: '#4169E1', sortOrder: 8, isActive: true },
+  { name: 'Гарячі напої', slug: 'hot',    description: 'Кава, авторські напої та чай', icon: 'coffee',   color: '#C0392B', sortOrder: 1, isActive: true },
+  { name: 'Холодні',      slug: 'cold',   description: 'Холодні напої, фреші, смузі',  icon: 'glass',    color: '#2980B9', sortOrder: 2, isActive: true },
+  { name: 'Кондитерка',   slug: 'pastry', description: 'Десерти та свіжа випічка',     icon: 'cake',     color: '#E67E22', sortOrder: 3, isActive: true },
+  { name: 'Гріль',        slug: 'grill',  description: 'Сендвічі, салати та сніданки', icon: 'utensils', color: '#27AE60', sortOrder: 4, isActive: true },
 ];
 
 // ============================================
@@ -77,39 +73,39 @@ export const modifiers = {
 
 export const products = [
   // ---- Кава (10) ----
-  { name: 'Еспресо', slug: 'espresso', description: 'Класичний італійський еспресо', shortDescription: 'Класика', price: 45, costPrice: 12, categorySlug: 'coffee', isActive: true, isFeatured: true, sortOrder: 1, preparationTime: 2, hasModifiers: true },
-  { name: 'Допіо', slug: 'doppio', description: 'Подвійний еспресо для справжніх цінителів', shortDescription: 'Подвійний', price: 65, costPrice: 24, categorySlug: 'coffee', isActive: true, isFeatured: false, sortOrder: 2, preparationTime: 2, hasModifiers: false },
-  { name: 'Американо', slug: 'americano', description: 'Еспресо з гарячою водою', shortDescription: 'М\'який смак', price: 55, costPrice: 14, categorySlug: 'coffee', isActive: true, isFeatured: false, sortOrder: 3, preparationTime: 2, hasModifiers: true },
-  { name: 'Капучіно', slug: 'cappuccino', description: 'Еспресо з молочною пінкою', shortDescription: 'Ніжна пінка', price: 65, costPrice: 18, categorySlug: 'coffee', isActive: true, isFeatured: true, sortOrder: 4, preparationTime: 3, hasModifiers: true },
-  { name: 'Латте', slug: 'latte', description: 'Еспресо з великою кількістю молока', shortDescription: 'Молочний', price: 70, costPrice: 20, categorySlug: 'coffee', isActive: true, isFeatured: true, sortOrder: 5, preparationTime: 3, hasModifiers: true },
-  { name: 'Флет Вайт', slug: 'flat-white', description: 'Подвійний еспресо з бархатистим молоком', shortDescription: 'Насичений', price: 75, costPrice: 22, categorySlug: 'coffee', isActive: true, isFeatured: false, sortOrder: 6, preparationTime: 3, hasModifiers: true },
-  { name: 'Кортадо', slug: 'cortado', description: 'Еспресо з невеликою кількістю теплого молока', shortDescription: 'Іспанський', price: 60, costPrice: 16, categorySlug: 'coffee', isActive: true, isFeatured: false, sortOrder: 7, preparationTime: 2, hasModifiers: false },
-  { name: 'Раф', slug: 'raf', description: 'Кава з вершками та ванільним цукром', shortDescription: 'Вершковий', price: 85, costPrice: 25, categorySlug: 'coffee', isActive: true, isFeatured: true, sortOrder: 8, preparationTime: 4, hasModifiers: true },
-  { name: 'Мокко', slug: 'mocha', description: 'Кава з шоколадом та молоком', shortDescription: 'Шоколадний', price: 80, costPrice: 24, categorySlug: 'coffee', isActive: true, isFeatured: false, sortOrder: 9, preparationTime: 4, hasModifiers: true },
-  { name: 'Айс Латте', slug: 'iced-latte', description: 'Холодний латте з льодом', shortDescription: 'Освіжаючий', price: 75, costPrice: 22, categorySlug: 'coffee', isActive: true, isFeatured: false, sortOrder: 10, preparationTime: 3, hasModifiers: true },
+  { name: 'Еспресо', slug: 'espresso', description: 'Класичний італійський еспресо', shortDescription: 'Класика', price: 45, costPrice: 12, categorySlug: 'hot', isActive: true, isFeatured: true, sortOrder: 1, preparationTime: 2, hasModifiers: true },
+  { name: 'Допіо', slug: 'doppio', description: 'Подвійний еспресо для справжніх цінителів', shortDescription: 'Подвійний', price: 65, costPrice: 24, categorySlug: 'hot', isActive: true, isFeatured: false, sortOrder: 2, preparationTime: 2, hasModifiers: false },
+  { name: 'Американо', slug: 'americano', description: 'Еспресо з гарячою водою', shortDescription: 'М\'який смак', price: 55, costPrice: 14, categorySlug: 'hot', isActive: true, isFeatured: false, sortOrder: 3, preparationTime: 2, hasModifiers: true },
+  { name: 'Капучіно', slug: 'cappuccino', description: 'Еспресо з молочною пінкою', shortDescription: 'Ніжна пінка', price: 65, costPrice: 18, categorySlug: 'hot', isActive: true, isFeatured: true, sortOrder: 4, preparationTime: 3, hasModifiers: true },
+  { name: 'Латте', slug: 'latte', description: 'Еспресо з великою кількістю молока', shortDescription: 'Молочний', price: 70, costPrice: 20, categorySlug: 'hot', isActive: true, isFeatured: true, sortOrder: 5, preparationTime: 3, hasModifiers: true },
+  { name: 'Флет Вайт', slug: 'flat-white', description: 'Подвійний еспресо з бархатистим молоком', shortDescription: 'Насичений', price: 75, costPrice: 22, categorySlug: 'hot', isActive: true, isFeatured: false, sortOrder: 6, preparationTime: 3, hasModifiers: true },
+  { name: 'Кортадо', slug: 'cortado', description: 'Еспресо з невеликою кількістю теплого молока', shortDescription: 'Іспанський', price: 60, costPrice: 16, categorySlug: 'hot', isActive: true, isFeatured: false, sortOrder: 7, preparationTime: 2, hasModifiers: false },
+  { name: 'Раф', slug: 'raf', description: 'Кава з вершками та ванільним цукром', shortDescription: 'Вершковий', price: 85, costPrice: 25, categorySlug: 'hot', isActive: true, isFeatured: true, sortOrder: 8, preparationTime: 4, hasModifiers: true },
+  { name: 'Мокко', slug: 'mocha', description: 'Кава з шоколадом та молоком', shortDescription: 'Шоколадний', price: 80, costPrice: 24, categorySlug: 'hot', isActive: true, isFeatured: false, sortOrder: 9, preparationTime: 4, hasModifiers: true },
+  { name: 'Айс Латте', slug: 'iced-latte', description: 'Холодний латте з льодом', shortDescription: 'Освіжаючий', price: 75, costPrice: 22, categorySlug: 'hot', isActive: true, isFeatured: false, sortOrder: 10, preparationTime: 3, hasModifiers: true },
 
   // ---- Авторські напої (6) ----
-  { name: 'Лавандовий Латте', slug: 'lavender-latte', description: 'Латте з лавандовим сиропом та молочною пінкою', shortDescription: 'Квітковий', price: 95, costPrice: 28, categorySlug: 'signature', isActive: true, isFeatured: true, sortOrder: 1, preparationTime: 4, hasModifiers: true },
-  { name: 'Бамбл', slug: 'bumble', description: 'Еспресо з апельсиновим соком та льодом', shortDescription: 'Цитрусовий', price: 90, costPrice: 32, categorySlug: 'signature', isActive: true, isFeatured: true, sortOrder: 2, preparationTime: 3, hasModifiers: false },
-  { name: 'Карамель Макіато', slug: 'caramel-macchiato', description: 'Ванільний латте з карамельним соусом', shortDescription: 'Солодкий', price: 95, costPrice: 26, categorySlug: 'signature', isActive: true, isFeatured: true, sortOrder: 3, preparationTime: 4, hasModifiers: true },
-  { name: 'Кокосовий Латте', slug: 'coconut-latte', description: 'Латте на кокосовому молоці з кокосовою стружкою', shortDescription: 'Тропічний', price: 90, costPrice: 30, categorySlug: 'signature', isActive: true, isFeatured: false, sortOrder: 4, preparationTime: 4, hasModifiers: false },
-  { name: 'Банановий Раф', slug: 'banana-raf', description: 'Раф з банановим пюре та карамеллю', shortDescription: 'Фруктовий', price: 95, costPrice: 30, categorySlug: 'signature', isActive: true, isFeatured: false, sortOrder: 5, preparationTime: 5, hasModifiers: true },
-  { name: 'Фредо Еспресо', slug: 'freddo-espresso', description: 'Холодний збитий еспресо з кремовою пінкою', shortDescription: 'Грецький', price: 85, costPrice: 20, categorySlug: 'signature', isActive: true, isFeatured: false, sortOrder: 6, preparationTime: 3, hasModifiers: false },
+  { name: 'Лавандовий Латте', slug: 'lavender-latte', description: 'Латте з лавандовим сиропом та молочною пінкою', shortDescription: 'Квітковий', price: 95, costPrice: 28, categorySlug: 'hot', isActive: true, isFeatured: true, sortOrder: 1, preparationTime: 4, hasModifiers: true },
+  { name: 'Бамбл', slug: 'bumble', description: 'Еспресо з апельсиновим соком та льодом', shortDescription: 'Цитрусовий', price: 90, costPrice: 32, categorySlug: 'hot', isActive: true, isFeatured: true, sortOrder: 2, preparationTime: 3, hasModifiers: false },
+  { name: 'Карамель Макіато', slug: 'caramel-macchiato', description: 'Ванільний латте з карамельним соусом', shortDescription: 'Солодкий', price: 95, costPrice: 26, categorySlug: 'hot', isActive: true, isFeatured: true, sortOrder: 3, preparationTime: 4, hasModifiers: true },
+  { name: 'Кокосовий Латте', slug: 'coconut-latte', description: 'Латте на кокосовому молоці з кокосовою стружкою', shortDescription: 'Тропічний', price: 90, costPrice: 30, categorySlug: 'hot', isActive: true, isFeatured: false, sortOrder: 4, preparationTime: 4, hasModifiers: false },
+  { name: 'Банановий Раф', slug: 'banana-raf', description: 'Раф з банановим пюре та карамеллю', shortDescription: 'Фруктовий', price: 95, costPrice: 30, categorySlug: 'hot', isActive: true, isFeatured: false, sortOrder: 5, preparationTime: 5, hasModifiers: true },
+  { name: 'Фредо Еспресо', slug: 'freddo-espresso', description: 'Холодний збитий еспресо з кремовою пінкою', shortDescription: 'Грецький', price: 85, costPrice: 20, categorySlug: 'hot', isActive: true, isFeatured: false, sortOrder: 6, preparationTime: 3, hasModifiers: false },
 
   // ---- Чай (5) ----
-  { name: 'Чорний чай', slug: 'black-tea', description: 'Класичний чорний чай', shortDescription: 'Класика', price: 40, costPrice: 8, categorySlug: 'tea', isActive: true, isFeatured: false, sortOrder: 1, preparationTime: 3, hasModifiers: false },
-  { name: 'Зелений чай', slug: 'green-tea', description: 'Зелений чай з жасмином', shortDescription: 'Легкий', price: 45, costPrice: 10, categorySlug: 'tea', isActive: true, isFeatured: false, sortOrder: 2, preparationTime: 3, hasModifiers: false },
-  { name: 'Матча Латте', slug: 'matcha-latte', description: 'Японський зелений чай з молоком', shortDescription: 'Японський', price: 85, costPrice: 30, categorySlug: 'tea', isActive: true, isFeatured: true, sortOrder: 3, preparationTime: 4, hasModifiers: true },
-  { name: 'Трав\'яний чай', slug: 'herbal-tea', description: 'Суміш м\'яти, ромашки та чебрецю', shortDescription: 'Заспокійливий', price: 45, costPrice: 12, categorySlug: 'tea', isActive: true, isFeatured: false, sortOrder: 4, preparationTime: 4, hasModifiers: false },
-  { name: 'Чай Латте', slug: 'chai-latte', description: 'Індійський масала чай з молоком та спеціями', shortDescription: 'Пряний', price: 80, costPrice: 22, categorySlug: 'tea', isActive: true, isFeatured: false, sortOrder: 5, preparationTime: 5, hasModifiers: true },
+  { name: 'Чорний чай', slug: 'black-tea', description: 'Класичний чорний чай', shortDescription: 'Класика', price: 40, costPrice: 8, categorySlug: 'hot', isActive: true, isFeatured: false, sortOrder: 1, preparationTime: 3, hasModifiers: false },
+  { name: 'Зелений чай', slug: 'green-tea', description: 'Зелений чай з жасмином', shortDescription: 'Легкий', price: 45, costPrice: 10, categorySlug: 'hot', isActive: true, isFeatured: false, sortOrder: 2, preparationTime: 3, hasModifiers: false },
+  { name: 'Матча Латте', slug: 'matcha-latte', description: 'Японський зелений чай з молоком', shortDescription: 'Японський', price: 85, costPrice: 30, categorySlug: 'hot', isActive: true, isFeatured: true, sortOrder: 3, preparationTime: 4, hasModifiers: true },
+  { name: 'Трав\'яний чай', slug: 'herbal-tea', description: 'Суміш м\'яти, ромашки та чебрецю', shortDescription: 'Заспокійливий', price: 45, costPrice: 12, categorySlug: 'hot', isActive: true, isFeatured: false, sortOrder: 4, preparationTime: 4, hasModifiers: false },
+  { name: 'Чай Латте', slug: 'chai-latte', description: 'Індійський масала чай з молоком та спеціями', shortDescription: 'Пряний', price: 80, costPrice: 22, categorySlug: 'hot', isActive: true, isFeatured: false, sortOrder: 5, preparationTime: 5, hasModifiers: true },
 
   // ---- Десерти (6) ----
-  { name: 'Чізкейк', slug: 'cheesecake', description: 'Класичний Нью-Йорк чізкейк', shortDescription: 'Класичний', price: 95, costPrice: 35, categorySlug: 'desserts', isActive: true, isFeatured: true, sortOrder: 1, preparationTime: 1, hasModifiers: false },
-  { name: 'Тірамісу', slug: 'tiramisu', description: 'Італійський десерт з маскарпоне та кавою', shortDescription: 'Італійський', price: 110, costPrice: 40, categorySlug: 'desserts', isActive: true, isFeatured: true, sortOrder: 2, preparationTime: 1, hasModifiers: false },
-  { name: 'Брауні', slug: 'brownie', description: 'Шоколадний брауні з горіхами', shortDescription: 'Шоколадний', price: 75, costPrice: 25, categorySlug: 'desserts', isActive: true, isFeatured: false, sortOrder: 3, preparationTime: 1, hasModifiers: false },
-  { name: 'Панна Кота', slug: 'panna-cotta', description: 'Вершковий десерт з ягідним соусом', shortDescription: 'Вершковий', price: 85, costPrice: 30, categorySlug: 'desserts', isActive: true, isFeatured: false, sortOrder: 4, preparationTime: 1, hasModifiers: false },
-  { name: 'Медовик', slug: 'medovik', description: 'Традиційний медовий торт', shortDescription: 'Медовий', price: 90, costPrice: 32, categorySlug: 'desserts', isActive: true, isFeatured: true, sortOrder: 5, preparationTime: 1, hasModifiers: false },
-  { name: 'Наполеон', slug: 'napoleon', description: 'Листкове тісто з кремом', shortDescription: 'Класичний', price: 85, costPrice: 28, categorySlug: 'desserts', isActive: true, isFeatured: false, sortOrder: 6, preparationTime: 1, hasModifiers: false },
+  { name: 'Чізкейк', slug: 'cheesecake', description: 'Класичний Нью-Йорк чізкейк', shortDescription: 'Класичний', price: 95, costPrice: 35, categorySlug: 'pastry', isActive: true, isFeatured: true, sortOrder: 1, preparationTime: 1, hasModifiers: false },
+  { name: 'Тірамісу', slug: 'tiramisu', description: 'Італійський десерт з маскарпоне та кавою', shortDescription: 'Італійський', price: 110, costPrice: 40, categorySlug: 'pastry', isActive: true, isFeatured: true, sortOrder: 2, preparationTime: 1, hasModifiers: false },
+  { name: 'Брауні', slug: 'brownie', description: 'Шоколадний брауні з горіхами', shortDescription: 'Шоколадний', price: 75, costPrice: 25, categorySlug: 'pastry', isActive: true, isFeatured: false, sortOrder: 3, preparationTime: 1, hasModifiers: false },
+  { name: 'Панна Кота', slug: 'panna-cotta', description: 'Вершковий десерт з ягідним соусом', shortDescription: 'Вершковий', price: 85, costPrice: 30, categorySlug: 'pastry', isActive: true, isFeatured: false, sortOrder: 4, preparationTime: 1, hasModifiers: false },
+  { name: 'Медовик', slug: 'medovik', description: 'Традиційний медовий торт', shortDescription: 'Медовий', price: 90, costPrice: 32, categorySlug: 'pastry', isActive: true, isFeatured: true, sortOrder: 5, preparationTime: 1, hasModifiers: false },
+  { name: 'Наполеон', slug: 'napoleon', description: 'Листкове тісто з кремом', shortDescription: 'Класичний', price: 85, costPrice: 28, categorySlug: 'pastry', isActive: true, isFeatured: false, sortOrder: 6, preparationTime: 1, hasModifiers: false },
 
   // ---- Випічка (5) ----
   { name: 'Круасан', slug: 'croissant', description: 'Свіжий французький круасан', shortDescription: 'Свіжий', price: 55, costPrice: 18, categorySlug: 'pastry', isActive: true, isFeatured: false, sortOrder: 1, preparationTime: 1, hasModifiers: false },
@@ -119,24 +115,24 @@ export const products = [
   { name: 'Бейгл з вершковим сиром', slug: 'bagel', description: 'Бейгл з крем-сиром та зеленню', shortDescription: 'Поживний', price: 75, costPrice: 28, categorySlug: 'pastry', isActive: true, isFeatured: false, sortOrder: 5, preparationTime: 2, hasModifiers: false },
 
   // ---- Сендвічі та салати (5) ----
-  { name: 'Сендвіч з куркою', slug: 'chicken-sandwich', description: 'Сендвіч з курячим філе, руколою та соусом песто', shortDescription: 'З куркою', price: 120, costPrice: 45, categorySlug: 'food', isActive: true, isFeatured: false, sortOrder: 1, preparationTime: 5, hasModifiers: false },
-  { name: 'Сендвіч з лососем', slug: 'salmon-sandwich', description: 'Сендвіч зі слабосоленим лососем та крем-сиром', shortDescription: 'З лососем', price: 145, costPrice: 60, categorySlug: 'food', isActive: true, isFeatured: true, sortOrder: 2, preparationTime: 5, hasModifiers: false },
-  { name: 'Сендвіч Капрезе', slug: 'caprese-sandwich', description: 'Моцарелла, томати, базилік, бальзамік', shortDescription: 'Італійський', price: 115, costPrice: 42, categorySlug: 'food', isActive: true, isFeatured: false, sortOrder: 3, preparationTime: 4, hasModifiers: false },
-  { name: 'Салат Цезар', slug: 'caesar-salad', description: 'Класичний салат Цезар з куркою та пармезаном', shortDescription: 'Класичний', price: 135, costPrice: 50, categorySlug: 'food', isActive: true, isFeatured: true, sortOrder: 4, preparationTime: 7, hasModifiers: false },
-  { name: 'Боул з тунцем', slug: 'tuna-bowl', description: 'Рис, тунець, авокадо, едамаме, соус понзу', shortDescription: 'Азійський', price: 155, costPrice: 65, categorySlug: 'food', isActive: true, isFeatured: false, sortOrder: 5, preparationTime: 8, hasModifiers: false },
+  { name: 'Сендвіч з куркою', slug: 'chicken-sandwich', description: 'Сендвіч з курячим філе, руколою та соусом песто', shortDescription: 'З куркою', price: 120, costPrice: 45, categorySlug: 'grill', isActive: true, isFeatured: false, sortOrder: 1, preparationTime: 5, hasModifiers: false },
+  { name: 'Сендвіч з лососем', slug: 'salmon-sandwich', description: 'Сендвіч зі слабосоленим лососем та крем-сиром', shortDescription: 'З лососем', price: 145, costPrice: 60, categorySlug: 'grill', isActive: true, isFeatured: true, sortOrder: 2, preparationTime: 5, hasModifiers: false },
+  { name: 'Сендвіч Капрезе', slug: 'caprese-sandwich', description: 'Моцарелла, томати, базилік, бальзамік', shortDescription: 'Італійський', price: 115, costPrice: 42, categorySlug: 'grill', isActive: true, isFeatured: false, sortOrder: 3, preparationTime: 4, hasModifiers: false },
+  { name: 'Салат Цезар', slug: 'caesar-salad', description: 'Класичний салат Цезар з куркою та пармезаном', shortDescription: 'Класичний', price: 135, costPrice: 50, categorySlug: 'grill', isActive: true, isFeatured: true, sortOrder: 4, preparationTime: 7, hasModifiers: false },
+  { name: 'Боул з тунцем', slug: 'tuna-bowl', description: 'Рис, тунець, авокадо, едамаме, соус понзу', shortDescription: 'Азійський', price: 155, costPrice: 65, categorySlug: 'grill', isActive: true, isFeatured: false, sortOrder: 5, preparationTime: 8, hasModifiers: false },
 
   // ---- Сніданки (4) ----
-  { name: 'Тост з авокадо', slug: 'avocado-toast', description: 'Тост з авокадо, яйцем пашот та мікрогріном', shortDescription: 'Корисний', price: 125, costPrice: 48, categorySlug: 'breakfast', isActive: true, isFeatured: true, sortOrder: 1, preparationTime: 7, hasModifiers: false },
-  { name: 'Гранола боул', slug: 'granola-bowl', description: 'Домашня гранола з йогуртом та сезонними фруктами', shortDescription: 'Фруктовий', price: 95, costPrice: 32, categorySlug: 'breakfast', isActive: true, isFeatured: false, sortOrder: 2, preparationTime: 3, hasModifiers: false },
-  { name: 'Сирники', slug: 'syrnyky', description: 'Домашні сирники з сметаною та ягодами', shortDescription: 'Домашні', price: 110, costPrice: 38, categorySlug: 'breakfast', isActive: true, isFeatured: true, sortOrder: 3, preparationTime: 10, hasModifiers: false },
-  { name: 'Омлет з овочами', slug: 'veggie-omelette', description: 'Пухкий омлет з грибами, перцем та сиром', shortDescription: 'Поживний', price: 115, costPrice: 35, categorySlug: 'breakfast', isActive: true, isFeatured: false, sortOrder: 4, preparationTime: 8, hasModifiers: false },
+  { name: 'Тост з авокадо', slug: 'avocado-toast', description: 'Тост з авокадо, яйцем пашот та мікрогріном', shortDescription: 'Корисний', price: 125, costPrice: 48, categorySlug: 'grill', isActive: true, isFeatured: true, sortOrder: 1, preparationTime: 7, hasModifiers: false },
+  { name: 'Гранола боул', slug: 'granola-bowl', description: 'Домашня гранола з йогуртом та сезонними фруктами', shortDescription: 'Фруктовий', price: 95, costPrice: 32, categorySlug: 'grill', isActive: true, isFeatured: false, sortOrder: 2, preparationTime: 3, hasModifiers: false },
+  { name: 'Сирники', slug: 'syrnyky', description: 'Домашні сирники з сметаною та ягодами', shortDescription: 'Домашні', price: 110, costPrice: 38, categorySlug: 'grill', isActive: true, isFeatured: true, sortOrder: 3, preparationTime: 10, hasModifiers: false },
+  { name: 'Омлет з овочами', slug: 'veggie-omelette', description: 'Пухкий омлет з грибами, перцем та сиром', shortDescription: 'Поживний', price: 115, costPrice: 35, categorySlug: 'grill', isActive: true, isFeatured: false, sortOrder: 4, preparationTime: 8, hasModifiers: false },
 
   // ---- Напої (5) ----
-  { name: 'Лимонад', slug: 'lemonade', description: 'Домашній лимонад з м\'ятою', shortDescription: 'Освіжаючий', price: 55, costPrice: 15, categorySlug: 'drinks', isActive: true, isFeatured: false, sortOrder: 1, preparationTime: 3, hasModifiers: false },
-  { name: 'Фреш апельсин', slug: 'orange-fresh', description: 'Свіжовичавлений апельсиновий сік', shortDescription: 'Свіжий', price: 75, costPrice: 30, categorySlug: 'drinks', isActive: true, isFeatured: false, sortOrder: 2, preparationTime: 3, hasModifiers: false },
-  { name: 'Фреш яблучний', slug: 'apple-fresh', description: 'Свіжовичавлений яблучний сік', shortDescription: 'Вітамінний', price: 70, costPrice: 25, categorySlug: 'drinks', isActive: true, isFeatured: false, sortOrder: 3, preparationTime: 3, hasModifiers: false },
-  { name: 'Мохіто безалкогольний', slug: 'virgin-mojito', description: 'Лайм, м\'ята, содова та лід', shortDescription: 'Літній', price: 65, costPrice: 18, categorySlug: 'drinks', isActive: true, isFeatured: false, sortOrder: 4, preparationTime: 4, hasModifiers: false },
-  { name: 'Смузі ягідний', slug: 'berry-smoothie', description: 'Мікс лісових ягід з йогуртом та бананом', shortDescription: 'Ягідний', price: 85, costPrice: 35, categorySlug: 'drinks', isActive: true, isFeatured: true, sortOrder: 5, preparationTime: 4, hasModifiers: false },
+  { name: 'Лимонад', slug: 'lemonade', description: 'Домашній лимонад з м\'ятою', shortDescription: 'Освіжаючий', price: 55, costPrice: 15, categorySlug: 'cold', isActive: true, isFeatured: false, sortOrder: 1, preparationTime: 3, hasModifiers: false },
+  { name: 'Фреш апельсин', slug: 'orange-fresh', description: 'Свіжовичавлений апельсиновий сік', shortDescription: 'Свіжий', price: 75, costPrice: 30, categorySlug: 'cold', isActive: true, isFeatured: false, sortOrder: 2, preparationTime: 3, hasModifiers: false },
+  { name: 'Фреш яблучний', slug: 'apple-fresh', description: 'Свіжовичавлений яблучний сік', shortDescription: 'Вітамінний', price: 70, costPrice: 25, categorySlug: 'cold', isActive: true, isFeatured: false, sortOrder: 3, preparationTime: 3, hasModifiers: false },
+  { name: 'Мохіто безалкогольний', slug: 'virgin-mojito', description: 'Лайм, м\'ята, содова та лід', shortDescription: 'Літній', price: 65, costPrice: 18, categorySlug: 'cold', isActive: true, isFeatured: false, sortOrder: 4, preparationTime: 4, hasModifiers: false },
+  { name: 'Смузі ягідний', slug: 'berry-smoothie', description: 'Мікс лісових ягід з йогуртом та бананом', shortDescription: 'Ягідний', price: 85, costPrice: 35, categorySlug: 'cold', isActive: true, isFeatured: true, sortOrder: 5, preparationTime: 4, hasModifiers: false },
 ];
 
 // ============================================

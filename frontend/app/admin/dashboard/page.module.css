@@ -406,6 +406,7 @@
 }
 
 .dotSuccess { background: var(--color-success); }
+.dotInfo { background: var(--color-info); }
 .dotError { background: var(--color-error); }
 
 /* ============================================

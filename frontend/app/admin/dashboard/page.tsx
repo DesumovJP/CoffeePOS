@@ -127,6 +127,7 @@ interface DayCell {
   cashSales: number;
   cardSales: number;
   writeOffsTotal: number;
+  suppliesTotal: number;
   shiftsCount: number;
 }
 
@@ -330,6 +331,7 @@ export default function AnalyticsPage() {
         cashSales: apiData?.cashSales || 0,
         cardSales: apiData?.cardSales || 0,
         writeOffsTotal: apiData?.writeOffsTotal || 0,
+        suppliesTotal: apiData?.suppliesTotal || 0,
         shiftsCount: apiData?.shiftsCount || 0,
       };
     });
@@ -789,7 +791,14 @@ export default function AnalyticsPage() {
                           <Text variant="labelSmall" weight="semibold" color="accent">₴{formatNumber(day.revenue)}</Text>
                           <Text variant="caption" color="tertiary">{day.ordersCount} зам.</Text>
                         </div>
-                        {/* Secondary: write-offs only if present */}
+                        {/* Secondary: supplies only if present */}
+                        {day.suppliesTotal > 0 && (
+                          <div className={styles.dayIndicator}>
+                            <span className={`${styles.dayIndicatorDot} ${styles.dotInfo}`} />
+                            <Text variant="caption" color="tertiary">+₴{formatNumber(day.suppliesTotal)}</Text>
+                          </div>
+                        )}
+                        {/* Tertiary: write-offs only if present */}
                         {day.writeOffsTotal > 0 && (
                           <div className={styles.dayIndicator}>
                             <span className={`${styles.dayIndicatorDot} ${styles.dotError}`} />

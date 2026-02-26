@@ -189,6 +189,7 @@ export const mockReportsApi = {
         cashSales,
         cardSales,
         writeOffsTotal: woTotal,
+        suppliesTotal: 0,
         shiftsCount: dayShifts.length,
       });
 

@@ -10,6 +10,9 @@ export default {
     // Ensure permissions for all content types
     await ensurePermissions(strapi);
 
+    // Migrate categories 8→4 (idempotent)
+    await migrateCategoriesV2(strapi);
+
     // Check if we should seed the database
     const shouldSeed = process.env.SEED_DATABASE === 'true';
 
@@ -31,6 +34,72 @@ export default {
     await ensureEmployees(strapi);
   },
 };
+
+/**
+ * Migrate categories from 8 old slugs to 4 new ones.
+ * Idempotent — no-op if old categories are already gone.
+ *
+ * Special case: 'pastry' slug is reused (Випічка → Кондитерка),
+ * so it is updated in-place rather than delete+recreate.
+ */
+async function migrateCategoriesV2(strapi: Core.Strapi) {
+  try {
+    const catQuery = strapi.db.query('api::category.category');
+    const productQuery = strapi.db.query('api::product.product');
+
+    // These 7 old slugs will be deleted; 'pastry' is handled separately (rename in-place)
+    const OLD_SLUGS_TO_DELETE = ['coffee', 'signature', 'tea', 'drinks', 'desserts', 'food', 'breakfast'];
+    const OLD_SLUG_TO_NEW_SLUG: Record<string, string> = {
+      coffee: 'hot', signature: 'hot', tea: 'hot',
+      drinks: 'cold',
+      desserts: 'pastry',
+      food: 'grill', breakfast: 'grill',
+    };
+
+    const existingOld = await catQuery.findMany({ where: { slug: { $in: OLD_SLUGS_TO_DELETE } } });
+    const existingPastry = await catQuery.findOne({ where: { slug: 'pastry' } }) as any;
+    const pastryNeedsRename = existingPastry && existingPastry.name !== 'Кондитерка';
+
+    if (existingOld.length === 0 && !pastryNeedsRename) return; // Already migrated
+
+    // 1. Upsert/update all 4 new categories
+    const newCatDefs = [
+      { slug: 'hot',    name: 'Гарячі напої', icon: 'coffee',   color: '#C0392B', sortOrder: 1, isActive: true },
+      { slug: 'cold',   name: 'Холодні',      icon: 'glass',    color: '#2980B9', sortOrder: 2, isActive: true },
+      { slug: 'pastry', name: 'Кондитерка',   icon: 'cake',     color: '#E67E22', sortOrder: 3, isActive: true },
+      { slug: 'grill',  name: 'Гріль',        icon: 'utensils', color: '#27AE60', sortOrder: 4, isActive: true },
+    ];
+    for (const def of newCatDefs) {
+      const existing = await catQuery.findOne({ where: { slug: def.slug } }) as any;
+      if (existing) {
+        // Update in-place (renames old 'pastry' Випічка → Кондитерка; refreshes others if already created)
+        await catQuery.update({ where: { id: existing.id }, data: { name: def.name, icon: def.icon, color: def.color, sortOrder: def.sortOrder } });
+      } else {
+        await catQuery.create({ data: def });
+      }
+    }
+
+    // 2. For each deletable old category: move its products to the new target, then delete it
+    for (const oldCat of existingOld as any[]) {
+      const newSlug = OLD_SLUG_TO_NEW_SLUG[oldCat.slug];
+      if (!newSlug) continue;
+      const newCat = await catQuery.findOne({ where: { slug: newSlug } }) as any;
+      if (!newCat) continue;
+      const products = await productQuery.findMany({ where: { category: { id: oldCat.id } } }) as any[];
+      for (const product of products) {
+        await productQuery.update({ where: { id: product.id }, data: { category: newCat.id } });
+      }
+      await catQuery.delete({ where: { id: oldCat.id } });
+    }
+    // Note: old 'pastry' (Випічка) was renamed to 'Кондитерка' in step 1 — its products stay put.
+    // Products from 'desserts' were moved to the updated 'pastry' (Кондитерка) record.
+
+    strapi.log.info('[bootstrap] migrateCategoriesV2: migrated 8→4 categories');
+  } catch (error) {
+    strapi.log.error('Failed to migrate categories:');
+    console.error(error);
+  }
+}
 
 /**
  * Seed employees if the table is empty.

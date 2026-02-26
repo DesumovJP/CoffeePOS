@@ -188,6 +188,14 @@ export default {
       },
     });
 
+    // Get all supplies for the month
+    const monthlySupplies = await strapi.db.query('api::supply.supply').findMany({
+      where: {
+        createdAt: { $gte: startOfMonth, $lte: endOfMonth },
+        status: 'received',
+      },
+    });
+
     // Get previous month orders for comparison
     const prevM = m === 0 ? 11 : m - 1;
     const prevY = m === 0 ? y - 1 : y;
@@ -219,6 +227,7 @@ export default {
         cashSales: 0,
         cardSales: 0,
         writeOffsTotal: 0,
+        suppliesTotal: 0,
         shiftsCount: 0,
       };
     }
@@ -248,6 +257,13 @@ export default {
       const dateKey = wo.createdAt.split('T')[0];
       if (dailyData[dateKey]) {
         dailyData[dateKey].writeOffsTotal += parseFloat(wo.totalCost) || 0;
+      }
+    }
+
+    for (const supply of monthlySupplies) {
+      const dateKey = supply.createdAt.split('T')[0];
+      if (dailyData[dateKey]) {
+        dailyData[dateKey].suppliesTotal += parseFloat(supply.totalCost) || 0;
       }
     }
 
