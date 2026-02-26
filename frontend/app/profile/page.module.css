@@ -1,7 +1,7 @@
 /**
  * Profile Page Styles
  *
- * Clean personal dashboard with glass cards
+ * Single-scroll dashboard: hero → charts → shift history
  */
 
 .page {
@@ -13,73 +13,92 @@
   width: 100%;
   height: 100%;
   overflow-y: auto;
+  overflow-x: hidden;
   max-width: var(--grid-max-width);
   margin-inline: auto;
 }
 
 /* ============================================
-   PROFILE CARD
+   HERO CARD
    ============================================ */
 
-.profileCard {
+.heroCard {
   padding: var(--space-6);
-  max-width: 720px;
-  margin-inline: auto;
-  width: 100%;
 }
 
-.profileHeader {
+.heroTop {
   display: flex;
   align-items: center;
-  gap: var(--space-5);
+  justify-content: space-between;
+  gap: var(--space-4);
   margin-bottom: var(--space-6);
 }
 
-.profileName {
+.heroIdentity {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-}
-
-/* ============================================
-   INFO GRID
-   ============================================ */
-
-.infoGrid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--space-3);
-}
-
-.infoField {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  padding: var(--space-4);
-  background: var(--glass-bg);
-  backdrop-filter: blur(var(--blur-md));
-  -webkit-backdrop-filter: blur(var(--blur-md));
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-lg);
-}
-
-/* ============================================
-   TAB CONTENT
-   ============================================ */
-
-.tabContent {
-  display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: var(--space-4);
-  max-width: 720px;
-  margin-inline: auto;
-  width: 100%;
-  flex: 1;
-  min-height: 0;
+  min-width: 0;
+}
+
+.heroInfo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.heroMeta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+/* Hire badge — top-right */
+.hireBadge {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  flex-shrink: 0;
+}
+
+.hireText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* ── Stats strip ── */
+.heroStats {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--glass-border);
+  flex-wrap: wrap;
+}
+
+.heroStat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 80px;
+}
+
+.heroStatDivider {
+  width: 1px;
+  height: 36px;
+  background: var(--glass-border);
+  flex-shrink: 0;
 }
 
 /* ============================================
-   CHARTS
+   CHARTS ROW
    ============================================ */
 
 .chartsRow {
@@ -88,10 +107,11 @@
   gap: var(--space-4);
 }
 
-.chartSection {
+.chartCard {
+  padding: var(--space-5);
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-3);
 }
 
 .chartContainer {
@@ -105,40 +125,80 @@
   border-radius: var(--radius-md);
   padding: var(--space-2) var(--space-3);
   box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 /* ============================================
-   LOADING
+   SHIFT TABLE
    ============================================ */
 
-.loading {
+.tableCard {
+  padding: 0;
+  overflow: hidden;
+}
+
+.tableHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+/* ============================================
+   STATES
+   ============================================ */
+
+.loadingCenter {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--space-12);
+  padding: var(--space-16);
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-16);
+  text-align: center;
 }
 
 /* ============================================
    RESPONSIVE
    ============================================ */
 
+@media (max-width: 900px) {
+  .heroTop {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .hireBadge {
+    align-self: flex-start;
+  }
+}
+
 @media (max-width: 768px) {
   .page {
     padding: var(--space-3);
-  }
-
-  .profileCard {
-    padding: var(--space-4);
-  }
-
-  .profileHeader {
-    flex-direction: column;
-    text-align: center;
     gap: var(--space-3);
   }
 
-  .infoGrid {
-    grid-template-columns: 1fr;
+  .heroCard {
+    padding: var(--space-4);
+  }
+
+  .heroStats {
+    gap: var(--space-4);
+  }
+
+  .heroStatDivider {
+    display: none;
   }
 
   .chartsRow {
@@ -149,18 +209,15 @@
 @media (max-width: 480px) {
   .page {
     padding: var(--space-2);
+    gap: var(--space-2);
   }
 
-  .profileCard {
-    padding: var(--space-3);
+  .heroIdentity {
+    gap: var(--space-3);
   }
 
-  .profileHeader {
-    margin-bottom: var(--space-4);
-  }
-
-  .infoField {
-    padding: var(--space-3);
+  .chartCard {
+    padding: var(--space-4);
   }
 
   .chartContainer {

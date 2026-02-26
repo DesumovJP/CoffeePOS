@@ -11,17 +11,17 @@
 }
 
 /* Header */
-.table thead {
+.table thead tr {
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.table th {
   position: sticky;
   top: 0;
   z-index: 1;
   background: var(--glass-bg);
   backdrop-filter: blur(var(--blur-md));
   -webkit-backdrop-filter: blur(var(--blur-md));
-  border-bottom: 1px solid var(--glass-border);
-}
-
-.table th {
   padding: var(--space-2) var(--space-3);
   text-align: left;
   font-weight: 500;

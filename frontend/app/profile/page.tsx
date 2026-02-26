@@ -3,10 +3,8 @@
 /**
  * CoffeePOS - Profile Page
  *
- * Data-driven personal profile with 3 tabs:
- * - Особисті дані (personal info from Employee record)
- * - Мої зміни (shifts + hours chart)
- * - Моя статистика (sales + orders charts)
+ * Single-scroll employee dashboard: hero + charts + shift history.
+ * No tabs — all data visible at once.
  */
 
 import { useState, useMemo, useEffect } from 'react';
@@ -19,8 +17,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
-import { Text, Avatar, Badge, GlassCard, Spinner } from '@/components/atoms';
-import { CategoryTabs, StatsGrid, type StatItem } from '@/components/molecules';
+import { Text, Avatar, Badge, GlassCard, Spinner, Icon } from '@/components/atoms';
 import { DataTable, type Column } from '@/components/organisms';
 import { useEmployees, useEmployeeStats, useShifts } from '@/lib/hooks';
 import { useAuth } from '@/lib/providers/AuthProvider';
@@ -30,12 +27,6 @@ import styles from './page.module.css';
 // ============================================
 // CONSTANTS
 // ============================================
-
-const TABS = [
-  { id: 'personal', name: 'Особисті дані' },
-  { id: 'shifts', name: 'Мої зміни' },
-  { id: 'stats', name: 'Моя статистика' },
-];
 
 const ROLE_LABELS: Record<string, string> = {
   owner: 'Власник',
@@ -62,332 +53,20 @@ function getDurationHours(openedAt: string, closedAt?: string): number {
   return (end - start) / (1000 * 60 * 60);
 }
 
-function isThisWeek(dateStr: string): boolean {
-  const date = new Date(dateStr);
-  const now = new Date();
-  const weekStart = new Date(now);
-  weekStart.setDate(now.getDate() - now.getDay() + 1);
-  weekStart.setHours(0, 0, 0, 0);
-  return date >= weekStart;
-}
-
-function isThisMonth(dateStr: string): boolean {
-  const date = new Date(dateStr);
-  const now = new Date();
-  return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
-}
-
 function daysSince(dateStr: string): number {
-  const start = new Date(dateStr).getTime();
-  const now = Date.now();
-  return Math.floor((now - start) / (1000 * 60 * 60 * 24));
+  return Math.floor((Date.now() - new Date(dateStr).getTime()) / (1000 * 60 * 60 * 24));
 }
 
 // ============================================
-// PERSONAL INFO TAB
+// CHART TOOLTIP
 // ============================================
 
-function PersonalInfoTab({ employee }: { employee: any }) {
+function ChartTooltip({ active, payload, label, valuePrefix = '' }: any) {
+  if (!active || !payload?.length) return null;
   return (
-    <GlassCard className={styles.profileCard}>
-      <div className={styles.profileHeader}>
-        <Avatar fallback={employee.name} size="xl" status={employee.isActive ? 'online' : 'offline'} />
-        <div className={styles.profileName}>
-          <Text variant="h4" weight="bold">{employee.name}</Text>
-          <Badge variant="info" size="md">
-            {employee.position || ROLE_LABELS[employee.role] || employee.role}
-          </Badge>
-        </div>
-      </div>
-
-      <div className={styles.infoGrid}>
-        {employee.email && (
-          <div className={styles.infoField}>
-            <Text variant="caption" color="tertiary">Email</Text>
-            <Text variant="bodyMedium" weight="medium">{employee.email}</Text>
-          </div>
-        )}
-        {employee.phone && (
-          <div className={styles.infoField}>
-            <Text variant="caption" color="tertiary">Телефон</Text>
-            <Text variant="bodyMedium" weight="medium">{employee.phone}</Text>
-          </div>
-        )}
-        <div className={styles.infoField}>
-          <Text variant="caption" color="tertiary">Роль</Text>
-          <Text variant="bodyMedium" weight="medium">{ROLE_LABELS[employee.role] || employee.role}</Text>
-        </div>
-        <div className={styles.infoField}>
-          <Text variant="caption" color="tertiary">Дата початку роботи</Text>
-          <Text variant="bodyMedium" weight="medium">
-            {new Date(employee.hireDate).toLocaleDateString('uk-UA')}
-          </Text>
-        </div>
-        <div className={styles.infoField}>
-          <Text variant="caption" color="tertiary">Днів роботи</Text>
-          <Text variant="bodyMedium" weight="medium">{daysSince(employee.hireDate)}</Text>
-        </div>
-        {employee.position && (
-          <div className={styles.infoField}>
-            <Text variant="caption" color="tertiary">Посада</Text>
-            <Text variant="bodyMedium" weight="medium">{employee.position}</Text>
-          </div>
-        )}
-      </div>
-    </GlassCard>
-  );
-}
-
-// ============================================
-// SHIFTS TAB
-// ============================================
-
-function ShiftsTab({ employeeName, employeeId }: { employeeName: string; employeeId: string }) {
-  const { data: allShifts, isLoading: shiftsLoading } = useShifts();
-  const { data: empStats } = useEmployeeStats(employeeId);
-
-  const [chartColors, setChartColors] = useState({
-    info: '#007AFF',
-    textSecondary: '#787880',
-    gridStroke: 'rgba(0,0,0,0.06)',
-  });
-
-  useEffect(() => {
-    const cs = getComputedStyle(document.documentElement);
-    const get = (v: string) => cs.getPropertyValue(v).trim();
-    setChartColors({
-      info: get('--color-info') || '#007AFF',
-      textSecondary: get('--text-secondary') || '#787880',
-      gridStroke: get('--glass-border') || 'rgba(0,0,0,0.06)',
-    });
-  }, []);
-
-  const myShifts = useMemo(() => {
-    if (!allShifts) return [];
-    return allShifts.filter((s) => s.openedBy === employeeName);
-  }, [allShifts, employeeName]);
-
-  const stats: StatItem[] = useMemo(() => {
-    const weekShifts = myShifts.filter((s) => isThisWeek(s.openedAt));
-    const monthShifts = myShifts.filter((s) => isThisMonth(s.openedAt));
-
-    const weekHours = weekShifts.reduce((sum, s) => sum + getDurationHours(s.openedAt, s.closedAt), 0);
-    const monthHours = monthShifts.reduce((sum, s) => sum + getDurationHours(s.openedAt, s.closedAt), 0);
-
-    const closedShifts = myShifts.filter((s) => s.status === 'closed');
-    const avgHours = closedShifts.length > 0
-      ? closedShifts.reduce((sum, s) => sum + getDurationHours(s.openedAt, s.closedAt), 0) / closedShifts.length
-      : 0;
-
-    return [
-      { id: 'weekHours', label: 'Годин цього тижня', value: weekHours.toFixed(1), icon: 'clock' as const, iconColor: 'accent' as const },
-      { id: 'monthHours', label: 'Годин цього місяця', value: monthHours.toFixed(1), icon: 'calendar' as const, iconColor: 'success' as const },
-      { id: 'avgShift', label: 'Середня зміна', value: `${avgHours.toFixed(1)} год`, icon: 'chart' as const, iconColor: 'info' as const },
-      { id: 'totalShifts', label: 'Всього змін', value: myShifts.length, icon: 'receipt' as const, iconColor: 'warning' as const },
-    ];
-  }, [myShifts]);
-
-  const columns: Column<Shift>[] = useMemo(() => [
-    {
-      key: 'date',
-      header: 'Дата',
-      width: '110px',
-      render: (shift) => (
-        <Text variant="bodyMedium" weight="medium">
-          {new Date(shift.openedAt).toLocaleDateString('uk-UA')}
-        </Text>
-      ),
-    },
-    {
-      key: 'time',
-      header: 'Час',
-      render: (shift) => (
-        <Text variant="bodySmall" color="secondary">
-          {new Date(shift.openedAt).toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' })}
-          {' — '}
-          {shift.closedAt
-            ? new Date(shift.closedAt).toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' })
-            : 'зараз'
-          }
-        </Text>
-      ),
-    },
-    {
-      key: 'duration',
-      header: 'Тривалість',
-      width: '100px',
-      render: (shift) => (
-        <Text variant="labelMedium" weight="semibold">
-          {calculateDuration(shift.openedAt, shift.closedAt)}
-        </Text>
-      ),
-    },
-    {
-      key: 'status',
-      header: 'Статус',
-      width: '100px',
-      render: (shift) => (
-        <Badge variant={shift.status === 'open' ? 'success' : 'default'} size="sm">
-          {shift.status === 'open' ? 'Активна' : 'Закрита'}
-        </Badge>
-      ),
-    },
-    {
-      key: 'orders',
-      header: 'Замовлень',
-      width: '100px',
-      hideOnMobile: true,
-      align: 'right',
-      render: (shift) => (
-        <Text variant="bodySmall" color="secondary">{shift.ordersCount}</Text>
-      ),
-    },
-    {
-      key: 'sales',
-      header: 'Продажі',
-      width: '100px',
-      align: 'right',
-      render: (shift) => (
-        <Text variant="labelMedium" weight="semibold">₴{(shift.totalSales || 0).toFixed(0)}</Text>
-      ),
-    },
-  ], []);
-
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className={styles.chartTooltip}>
-          <Text variant="labelSmall" color="tertiary">{label}</Text>
-          <Text variant="labelMedium" weight="bold">{payload[0].value}</Text>
-        </div>
-      );
-    }
-    return null;
-  };
-
-  return (
-    <div className={styles.tabContent}>
-      <StatsGrid stats={stats} columns={4} variant="bar" />
-
-      {/* Hours chart */}
-      {empStats && (
-        <div className={styles.chartSection}>
-          <Text variant="labelMedium" weight="semibold" color="secondary">Години за 7 днів</Text>
-          <div className={styles.chartContainer}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={empStats.dailyHours} margin={{ top: 5, right: 10, left: -15, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={chartColors.gridStroke} />
-                <XAxis dataKey="date" tick={{ fontSize: 11, fill: chartColors.textSecondary }} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: chartColors.textSecondary }} axisLine={false} tickLine={false} />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="hours" fill={chartColors.info} radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      )}
-
-      <DataTable
-        columns={columns}
-        data={myShifts}
-        getRowKey={(shift) => String(shift.id)}
-        loading={shiftsLoading}
-        emptyState={{
-          icon: 'clock',
-          title: 'Змін не знайдено',
-        }}
-      />
-    </div>
-  );
-}
-
-// ============================================
-// STATS TAB
-// ============================================
-
-function StatsTab({ employeeId }: { employeeId: string }) {
-  const { data: empStats, isLoading } = useEmployeeStats(employeeId);
-
-  const [chartColors, setChartColors] = useState({
-    accent: '#3D3D3D',
-    info: '#007AFF',
-    textSecondary: '#787880',
-    gridStroke: 'rgba(0,0,0,0.06)',
-  });
-
-  useEffect(() => {
-    const cs = getComputedStyle(document.documentElement);
-    const get = (v: string) => cs.getPropertyValue(v).trim();
-    setChartColors({
-      accent: get('--color-accent-600') || '#3D3D3D',
-      info: get('--color-info') || '#007AFF',
-      textSecondary: get('--text-secondary') || '#787880',
-      gridStroke: get('--glass-border') || 'rgba(0,0,0,0.06)',
-    });
-  }, []);
-
-  const stats: StatItem[] = useMemo(() => {
-    if (!empStats) return [];
-    return [
-      { id: 'orders', label: 'Замовлень', value: empStats.totalOrders, icon: 'receipt' as const, iconColor: 'accent' as const },
-      { id: 'sales', label: 'Продажі', value: `₴${empStats.totalSales.toLocaleString('uk-UA')}`, icon: 'cash' as const, iconColor: 'success' as const },
-      { id: 'avg', label: 'Середній чек', value: `₴${empStats.avgOrderValue}`, icon: 'chart' as const, iconColor: 'info' as const },
-      { id: 'hours', label: 'Годин', value: empStats.totalHours, icon: 'clock' as const, iconColor: 'warning' as const },
-    ];
-  }, [empStats]);
-
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className={styles.chartTooltip}>
-          <Text variant="labelSmall" color="tertiary">{label}</Text>
-          <Text variant="labelMedium" weight="bold">{payload[0].value}</Text>
-        </div>
-      );
-    }
-    return null;
-  };
-
-  if (isLoading) {
-    return <div className={styles.loading}><Spinner size="md" /></div>;
-  }
-
-  if (!empStats) return null;
-
-  return (
-    <div className={styles.tabContent}>
-      <StatsGrid stats={stats} columns={4} variant="bar" />
-
-      <div className={styles.chartsRow}>
-        <div className={styles.chartSection}>
-          <Text variant="labelMedium" weight="semibold" color="secondary">Продажі за 7 днів</Text>
-          <div className={styles.chartContainer}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={empStats.dailySales} margin={{ top: 5, right: 10, left: -15, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={chartColors.gridStroke} />
-                <XAxis dataKey="date" tick={{ fontSize: 11, fill: chartColors.textSecondary }} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: chartColors.textSecondary }} axisLine={false} tickLine={false} />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="sales" fill={chartColors.accent} radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-        <div className={styles.chartSection}>
-          <Text variant="labelMedium" weight="semibold" color="secondary">Години за 7 днів</Text>
-          <div className={styles.chartContainer}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={empStats.dailyHours} margin={{ top: 5, right: 10, left: -15, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={chartColors.gridStroke} />
-                <XAxis dataKey="date" tick={{ fontSize: 11, fill: chartColors.textSecondary }} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: chartColors.textSecondary }} axisLine={false} tickLine={false} />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="hours" fill={chartColors.info} radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      </div>
+    <div className={styles.chartTooltip}>
+      <Text variant="labelSmall" color="tertiary">{label}</Text>
+      <Text variant="labelMedium" weight="bold">{valuePrefix}{payload[0].value}</Text>
     </div>
   );
 }
@@ -397,48 +76,314 @@ function StatsTab({ employeeId }: { employeeId: string }) {
 // ============================================
 
 export default function ProfilePage() {
-  const [activeTab, setActiveTab] = useState<string | null>('personal');
   const { user } = useAuth();
   const { data: employees, isLoading } = useEmployees();
 
-  // Find the employee record matching the current auth user
   const myEmployee = useMemo(() => {
     if (!employees || !user) return null;
-    return employees.find(
-      (e) => e.name === user.username || e.email === user.email
-    ) || null;
+    return (
+      employees.find((e) => e.name === user.username || e.email === user.email) || null
+    );
   }, [employees, user]);
 
+  const { data: empStats } = useEmployeeStats(myEmployee?.documentId ?? '');
+  const { data: allShifts, isLoading: shiftsLoading } = useShifts();
+
+  const myShifts = useMemo(() => {
+    if (!allShifts || !myEmployee) return [];
+    return allShifts.filter((s) => s.openedBy === myEmployee.name);
+  }, [allShifts, myEmployee]);
+
+  const totalHours = useMemo(
+    () => myShifts.reduce((sum, s) => sum + getDurationHours(s.openedAt, s.closedAt), 0),
+    [myShifts]
+  );
+
+  // Chart colors from CSS vars
+  const [colors, setColors] = useState({
+    accent: '#2C2C2E',
+    info: '#007AFF',
+    textSecondary: '#787880',
+    gridStroke: 'rgba(0,0,0,0.06)',
+  });
+
+  useEffect(() => {
+    const cs = getComputedStyle(document.documentElement);
+    const get = (v: string) => cs.getPropertyValue(v).trim();
+    setColors({
+      accent: get('--color-accent') || '#2C2C2E',
+      info: get('--color-info') || '#007AFF',
+      textSecondary: get('--text-secondary') || '#787880',
+      gridStroke: get('--glass-border') || 'rgba(0,0,0,0.06)',
+    });
+  }, []);
+
+  // Shift table columns
+  const shiftColumns: Column<Shift>[] = useMemo(() => [
+    {
+      key: 'date',
+      header: 'Дата',
+      width: '110px',
+      render: (s) => (
+        <Text variant="bodyMedium" weight="medium">
+          {new Date(s.openedAt).toLocaleDateString('uk-UA')}
+        </Text>
+      ),
+    },
+    {
+      key: 'time',
+      header: 'Час',
+      width: '160px',
+      render: (s) => (
+        <Text variant="bodySmall" color="secondary">
+          {new Date(s.openedAt).toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' })}
+          {' — '}
+          {s.closedAt
+            ? new Date(s.closedAt).toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' })
+            : 'зараз'}
+        </Text>
+      ),
+    },
+    {
+      key: 'duration',
+      header: 'Тривалість',
+      width: '100px',
+      render: (s) => (
+        <Text variant="labelMedium" weight="semibold">
+          {calculateDuration(s.openedAt, s.closedAt)}
+        </Text>
+      ),
+    },
+    {
+      key: 'status',
+      header: 'Статус',
+      width: '100px',
+      render: (s) => (
+        <Badge variant={s.status === 'open' ? 'success' : 'default'} size="sm">
+          {s.status === 'open' ? 'Активна' : 'Закрита'}
+        </Badge>
+      ),
+    },
+    {
+      key: 'orders',
+      header: 'Замовлень',
+      width: '100px',
+      align: 'right',
+      hideOnMobile: true,
+      render: (s) => (
+        <Text variant="bodySmall" color="secondary">{s.ordersCount}</Text>
+      ),
+    },
+    {
+      key: 'sales',
+      header: 'Продажі',
+      width: '110px',
+      align: 'right',
+      render: (s) => (
+        <Text variant="labelMedium" weight="semibold">
+          ₴{(s.totalSales || 0).toFixed(0)}
+        </Text>
+      ),
+    },
+  ], []);
+
+  // ── Loading ──────────────────────────────────────────
   if (isLoading) {
     return (
       <div className={styles.page}>
-        <div className={styles.loading}><Spinner size="md" /></div>
+        <div className={styles.loadingCenter}><Spinner size="md" /></div>
       </div>
     );
   }
 
+  // ── No employee found ────────────────────────────────
   if (!myEmployee) {
     return (
       <div className={styles.page}>
-        <GlassCard className={styles.profileCard}>
+        <GlassCard className={styles.emptyState}>
+          <Icon name="user" size="2xl" color="tertiary" />
           <Text variant="bodyLarge" color="secondary">Профіль не знайдено</Text>
+          <Text variant="bodySmall" color="tertiary">
+            Обліковий запис не прив'язаний до жодного працівника
+          </Text>
         </GlassCard>
       </div>
     );
   }
 
+  const roleLabel = myEmployee.position || ROLE_LABELS[myEmployee.role] || myEmployee.role;
+
   return (
     <div className={styles.page}>
-      <CategoryTabs
-        categories={TABS}
-        value={activeTab}
-        showAll={false}
-        onChange={setActiveTab}
-      />
 
-      {activeTab === 'personal' && <PersonalInfoTab employee={myEmployee} />}
-      {activeTab === 'shifts' && <ShiftsTab employeeName={myEmployee.name} employeeId={myEmployee.documentId} />}
-      {activeTab === 'stats' && <StatsTab employeeId={myEmployee.documentId} />}
+      {/* ══════════════════════════════════════════════
+          HERO CARD — avatar + identity + key metrics
+          ══════════════════════════════════════════════ */}
+      <GlassCard className={styles.heroCard}>
+
+        {/* Top row: avatar + name | hire info */}
+        <div className={styles.heroTop}>
+          <div className={styles.heroIdentity}>
+            <Avatar
+              fallback={myEmployee.name}
+              size="xl"
+              status={myEmployee.isActive ? 'online' : 'offline'}
+            />
+            <div className={styles.heroInfo}>
+              <Text variant="h3" weight="bold">{myEmployee.name}</Text>
+              <div className={styles.heroMeta}>
+                <Badge variant="info" size="sm">{roleLabel}</Badge>
+                {myEmployee.email && (
+                  <Text variant="bodySmall" color="secondary">{myEmployee.email}</Text>
+                )}
+                {myEmployee.phone && (
+                  <Text variant="bodySmall" color="secondary">{myEmployee.phone}</Text>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {myEmployee.hireDate && (
+            <div className={styles.hireBadge}>
+              <Icon name="calendar" size="sm" color="tertiary" />
+              <div className={styles.hireText}>
+                <Text variant="bodySmall" weight="semibold">
+                  {daysSince(myEmployee.hireDate)} днів в команді
+                </Text>
+                <Text variant="caption" color="tertiary">
+                  з {new Date(myEmployee.hireDate).toLocaleDateString('uk-UA')}
+                </Text>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Stats strip */}
+        <div className={styles.heroStats}>
+          <div className={styles.heroStat}>
+            <Text variant="h4" weight="bold">{myShifts.length}</Text>
+            <Text variant="caption" color="tertiary">Всього змін</Text>
+          </div>
+
+          <div className={styles.heroStatDivider} aria-hidden />
+
+          <div className={styles.heroStat}>
+            <Text variant="h4" weight="bold">{totalHours.toFixed(0)}</Text>
+            <Text variant="caption" color="tertiary">Годин роботи</Text>
+          </div>
+
+          {empStats && (
+            <>
+              <div className={styles.heroStatDivider} aria-hidden />
+              <div className={styles.heroStat}>
+                <Text variant="h4" weight="bold">{empStats.totalOrders}</Text>
+                <Text variant="caption" color="tertiary">Замовлень / міс</Text>
+              </div>
+
+              <div className={styles.heroStatDivider} aria-hidden />
+              <div className={styles.heroStat}>
+                <Text variant="h4" weight="bold">
+                  ₴{empStats.totalSales.toLocaleString('uk-UA')}
+                </Text>
+                <Text variant="caption" color="tertiary">Продажі / міс</Text>
+              </div>
+
+              <div className={styles.heroStatDivider} aria-hidden />
+              <div className={styles.heroStat}>
+                <Text variant="h4" weight="bold">₴{empStats.avgOrderValue}</Text>
+                <Text variant="caption" color="tertiary">Сер. чек</Text>
+              </div>
+            </>
+          )}
+        </div>
+      </GlassCard>
+
+      {/* ══════════════════════════════════════════════
+          CHARTS — sales + hours last 7 days
+          ══════════════════════════════════════════════ */}
+      {empStats && (
+        <div className={styles.chartsRow}>
+          <GlassCard className={styles.chartCard}>
+            <Text variant="labelLarge" weight="semibold">Продажі за 7 днів</Text>
+            <div className={styles.chartContainer}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={empStats.dailySales}
+                  margin={{ top: 4, right: 8, left: -12, bottom: 0 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke={colors.gridStroke}
+                    vertical={false}
+                  />
+                  <XAxis
+                    dataKey="date"
+                    tick={{ fontSize: 11, fill: colors.textSecondary }}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 11, fill: colors.textSecondary }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip content={<ChartTooltip valuePrefix="₴" />} cursor={{ fill: 'var(--glass-bg-subtle)' }} />
+                  <Bar dataKey="sales" fill={colors.accent} radius={[4, 4, 0, 0]} maxBarSize={40} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </GlassCard>
+
+          <GlassCard className={styles.chartCard}>
+            <Text variant="labelLarge" weight="semibold">Години за 7 днів</Text>
+            <div className={styles.chartContainer}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={empStats.dailyHours}
+                  margin={{ top: 4, right: 8, left: -12, bottom: 0 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke={colors.gridStroke}
+                    vertical={false}
+                  />
+                  <XAxis
+                    dataKey="date"
+                    tick={{ fontSize: 11, fill: colors.textSecondary }}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 11, fill: colors.textSecondary }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip content={<ChartTooltip />} cursor={{ fill: 'var(--glass-bg-subtle)' }} />
+                  <Bar dataKey="hours" fill={colors.info} radius={[4, 4, 0, 0]} maxBarSize={40} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </GlassCard>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════
+          SHIFT HISTORY TABLE
+          ══════════════════════════════════════════════ */}
+      <GlassCard className={styles.tableCard}>
+        <div className={styles.tableHeader}>
+          <Text variant="labelLarge" weight="semibold">Мої зміни</Text>
+          <Badge variant="default" size="sm">{myShifts.length}</Badge>
+        </div>
+        <DataTable
+          columns={shiftColumns}
+          data={myShifts}
+          getRowKey={(s) => String(s.id)}
+          loading={shiftsLoading}
+          emptyState={{ icon: 'clock', title: 'Змін не знайдено' }}
+        />
+      </GlassCard>
+
     </div>
   );
 }

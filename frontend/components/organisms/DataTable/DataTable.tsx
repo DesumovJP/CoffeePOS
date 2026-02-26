@@ -95,6 +95,11 @@ export function DataTable<T>({
     <GlassCard padding="none" className={className}>
       <div className={styles.tableWrapper}>
         <table className={styles.table}>
+          <colgroup>
+            {columns.map((col) => (
+              <col key={col.key} style={col.width ? { width: col.width } : undefined} />
+            ))}
+          </colgroup>
           <thead>
             <tr>
               {columns.map((col) => (
@@ -105,7 +110,6 @@ export function DataTable<T>({
                     ${col.hideOnMobile ? styles.hideOnMobile : ''}
                     ${col.hideOnTablet ? styles.hideOnTablet : ''}
                   `}
-                  style={col.width ? { width: col.width } : undefined}
                 >
                   {col.header}
                 </th>

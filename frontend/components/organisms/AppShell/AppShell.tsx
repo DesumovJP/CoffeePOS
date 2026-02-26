@@ -16,6 +16,7 @@ import { NotificationCenter } from '@/components/organisms/NotificationCenter';
 import { Text, Button, Icon, type IconName, MockBanner } from '@/components/atoms';
 import type { NavGroup } from '@/components/organisms/Sidebar';
 import { useAuth } from '@/lib/providers/AuthProvider';
+import { useEmployees } from '@/lib/hooks';
 import { IS_MOCK } from '@/lib/mock/helpers';
 import styles from './AppShell.module.css';
 
@@ -130,6 +131,7 @@ export function AppShell({ children }: AppShellProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { user: authUser, isAuthenticated, isLoading, logout } = useAuth();
+  const { data: employees } = useEmployees();
 
   const isDesktop = useMediaQuery('(min-width: 1024px)');
   const isTablet = useMediaQuery('(min-width: 768px)');
@@ -149,11 +151,15 @@ export function AppShell({ children }: AppShellProps) {
     }
   }, [router]);
 
-  // Build user info from auth context
+  // Build user info: prefer employee display name over auth username
+  const myEmployee = authUser && employees
+    ? employees.find((e) => e.email === authUser.email) || null
+    : null;
+
   const user = authUser
     ? {
-        name: authUser.username,
-        role: authUser.role?.name || 'Користувач',
+        name: myEmployee?.name || authUser.username,
+        role: myEmployee?.position || authUser.role?.name || 'Користувач',
       }
     : { name: '', role: '' };
 

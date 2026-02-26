@@ -125,7 +125,7 @@ export default function RecipesAdminPage() {
     {
       key: 'name',
       header: 'Продукт',
-      width: '180px',
+      width: '40%',
       render: (recipe) => (
         <Text variant="bodyMedium" weight="medium">{recipe.product?.name || '—'}</Text>
       ),
