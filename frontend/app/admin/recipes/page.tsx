@@ -108,28 +108,24 @@ export default function RecipesAdminPage() {
 
   const columns: Column<ApiRecipe>[] = useMemo(() => [
     {
-      key: 'thumbnail',
-      header: '',
-      width: '52px',
+      key: 'name',
+      header: 'Продукт',
+      width: '45%',
       render: (recipe) => {
         const imageUrl = productImageMap.get(recipe.product?.id ?? -1);
-        return imageUrl ? (
-          <img src={imageUrl} alt={recipe.product?.name} className={styles.thumbnail} />
-        ) : (
-          <div className={styles.thumbnailPlaceholder}>
-            <Icon name="receipt" size="sm" color="tertiary" />
+        return (
+          <div className={styles.nameCell}>
+            {imageUrl ? (
+              <img src={imageUrl} alt={recipe.product?.name} className={styles.thumbnail} />
+            ) : (
+              <div className={styles.thumbnailPlaceholder}>
+                <Icon name="receipt" size="sm" color="tertiary" />
+              </div>
+            )}
+            <Text variant="bodyMedium" weight="medium">{recipe.product?.name || '—'}</Text>
           </div>
         );
       },
-    },
-    {
-      key: 'name',
-      header: 'Продукт',
-      width: '40%',
-      cellStyle: { paddingLeft: 0 },
-      render: (recipe) => (
-        <Text variant="bodyMedium" weight="medium">{recipe.product?.name || '—'}</Text>
-      ),
     },
     {
       key: 'size',

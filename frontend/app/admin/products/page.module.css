@@ -99,6 +99,14 @@
   flex-shrink: 0;
 }
 
+/* Thumbnail + name flex row (single cell) */
+.nameCell {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
 /* Item name with badge */
 .itemName {
   display: flex;

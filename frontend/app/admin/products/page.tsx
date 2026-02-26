@@ -476,28 +476,22 @@ export default function ProductsAdminPage() {
   // Product/Recipe columns
   const productColumns: Column<UnifiedProduct>[] = useMemo(() => [
     {
-      key: 'thumbnail',
-      header: '',
-      width: '52px',
-      render: (product) => (
-        product.image ? (
-          <img src={product.image} alt={product.name} className={styles.thumbnail} />
-        ) : (
-          <div className={styles.thumbnailPlaceholder}>
-            <Icon name="package" size="sm" color="tertiary" />
-          </div>
-        )
-      ),
-    },
-    {
       key: 'name',
       header: 'Назва',
-      width: '40%',
-      cellStyle: { paddingLeft: 0 },
+      width: '45%',
       render: (product) => (
-        <div className={styles.itemName}>
-          <Text variant="bodyMedium" weight="medium">{product.name}</Text>
-          <Text variant="caption" color="tertiary">{product.categoryName}</Text>
+        <div className={styles.nameCell}>
+          {product.image ? (
+            <img src={product.image} alt={product.name} className={styles.thumbnail} />
+          ) : (
+            <div className={styles.thumbnailPlaceholder}>
+              <Icon name="package" size="sm" color="tertiary" />
+            </div>
+          )}
+          <div className={styles.itemName}>
+            <Text variant="bodyMedium" weight="medium">{product.name}</Text>
+            <Text variant="caption" color="tertiary">{product.categoryName}</Text>
+          </div>
         </div>
       ),
     },
@@ -562,31 +556,25 @@ export default function ProductsAdminPage() {
   // Ingredient columns
   const ingredientColumns: Column<Ingredient>[] = useMemo(() => [
     {
-      key: 'thumbnail',
-      header: '',
-      width: '52px',
-      render: (_ingredient) => (
-        <div className={styles.thumbnailPlaceholder}>
-          <Icon name="package" size="sm" color="tertiary" />
-        </div>
-      ),
-    },
-    {
       key: 'name',
       header: 'Назва',
-      width: '40%',
-      cellStyle: { paddingLeft: 0 },
+      width: '45%',
       render: (ingredient) => {
         const isLowStock = ingredient.quantity <= ingredient.minQuantity;
         const isOutOfStock = ingredient.quantity <= 0;
         return (
-          <div className={styles.itemName}>
-            <Text variant="bodyMedium" weight="medium">{ingredient.name}</Text>
-            {isOutOfStock
-              ? <Badge variant="error" size="sm">Немає</Badge>
-              : isLowStock
-              ? <Badge variant="warning" size="sm">Мало</Badge>
-              : null}
+          <div className={styles.nameCell}>
+            <div className={styles.thumbnailPlaceholder}>
+              <Icon name="package" size="sm" color="tertiary" />
+            </div>
+            <div className={styles.itemName}>
+              <Text variant="bodyMedium" weight="medium">{ingredient.name}</Text>
+              {isOutOfStock
+                ? <Badge variant="error" size="sm">Немає</Badge>
+                : isLowStock
+                ? <Badge variant="warning" size="sm">Мало</Badge>
+                : null}
+            </div>
           </div>
         );
       },
