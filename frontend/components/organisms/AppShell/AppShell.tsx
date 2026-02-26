@@ -72,7 +72,7 @@ interface PageMeta {
 }
 
 const pageMeta: Record<string, PageMeta> = {
-  '/pos': { title: 'Каса', icon: 'cart', search: true, action: { label: 'Гарячі клавіші', icon: 'settings' } },
+  '/pos': { title: 'Каса', icon: 'cart', search: true },
   '/orders': { title: 'Історія', icon: 'clock', search: true },
   '/admin/dashboard': { title: 'Аналітика', icon: 'chart' },
   '/admin/products': { title: 'Продукція', icon: 'package', search: true, action: { label: 'Додати', icon: 'plus' } },
