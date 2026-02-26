@@ -282,7 +282,7 @@ export function RecipeFormModal({
         {/* Image upload */}
         <div className={styles.field}>
           <label className={styles.label}>Зображення</label>
-          <div className={styles.imageRow}>
+          <div className={styles.imageUpload}>
             <button
               type="button"
               className={styles.imageArea}
@@ -298,21 +298,12 @@ export function RecipeFormModal({
               ) : (
                 <div className={styles.imagePlaceholder}>
                   <Icon name="upload" size="lg" color="tertiary" />
-                  <Text variant="caption" color="tertiary">Завантажити</Text>
+                  <Text variant="caption" color="tertiary">Фото</Text>
                 </div>
               )}
             </button>
-            <div className={styles.imageActions}>
+            <div className={styles.imageHint}>
               <Text variant="caption" color="tertiary">JPG, PNG, WebP · до 5 МБ</Text>
-              <button
-                type="button"
-                className={styles.uploadBtn}
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isUploading}
-              >
-                <Icon name="upload" size="sm" />
-                {isUploading ? 'Завантаження...' : 'Обрати файл'}
-              </button>
               {imageId && (
                 <button
                   type="button"
