@@ -783,17 +783,19 @@ export default function AnalyticsPage() {
                     </div>
                     {hasData && day.isCurrentMonth && (
                       <div className={styles.dayData}>
+                        {/* Primary: revenue + orders count on same line */}
                         <div className={styles.dayIndicator}>
                           <span className={`${styles.dayIndicatorDot} ${styles.dotSuccess}`} />
                           <Text variant="labelSmall" weight="semibold" color="accent">₴{formatNumber(day.revenue)}</Text>
+                          <Text variant="caption" color="tertiary">{day.ordersCount} зам.</Text>
                         </div>
+                        {/* Secondary: write-offs only if present */}
                         {day.writeOffsTotal > 0 && (
                           <div className={styles.dayIndicator}>
                             <span className={`${styles.dayIndicatorDot} ${styles.dotError}`} />
                             <Text variant="labelSmall" weight="semibold" color="error">-₴{formatNumber(day.writeOffsTotal)}</Text>
                           </div>
                         )}
-                        <Text variant="caption" color="tertiary">{day.ordersCount} зам.</Text>
                       </div>
                     )}
                   </div>

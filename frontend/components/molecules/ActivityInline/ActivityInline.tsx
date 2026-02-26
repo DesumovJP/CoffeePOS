@@ -24,7 +24,7 @@ const ACTIVITY_CONFIG: Record<string, ActivityConfig> = {
   order_status: { icon: 'receipt', color: 'info', label: 'Статус замовлення' },
   order_cancel: { icon: 'close', color: 'error', label: 'Скасовано' },
   supply_create: { icon: 'package', color: 'info', label: 'Нова поставка' },
-  supply_receive: { icon: 'check', color: 'success', label: 'Поставку отримано' },
+  supply_receive: { icon: 'check', color: 'info', label: 'Поставку отримано' },
   writeoff_create: { icon: 'minus', color: 'error', label: 'Списання' },
   ingredient_adjust: { icon: 'package', color: 'info', label: 'Корекція залишку' },
 };

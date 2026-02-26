@@ -19,7 +19,7 @@
 }
 
 .accordion.expanded {
-  border-color: var(--color-success);
+  border-color: var(--color-info);
   background: var(--bg-primary);
 }
 
@@ -59,7 +59,7 @@
 }
 
 .accordion.expanded .supplierBadge {
-  background: var(--color-success);
+  background: var(--color-info);
   color: var(--text-inverse);
 }
 
