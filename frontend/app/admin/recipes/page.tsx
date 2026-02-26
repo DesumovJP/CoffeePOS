@@ -8,7 +8,7 @@
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Text, Icon, Badge, Button, Modal } from '@/components/atoms';
-import { SearchInput, CategoryTabs, type Category } from '@/components/molecules';
+import { SearchInput } from '@/components/molecules';
 import { DataTable, type Column, RecipeFormModal } from '@/components/organisms';
 import {
   useRecipes,
@@ -27,7 +27,6 @@ import styles from './page.module.css';
 
 export default function RecipesAdminPage() {
   const [search, setSearch] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   const [recipeModal, setRecipeModal] = useState<{ isOpen: boolean; recipe: ApiRecipe | null }>({
@@ -56,44 +55,23 @@ export default function RecipesAdminPage() {
     return () => window.removeEventListener('appshell:search', handler);
   }, []);
 
-  // Build category tabs from recipes (cross-referenced with products for category info)
-  const categoryTabs = useMemo((): Category[] => {
-    if (!recipes || !products) return [];
-    const productMap = new Map(products.map((p) => [p.id, p]));
-    const seen = new Map<string, { name: string; count: number }>();
-    recipes.forEach((r) => {
-      if (r.product) {
-        const cat = productMap.get(r.product.id)?.category;
-        if (cat) {
-          const existing = seen.get(cat.slug);
-          if (existing) {
-            existing.count += 1;
-          } else {
-            seen.set(cat.slug, { name: cat.name, count: 1 });
-          }
-        }
-      }
+  // Product image map for thumbnails
+  const productImageMap = useMemo(() => {
+    const map = new Map<number, string>();
+    (products || []).forEach((p) => {
+      const url = p.image?.formats?.thumbnail?.url || p.image?.url;
+      if (url) map.set(p.id, url);
     });
-    return Array.from(seen.entries()).map(([slug, { name, count }]) => ({
-      id: slug,
-      name,
-      count,
-    }));
-  }, [recipes, products]);
+    return map;
+  }, [products]);
 
-  // Filtered recipes
+  // Filtered recipes — search only
   const filteredRecipes = useMemo(() => {
     if (!recipes) return [];
-    const productMap = new Map((products || []).map((p) => [p.id, p]));
-    return recipes.filter((r) => {
-      if (search && !r.product?.name.toLowerCase().includes(search.toLowerCase())) return false;
-      if (categoryFilter !== 'all') {
-        const cat = productMap.get(r.product?.id ?? -1)?.category;
-        if (cat?.slug !== categoryFilter) return false;
-      }
-      return true;
-    });
-  }, [recipes, products, search, categoryFilter]);
+    if (!search) return recipes;
+    const q = search.toLowerCase();
+    return recipes.filter((r) => r.product?.name.toLowerCase().includes(q));
+  }, [recipes, search]);
 
   // ============================================
   // CRUD HANDLERS
@@ -129,6 +107,21 @@ export default function RecipesAdminPage() {
   // ============================================
 
   const columns: Column<ApiRecipe>[] = useMemo(() => [
+    {
+      key: 'thumbnail',
+      header: '',
+      width: '52px',
+      render: (recipe) => {
+        const imageUrl = productImageMap.get(recipe.product?.id ?? -1);
+        return imageUrl ? (
+          <img src={imageUrl} alt={recipe.product?.name} className={styles.thumbnail} />
+        ) : (
+          <div className={styles.thumbnailPlaceholder}>
+            <Icon name="receipt" size="sm" color="tertiary" />
+          </div>
+        );
+      },
+    },
     {
       key: 'name',
       header: 'Продукт',
@@ -213,7 +206,7 @@ export default function RecipesAdminPage() {
         </div>
       ),
     },
-  ], [handleEdit, handleDelete]);
+  ], [handleEdit, handleDelete, productImageMap]);
 
   // ============================================
   // RENDER
@@ -243,15 +236,6 @@ export default function RecipesAdminPage() {
           </Button>
         </div>
       )}
-
-      {/* Category filter tabs */}
-      <CategoryTabs
-        categories={categoryTabs}
-        value={categoryFilter === 'all' ? null : categoryFilter}
-        showAll={true}
-        allLabel="Всі"
-        onChange={(id) => setCategoryFilter(id || 'all')}
-      />
 
       {/* Data Table */}
       {isLoading ? (

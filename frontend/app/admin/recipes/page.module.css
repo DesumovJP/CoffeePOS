@@ -37,6 +37,28 @@
   padding: var(--space-12) var(--space-4);
 }
 
+/* Thumbnail in recipe table rows */
+.thumbnail {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  object-fit: cover;
+  display: block;
+  flex-shrink: 0;
+}
+
+.thumbnailPlaceholder {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  background: var(--glass-bg-elevated);
+  border: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
 /* Size cell — stacked sizeName + sizeVolume */
 .sizeCell {
   display: flex;
