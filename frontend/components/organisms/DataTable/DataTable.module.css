@@ -61,16 +61,16 @@
   vertical-align: middle;
 }
 
-/* Alignment */
-.left {
+/* Alignment — .table prefix raises specificity above .table th { text-align: left } */
+.table .left {
   text-align: left;
 }
 
-.center {
+.table .center {
   text-align: center;
 }
 
-.right {
+.table .right {
   text-align: right;
 }
 
