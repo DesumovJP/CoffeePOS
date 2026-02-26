@@ -365,7 +365,7 @@
 .dayCell.hasData { cursor: pointer; }
 .dayCell.hasData:hover { background: var(--color-brand-bg); }
 .dayCell.today { background: var(--color-brand-subtle); }
-.dayCell.today.hasData:hover { background: rgba(139, 94, 60, 0.1); }
+.dayCell.today.hasData:hover { background: rgba(44, 44, 46, 0.08); }
 .dayCell.otherMonth { background: var(--bg-tertiary); opacity: 0.5; }
 
 .dayNumber {

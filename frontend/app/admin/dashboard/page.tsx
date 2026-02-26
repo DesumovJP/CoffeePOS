@@ -145,7 +145,7 @@ export default function AnalyticsPage() {
 
   // ---- Chart colors (read from CSS vars) ----
   const [chartColors, setChartColors] = useState({
-    brand: '#8B5E3C',
+    brand: '#3D3D3D',
     success: '#30B350',
     info: '#007AFF',
     warning: '#FF9500',
@@ -160,7 +160,7 @@ export default function AnalyticsPage() {
     const cs = getComputedStyle(document.documentElement);
     const get = (v: string) => cs.getPropertyValue(v).trim();
     setChartColors({
-      brand: get('--color-accent-600') || '#8B5E3C',
+      brand: get('--color-accent-600') || '#3D3D3D',
       success: get('--color-success') || '#30B350',
       info: get('--color-info') || '#007AFF',
       warning: get('--color-warning') || '#FF9500',

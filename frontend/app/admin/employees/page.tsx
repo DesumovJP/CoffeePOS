@@ -300,7 +300,7 @@ function AnalyticsTab() {
   const { data: performance, isLoading } = useEmployeePerformance({ month: selectedMonth, year: selectedYear });
 
   const [chartColors, setChartColors] = useState({
-    accent: '#8B5E3C',
+    accent: '#3D3D3D',
     info: '#007AFF',
     success: '#30B350',
     textSecondary: '#787880',
@@ -311,7 +311,7 @@ function AnalyticsTab() {
     const cs = getComputedStyle(document.documentElement);
     const get = (v: string) => cs.getPropertyValue(v).trim();
     setChartColors({
-      accent: get('--color-accent-600') || '#8B5E3C',
+      accent: get('--color-accent-600') || '#3D3D3D',
       info: get('--color-info') || '#007AFF',
       success: get('--color-success') || '#30B350',
       textSecondary: get('--text-secondary') || '#787880',

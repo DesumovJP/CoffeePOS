@@ -309,7 +309,7 @@ function StatsTab({ employeeId }: { employeeId: string }) {
   const { data: empStats, isLoading } = useEmployeeStats(employeeId);
 
   const [chartColors, setChartColors] = useState({
-    accent: '#8B5E3C',
+    accent: '#3D3D3D',
     info: '#007AFF',
     textSecondary: '#787880',
     gridStroke: 'rgba(0,0,0,0.06)',
@@ -319,7 +319,7 @@ function StatsTab({ employeeId }: { employeeId: string }) {
     const cs = getComputedStyle(document.documentElement);
     const get = (v: string) => cs.getPropertyValue(v).trim();
     setChartColors({
-      accent: get('--color-accent-600') || '#8B5E3C',
+      accent: get('--color-accent-600') || '#3D3D3D',
       info: get('--color-info') || '#007AFF',
       textSecondary: get('--text-secondary') || '#787880',
       gridStroke: get('--glass-border') || 'rgba(0,0,0,0.06)',

@@ -38,8 +38,8 @@
   height: 50%;
   background: radial-gradient(
     circle,
-    rgba(139, 94, 60, 0.1) 0%,
-    rgba(139, 94, 60, 0.03) 50%,
+    rgba(44, 44, 46, 0.08) 0%,
+    rgba(44, 44, 46, 0.02) 50%,
     transparent 70%
   );
   border-radius: var(--radius-full);
@@ -55,8 +55,8 @@
   height: 45%;
   background: radial-gradient(
     circle,
-    rgba(139, 94, 60, 0.08) 0%,
-    rgba(139, 94, 60, 0.02) 50%,
+    rgba(44, 44, 46, 0.06) 0%,
+    rgba(44, 44, 46, 0.01) 50%,
     transparent 70%
   );
   border-radius: var(--radius-full);
@@ -179,7 +179,7 @@
   gap: var(--space-2);
   padding: var(--space-1-5) var(--space-4);
   background: var(--color-brand-subtle);
-  border: 1px solid rgba(139, 94, 60, 0.12);
+  border: 1px solid rgba(44, 44, 46, 0.10);
   border-radius: var(--radius-full);
   font-size: var(--text-sm);
   font-weight: var(--font-medium);
@@ -208,7 +208,7 @@
 }
 
 .gradientText {
-  background: linear-gradient(135deg, var(--color-brand) 0%, #C4865A 50%, var(--color-brand-hover) 100%);
+  background: linear-gradient(135deg, var(--color-brand) 0%, #3A3A3C 50%, var(--color-brand-hover) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -716,7 +716,7 @@
   letter-spacing: -0.02em;
   line-height: 1;
   /* Use the subtle brand for the big number */
-  background: linear-gradient(180deg, var(--color-brand) 0%, rgba(139, 94, 60, 0.2) 100%);
+  background: linear-gradient(180deg, var(--color-brand) 0%, rgba(44, 44, 46, 0.15) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

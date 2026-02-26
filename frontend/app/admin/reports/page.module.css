@@ -132,7 +132,7 @@
 }
 
 .dayCell.today.hasData:hover {
-  background: rgba(139, 94, 60, 0.1);
+  background: rgba(44, 44, 46, 0.08);
 }
 
 .dayCell.otherMonth {

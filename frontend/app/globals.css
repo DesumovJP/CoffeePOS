@@ -45,7 +45,7 @@
   --color-neutral-950: #0D0D0D;
 
   /* ----------------------------------------
-     Accent Colors (Deep charcoal + warm brown brand)
+     Accent Colors (Deep charcoal)
      ---------------------------------------- */
   --color-accent: #2C2C2E;
   --color-accent-hover: #3A3A3C;
@@ -62,12 +62,12 @@
   --color-accent-800: #1C1C1E;
   --color-accent-900: #0D0D0D;
 
-  /* Brand — warm brown for cafe identity */
-  --color-brand: #8B5E3C;
-  --color-brand-hover: #A0704D;
-  --color-brand-active: #764E30;
-  --color-brand-subtle: rgba(139, 94, 60, 0.08);
-  --color-brand-bg: rgba(139, 94, 60, 0.06);
+  /* Brand — charcoal (same as accent) */
+  --color-brand: #2C2C2E;
+  --color-brand-hover: #3A3A3C;
+  --color-brand-active: #1C1C1E;
+  --color-brand-subtle: rgba(44, 44, 46, 0.08);
+  --color-brand-bg: rgba(44, 44, 46, 0.06);
 
   /* ----------------------------------------
      Semantic Colors
