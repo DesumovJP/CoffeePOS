@@ -33,12 +33,6 @@
   overflow: hidden;
 }
 
-.searchWrapper {
-  flex: 1;
-  min-width: 0;
-  max-width: 240px;
-}
-
 /* Mobile search bar (hidden by default, shown on mobile when active) */
 .mobileSearchBar {
   display: none;
@@ -71,8 +65,7 @@
     gap: var(--space-2);
   }
 
-  .categoriesWrapper,
-  .searchWrapper {
+  .categoriesWrapper {
     flex: none;
     width: 100%;
     max-width: none;
@@ -180,11 +173,6 @@
 
   .loading {
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  }
-
-  /* Hide search & headerExtra on mobile — search moves to AppShell navbar */
-  .searchWrapper {
-    display: none;
   }
 
   /* Mobile search bar replaces categories when active */

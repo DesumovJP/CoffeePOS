@@ -6,7 +6,7 @@
   display: grid;
   gap: 4px;
   padding: 4px;
-  background: var(--glass-bg-elevated);
+  background: var(--bg-tertiary);
   backdrop-filter: blur(var(--blur-md));
   -webkit-backdrop-filter: blur(var(--blur-md));
   border: 1px solid var(--glass-border);
@@ -36,7 +36,7 @@
 }
 
 .active {
-  background: var(--glass-bg);
+  background: var(--bg-primary);
   border-color: var(--glass-border);
   color: var(--text-primary);
   font-weight: var(--font-semibold);

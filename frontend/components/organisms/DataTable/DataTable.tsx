@@ -6,7 +6,7 @@
  * Replaces custom tables in Products, Inventory, Reports pages
  */
 
-import { type ReactNode } from 'react';
+import { type ReactNode, type CSSProperties } from 'react';
 import { Text, Icon, GlassCard, type IconName } from '@/components/atoms';
 import styles from './DataTable.module.css';
 
@@ -25,6 +25,8 @@ export interface Column<T> {
   hideOnTablet?: boolean;
   /** Column width */
   width?: string;
+  /** Inline style applied to every td in this column */
+  cellStyle?: CSSProperties;
 }
 
 export interface DataTableProps<T> {
@@ -134,6 +136,7 @@ export function DataTable<T>({
                       ${col.hideOnMobile ? styles.hideOnMobile : ''}
                       ${col.hideOnTablet ? styles.hideOnTablet : ''}
                     `}
+                    style={col.cellStyle}
                   >
                     {col.render
                       ? col.render(item, index)

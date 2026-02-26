@@ -233,13 +233,20 @@ export default function POSPage() {
   // Keyboard shortcuts tooltip
   const [showShortcuts, setShowShortcuts] = useState(false);
 
-  // Mobile search (triggered from AppShell navbar search icon)
+  // Search (triggered from AppShell header search icon)
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   useEffect(() => {
     const handler = () => setMobileSearchOpen(true);
     window.addEventListener('appshell:search', handler);
     return () => window.removeEventListener('appshell:search', handler);
+  }, []);
+
+  // Keyboard shortcuts panel (triggered from AppShell header action button)
+  useEffect(() => {
+    const handler = () => setShowShortcuts((v) => !v);
+    window.addEventListener('appshell:action', handler);
+    return () => window.removeEventListener('appshell:action', handler);
   }, []);
 
   // Transform store items to OrderSummary format
@@ -450,6 +457,33 @@ export default function POSPage() {
   return (
     <ShiftGuard>
       <div className={styles.layout}>
+        {/* Keyboard shortcuts panel — shown via header action button */}
+        {showShortcuts && (
+          <div className={styles.shortcutsTooltip} onClick={() => setShowShortcuts(false)}>
+            <div className={styles.shortcutsPanel} onClick={(e) => e.stopPropagation()}>
+              <Text variant="labelMedium" weight="semibold">Гарячі клавіші</Text>
+              <div className={styles.shortcutsList}>
+                <div className={styles.shortcutItem}>
+                  <kbd className={styles.kbd}>Enter</kbd>
+                  <Text variant="bodySmall" color="secondary">Відкрити оплату</Text>
+                </div>
+                <div className={styles.shortcutItem}>
+                  <kbd className={styles.kbd}>Esc</kbd>
+                  <Text variant="bodySmall" color="secondary">Закрити / Очистити</Text>
+                </div>
+                <div className={styles.shortcutItem}>
+                  <kbd className={styles.kbd}>F1</kbd>
+                  <Text variant="bodySmall" color="secondary">Фокус на пошук</Text>
+                </div>
+                <div className={styles.shortcutItem}>
+                  <kbd className={styles.kbd}>Del</kbd>
+                  <Text variant="bodySmall" color="secondary">Очистити кошик</Text>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Main content */}
         <main className={styles.main}>
           {/* Product grid */}
@@ -465,42 +499,6 @@ export default function POSPage() {
               loading={isLoading}
               mobileSearchOpen={mobileSearchOpen}
               onMobileSearchClose={() => setMobileSearchOpen(false)}
-              headerExtra={
-                <div className={styles.shortcutsIndicator}>
-                  <button
-                    type="button"
-                    className={styles.shortcutsButton}
-                    onClick={() => setShowShortcuts((v) => !v)}
-                    title="Гарячі клавіші"
-                    aria-label="Показати гарячі клавіші"
-                  >
-                    <Icon name="settings" size="sm" color="secondary" />
-                  </button>
-                  {showShortcuts && (
-                    <div className={styles.shortcutsTooltip}>
-                      <Text variant="labelMedium" weight="semibold">Гарячі клавіші</Text>
-                      <div className={styles.shortcutsList}>
-                        <div className={styles.shortcutItem}>
-                          <kbd className={styles.kbd}>Enter</kbd>
-                          <Text variant="bodySmall" color="secondary">Відкрити оплату</Text>
-                        </div>
-                        <div className={styles.shortcutItem}>
-                          <kbd className={styles.kbd}>Esc</kbd>
-                          <Text variant="bodySmall" color="secondary">Закрити / Очистити</Text>
-                        </div>
-                        <div className={styles.shortcutItem}>
-                          <kbd className={styles.kbd}>F1</kbd>
-                          <Text variant="bodySmall" color="secondary">Фокус на пошук</Text>
-                        </div>
-                        <div className={styles.shortcutItem}>
-                          <kbd className={styles.kbd}>Del</kbd>
-                          <Text variant="bodySmall" color="secondary">Очистити кошик</Text>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              }
             />
           </div>
 

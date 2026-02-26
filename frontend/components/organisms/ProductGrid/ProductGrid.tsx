@@ -165,18 +165,6 @@ export const ProductGrid = forwardRef<HTMLDivElement, ProductGridProps>(
               )}
             </div>
 
-            {/* Search (desktop only, hidden on mobile via CSS) */}
-            <div className={styles.searchWrapper}>
-              <SearchInput
-                value={searchQuery}
-                onChange={onSearchChange}
-                placeholder="Пошук товарів..."
-                variant="glass"
-                fullWidth
-                loading={loading}
-              />
-            </div>
-
             {headerExtra}
           </div>
 
