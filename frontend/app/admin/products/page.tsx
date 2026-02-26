@@ -371,8 +371,11 @@ export default function ProductsAdminPage() {
     return apiProducts.map(productToUnified);
   }, [apiProducts]);
 
-  // Only show non-recipe products (готова/фізична продукція)
-  const products = allProducts.filter((p) => p.type !== 'recipe');
+  // Show only physical goods (Кондитерка + Гріль) — drinks (hot/cold) are managed via /admin/recipes
+  const PHYSICAL_CATEGORIES = ['pastry', 'grill'];
+  const products = allProducts.filter(
+    (p) => p.type !== 'recipe' && PHYSICAL_CATEGORIES.includes(p.category)
+  );
 
   const ingredientsList = apiIngredients || [];
 
