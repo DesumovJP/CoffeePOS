@@ -20,6 +20,7 @@ export interface ApiRecipe {
   isDefault: boolean;
   ingredients: Array<{ ingredientId: number; amount: number }>;
   preparationNotes?: string;
+  image?: { id: number; url: string };
   createdAt: string;
   updatedAt: string;
 }
@@ -34,6 +35,7 @@ export interface ApiRecipeInput {
   isDefault?: boolean;
   ingredients: Array<{ ingredientId: number; amount: number }>;
   preparationNotes?: string;
+  image?: number;
 }
 
 export interface GetRecipesParams {
@@ -47,7 +49,8 @@ export interface GetRecipesParams {
 export const recipesApi = {
   async getAll(params: GetRecipesParams = {}): Promise<ApiResponse<ApiRecipe[]>> {
     const queryParams: Record<string, string | number | boolean | undefined> = {
-      'populate': 'product',
+      'populate[0]': 'product',
+      'populate[1]': 'image',
       'pagination[pageSize]': 200,
     };
 
@@ -61,7 +64,8 @@ export const recipesApi = {
   async getByProduct(productId: number): Promise<ApiResponse<ApiRecipe[]>> {
     return apiClient.get<ApiRecipe[]>('/recipes', {
       'filters[product][id][$eq]': productId,
-      'populate': 'product',
+      'populate[0]': 'product',
+      'populate[1]': 'image',
     });
   },
 

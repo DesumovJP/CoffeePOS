@@ -83,8 +83,9 @@ export const ingredientsApi = {
       query.append('pagination[pageSize]', String(params.pageSize));
     }
 
-    // Populate relations (Ingredient has no image field in schema)
-    query.append('populate', 'category');
+    // Populate relations
+    query.append('populate[0]', 'category');
+    query.append('populate[1]', 'image');
 
     const queryString = query.toString();
     return apiClient.get<Ingredient[]>(`/ingredients${queryString ? `?${queryString}` : ''}`);
@@ -95,7 +96,8 @@ export const ingredientsApi = {
    */
   async getById(documentId: string): Promise<ApiResponse<Ingredient>> {
     return apiClient.get<Ingredient>(`/ingredients/${documentId}`, {
-      populate: 'category',
+      'populate[0]': 'category',
+      'populate[1]': 'image',
     });
   },
 

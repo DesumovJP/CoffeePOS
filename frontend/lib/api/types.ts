@@ -358,6 +358,7 @@ export interface IngredientInput {
   supplier?: string;
   isActive?: boolean;
   category?: number;
+  image?: number;
 }
 
 // ============================================

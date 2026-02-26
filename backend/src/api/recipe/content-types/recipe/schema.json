@@ -50,6 +50,12 @@
     "preparationNotes": {
       "type": "text",
       "maxLength": 1000
+    },
+    "image": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": ["images"]
     }
   }
 }

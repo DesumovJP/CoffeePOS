@@ -6,10 +6,10 @@
  * Create/edit recipes with dynamic ingredient list
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Text, Button, Icon, Input } from '@/components/atoms';
 import { Modal } from '@/components/atoms/Modal';
-import { recipesApi } from '@/lib/api';
+import { recipesApi, uploadFile } from '@/lib/api';
 import type { ApiRecipe } from '@/lib/api';
 import type { Product, Ingredient } from '@/lib/api/types';
 import styles from './RecipeFormModal.module.css';
@@ -69,6 +69,12 @@ export function RecipeFormModal({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Image upload state
+  const [imageId, setImageId] = useState<number | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   // Reset form when modal opens/closes or recipe changes
   useEffect(() => {
     if (isOpen) {
@@ -87,6 +93,8 @@ export function RecipeFormModal({
             amount: ing.amount,
           }))
         );
+        setImageId(recipe.image?.id ?? null);
+        setImagePreview(recipe.image?.url ?? null);
       } else {
         setProductId(0);
         setSizeId('');
@@ -96,11 +104,46 @@ export function RecipeFormModal({
         setIsDefault(false);
         setPreparationNotes('');
         setIngredientRows([]);
+        setImageId(null);
+        setImagePreview(null);
       }
       setError(null);
       setSubmitting(false);
     }
   }, [isOpen, recipe]);
+
+  const handleImageSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    if (!file.type.startsWith('image/')) {
+      setError('Оберіть файл зображення (JPG, PNG, WebP)');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Розмір файлу не повинен перевищувати 5 МБ');
+      return;
+    }
+    setImagePreview(URL.createObjectURL(file));
+    setError(null);
+    try {
+      setIsUploading(true);
+      const uploaded = await uploadFile(file);
+      setImageId(uploaded.id);
+      setImagePreview(uploaded.url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Помилка завантаження');
+      setImageId(null);
+      setImagePreview(null);
+    } finally {
+      setIsUploading(false);
+    }
+  }, []);
+
+  const handleRemoveImage = useCallback(() => {
+    setImageId(null);
+    setImagePreview(null);
+  }, []);
 
   // Auto-calculate cost price
   const costPrice = useMemo(() => {
@@ -169,6 +212,7 @@ export function RecipeFormModal({
         ingredientId: r.ingredientId,
         amount: r.amount,
       })),
+      image: imageId ?? undefined,
     };
 
     setSubmitting(true);
@@ -233,6 +277,60 @@ export function RecipeFormModal({
               <option key={p.id} value={p.id}>{p.name}</option>
             ))}
           </select>
+        </div>
+
+        {/* Image upload */}
+        <div className={styles.field}>
+          <label className={styles.label}>Зображення</label>
+          <div className={styles.imageRow}>
+            <button
+              type="button"
+              className={styles.imageArea}
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+              aria-label="Завантажити зображення"
+            >
+              {isUploading ? (
+                <span className={styles.uploadSpinner} />
+              ) : imagePreview ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={imagePreview} alt="" className={styles.imageThumb} />
+              ) : (
+                <div className={styles.imagePlaceholder}>
+                  <Icon name="upload" size="lg" color="tertiary" />
+                  <Text variant="caption" color="tertiary">Завантажити</Text>
+                </div>
+              )}
+            </button>
+            <div className={styles.imageActions}>
+              <Text variant="caption" color="tertiary">JPG, PNG, WebP · до 5 МБ</Text>
+              <button
+                type="button"
+                className={styles.uploadBtn}
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+              >
+                <Icon name="upload" size="sm" />
+                {isUploading ? 'Завантаження...' : 'Обрати файл'}
+              </button>
+              {imageId && (
+                <button
+                  type="button"
+                  className={styles.removeBtn}
+                  onClick={handleRemoveImage}
+                >
+                  Видалити
+                </button>
+              )}
+            </div>
+          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className={styles.hiddenInput}
+            onChange={handleImageSelect}
+          />
         </div>
 
         {/* Size fields */}
