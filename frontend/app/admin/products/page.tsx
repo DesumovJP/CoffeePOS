@@ -492,6 +492,7 @@ export default function ProductsAdminPage() {
     {
       key: 'name',
       header: 'Назва',
+      width: '180px',
       render: (product) => (
         <div className={styles.itemName}>
           <Text variant="bodyMedium" weight="medium">{product.name}</Text>
@@ -572,6 +573,7 @@ export default function ProductsAdminPage() {
     {
       key: 'name',
       header: 'Назва',
+      width: '180px',
       render: (ingredient) => {
         const isLowStock = ingredient.quantity <= ingredient.minQuantity;
         const isOutOfStock = ingredient.quantity <= 0;
