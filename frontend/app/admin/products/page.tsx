@@ -10,7 +10,7 @@
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Text, Icon, Badge, Button, Modal } from '@/components/atoms';
-import { SearchInput, CategoryTabs, SegmentedControl, type Category } from '@/components/molecules';
+import { SearchInput, SegmentedControl } from '@/components/molecules';
 import {
   DataTable,
   type Column,
@@ -42,7 +42,6 @@ import styles from './page.module.css';
 // ============================================
 
 type ViewMode = 'products' | 'ingredients';
-type CategoryFilter = 'all' | string;
 
 interface UnifiedProduct {
   id: number;
@@ -338,7 +337,6 @@ function DeleteConfirmModal({ isOpen, onClose, onConfirm, title, description, is
 export default function ProductsAdminPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('products');
   const [search, setSearch] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all');
   const [selectedProduct, setSelectedProduct] = useState<UnifiedProduct | null>(null);
   const [selectedIngredient, setSelectedIngredient] = useState<Ingredient | null>(null);
 
@@ -373,67 +371,32 @@ export default function ProductsAdminPage() {
     return apiProducts.map(productToUnified);
   }, [apiProducts]);
 
-  // All products (no separation by type)
-  const products = allProducts;
+  // Only show non-recipe products (готова/фізична продукція)
+  const products = allProducts.filter((p) => p.type !== 'recipe');
 
   const ingredientsList = apiIngredients || [];
 
-  // Reset filters on view mode change
+  // Reset search on view mode change
   const handleViewModeChange = (mode: ViewMode) => {
     setViewMode(mode);
-    setCategoryFilter('all');
     setSearch('');
   };
 
-  // Category tabs based on view mode
-  const categories = useMemo((): Category[] => {
-    if (viewMode === 'ingredients') {
-      const lowStockCount = ingredientsList.filter((ing) => ing.quantity <= ing.minQuantity).length;
-      const ingCats = (apiIngredientCategories || []).map((cat) => ({
-        id: cat.slug,
-        name: cat.name,
-        count: ingredientsList.filter((ing) => ing.category?.slug === cat.slug).length,
-      })).filter((cat) => cat.count > 0);
-      return [
-        ...ingCats,
-        { id: 'low-stock', name: 'Мало', count: lowStockCount },
-      ];
-    }
-
-    return (apiCategories || [])
-      .map((cat) => ({
-        id: cat.slug,
-        name: cat.name,
-        count: products.filter((p) => p.category === cat.slug).length,
-      }))
-      .filter((cat) => cat.count > 0);
-  }, [viewMode, products, ingredientsList, apiCategories, apiIngredientCategories]);
-
-  // Filtered data based on view mode
+  // Filtered data — search only, no category filter
   const filteredProducts = useMemo(() => {
-    return products.filter((item) => {
-      if (search && !item.name.toLowerCase().includes(search.toLowerCase())) return false;
-      if (categoryFilter !== 'all' && item.category !== categoryFilter) return false;
-      return true;
-    });
-  }, [products, search, categoryFilter]);
+    if (!search) return products;
+    const q = search.toLowerCase();
+    return products.filter((item) => item.name.toLowerCase().includes(q));
+  }, [products, search]);
 
   const filteredIngredients = useMemo(() => {
-    let result = ingredientsList;
-    if (search.trim()) {
-      const query = search.toLowerCase();
-      result = result.filter((ing) =>
-        ing.name.toLowerCase().includes(query) ||
-        ing.supplier?.toLowerCase().includes(query)
-      );
-    }
-    if (categoryFilter === 'low-stock') {
-      result = result.filter((ing) => ing.quantity <= ing.minQuantity);
-    } else if (categoryFilter !== 'all') {
-      result = result.filter((ing) => ing.category?.slug === categoryFilter);
-    }
-    return result;
-  }, [ingredientsList, search, categoryFilter]);
+    if (!search.trim()) return ingredientsList;
+    const q = search.toLowerCase();
+    return ingredientsList.filter((ing) =>
+      ing.name.toLowerCase().includes(q) ||
+      ing.supplier?.toLowerCase().includes(q)
+    );
+  }, [ingredientsList, search]);
 
   // ============================================
   // CRUD HANDLERS
@@ -779,15 +742,6 @@ export default function ProductsAdminPage() {
           </Button>
         </div>
       )}
-
-      {/* Category filter */}
-      <CategoryTabs
-        categories={categories}
-        value={categoryFilter === 'all' ? null : categoryFilter}
-        showAll={true}
-        allLabel="Всі"
-        onChange={(id) => setCategoryFilter(id || 'all')}
-      />
 
       {/* Data Table */}
       {isLoading ? (
