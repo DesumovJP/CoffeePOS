@@ -103,6 +103,7 @@ export interface ProductInput {
   price: number;
   costPrice?: number;
   compareAtPrice?: number;
+  image?: number;
   category?: number;
   modifierGroups?: number[];
   isActive?: boolean;

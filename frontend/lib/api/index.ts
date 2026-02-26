@@ -8,6 +8,9 @@
 // Client
 export { apiClient, ApiClient, type ApiResponse, type ApiError, type RequestOptions } from './client';
 
+// Upload
+export { uploadFile } from './upload';
+
 // Auth
 export { authApi, type AuthUser, type LoginResponse, type LoginCredentials } from './auth';
 
