@@ -27,7 +27,7 @@ import styles from './page.module.css';
 
 export default function RecipesAdminPage() {
   const [search, setSearch] = useState('');
-  const [productFilter, setProductFilter] = useState<string>('all');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   const [recipeModal, setRecipeModal] = useState<{ isOpen: boolean; recipe: ApiRecipe | null }>({
@@ -56,36 +56,44 @@ export default function RecipesAdminPage() {
     return () => window.removeEventListener('appshell:search', handler);
   }, []);
 
-  // Build product category tabs from recipes
-  const productCategories = useMemo((): Category[] => {
-    if (!recipes) return [];
-    const seen = new Map<number, { name: string; count: number }>();
+  // Build category tabs from recipes (cross-referenced with products for category info)
+  const categoryTabs = useMemo((): Category[] => {
+    if (!recipes || !products) return [];
+    const productMap = new Map(products.map((p) => [p.id, p]));
+    const seen = new Map<string, { name: string; count: number }>();
     recipes.forEach((r) => {
       if (r.product) {
-        const existing = seen.get(r.product.id);
-        if (existing) {
-          existing.count += 1;
-        } else {
-          seen.set(r.product.id, { name: r.product.name, count: 1 });
+        const cat = productMap.get(r.product.id)?.category;
+        if (cat) {
+          const existing = seen.get(cat.slug);
+          if (existing) {
+            existing.count += 1;
+          } else {
+            seen.set(cat.slug, { name: cat.name, count: 1 });
+          }
         }
       }
     });
-    return Array.from(seen.entries()).map(([id, { name, count }]) => ({
-      id: String(id),
+    return Array.from(seen.entries()).map(([slug, { name, count }]) => ({
+      id: slug,
       name,
       count,
     }));
-  }, [recipes]);
+  }, [recipes, products]);
 
   // Filtered recipes
   const filteredRecipes = useMemo(() => {
     if (!recipes) return [];
+    const productMap = new Map((products || []).map((p) => [p.id, p]));
     return recipes.filter((r) => {
       if (search && !r.product?.name.toLowerCase().includes(search.toLowerCase())) return false;
-      if (productFilter !== 'all' && String(r.product?.id) !== productFilter) return false;
+      if (categoryFilter !== 'all') {
+        const cat = productMap.get(r.product?.id ?? -1)?.category;
+        if (cat?.slug !== categoryFilter) return false;
+      }
       return true;
     });
-  }, [recipes, search, productFilter]);
+  }, [recipes, products, search, categoryFilter]);
 
   // ============================================
   // CRUD HANDLERS
@@ -236,13 +244,13 @@ export default function RecipesAdminPage() {
         </div>
       )}
 
-      {/* Product filter tabs */}
+      {/* Category filter tabs */}
       <CategoryTabs
-        categories={productCategories}
-        value={productFilter === 'all' ? null : productFilter}
+        categories={categoryTabs}
+        value={categoryFilter === 'all' ? null : categoryFilter}
         showAll={true}
         allLabel="Всі"
-        onChange={(id) => setProductFilter(id || 'all')}
+        onChange={(id) => setCategoryFilter(id || 'all')}
       />
 
       {/* Data Table */}
