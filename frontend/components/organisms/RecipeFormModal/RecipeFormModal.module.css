@@ -44,6 +44,13 @@
   display: flex;
   gap: var(--space-3);
   align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+/* All direct children of .row (including Input wrappers) should flex properly */
+.row > * {
+  flex: 1 1 160px;
+  min-width: 0;
 }
 
 /* ============================================
@@ -172,29 +179,24 @@
 }
 
 .ingredientRow {
-  display: flex;
+  display: grid;
+  /* select fills space | amount fixed | cost auto | remove button auto */
+  grid-template-columns: 1fr 5.5rem auto auto;
   gap: var(--space-2);
   align-items: center;
 }
 
 .ingredientRow .select {
-  flex: 2;
   min-width: 0;
 }
 
-.ingredientRow > div:nth-child(2) {
-  flex: 1;
-  min-width: 80px;
-}
-
 .rowCost {
-  flex-shrink: 0;
-  min-width: 60px;
+  white-space: nowrap;
   text-align: right;
 }
 
 .removeButton {
-  flex-shrink: 0;
+  justify-self: end;
 }
 
 /* ============================================
@@ -225,21 +227,13 @@
    RESPONSIVE
    ============================================ */
 
-@media (max-width: 640px) {
-  .row {
-    flex-direction: column;
-    gap: var(--space-3);
-  }
-
+@media (max-width: 480px) {
   .ingredientRow {
-    flex-wrap: wrap;
+    /* On very narrow screens, stack select on its own row */
+    grid-template-columns: 1fr auto auto;
   }
 
   .ingredientRow .select {
-    flex: 1 1 100%;
-  }
-
-  .ingredientRow > div:nth-child(2) {
-    flex: 1 1 auto;
+    grid-column: 1 / -1;
   }
 }
