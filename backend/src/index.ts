@@ -3,6 +3,41 @@ import seed from './seed';
 import { seedUsers } from './seed';
 import { employees } from './seed/data';
 
+// ============================================================
+// Kyiv timezone helpers (UTC+2 winter / UTC+3 summer)
+// ============================================================
+const KYIV_TZ = 'Europe/Kiev';
+
+function toKyivDate(isoString: string): string {
+  return new Intl.DateTimeFormat('sv-SE', { timeZone: KYIV_TZ }).format(new Date(isoString));
+}
+
+function kyivDayStartUTC(kyivDateStr: string): string {
+  for (const offset of ['+02:00', '+03:00']) {
+    const candidate = new Date(`${kyivDateStr}T00:00:00.000${offset}`);
+    if (toKyivDate(candidate.toISOString()) !== kyivDateStr) continue;
+    const hour = parseInt(
+      new Intl.DateTimeFormat('en-US', { timeZone: KYIV_TZ, hour: 'numeric', hour12: false, hourCycle: 'h23' }).format(candidate),
+      10
+    );
+    if (hour === 0) return candidate.toISOString();
+  }
+  return new Date(`${kyivDateStr}T00:00:00.000+02:00`).toISOString();
+}
+
+function kyivDayEndUTC(kyivDateStr: string): string {
+  for (const offset of ['+02:00', '+03:00']) {
+    const candidate = new Date(`${kyivDateStr}T23:59:59.999${offset}`);
+    if (toKyivDate(candidate.toISOString()) !== kyivDateStr) continue;
+    const hour = parseInt(
+      new Intl.DateTimeFormat('en-US', { timeZone: KYIV_TZ, hour: 'numeric', hour12: false, hourCycle: 'h23' }).format(candidate),
+      10
+    );
+    if (hour === 23) return candidate.toISOString();
+  }
+  return new Date(`${kyivDateStr}T23:59:59.999+02:00`).toISOString();
+}
+
 export default {
   register(/* { strapi }: { strapi: Core.Strapi } */) {},
 
@@ -32,6 +67,9 @@ export default {
 
     // Seed employees if missing (runs always, has own guard)
     await ensureEmployees(strapi);
+
+    // Auto-create closed shifts for every Kyiv day that has orders but no shift
+    await ensureDailyShifts(strapi);
   },
 };
 
@@ -128,6 +166,88 @@ async function ensureEmployees(strapi: Core.Strapi) {
     strapi.log.info(`Employees: seeded ${employees.length} employees`);
   } catch (error) {
     strapi.log.error('Failed to seed employees:');
+    console.error(error);
+  }
+}
+
+/**
+ * Auto-create a closed "Автозміна" shift for every Kyiv calendar day that has
+ * orders but no real shift record. Runs on every bootstrap; fully idempotent.
+ *
+ * Rules:
+ *  - Skip today (the day might still be in progress).
+ *  - Skip any day that already has at least one shift (opened during that Kyiv day).
+ */
+async function ensureDailyShifts(strapi: Core.Strapi) {
+  try {
+    const orderQuery = strapi.db.query('api::order.order') as any;
+    const shiftQuery = strapi.db.query('api::shift.shift') as any;
+
+    // All orders (just need createdAt + total + payment for aggregation)
+    const orders = await orderQuery.findMany({
+      populate: ['payment'],
+      orderBy: { createdAt: 'asc' },
+    });
+
+    if (orders.length === 0) return;
+
+    // Group orders by Kyiv date
+    const ordersByDay = new Map<string, any[]>();
+    for (const order of orders) {
+      const kyivDate = toKyivDate(order.createdAt);
+      if (!ordersByDay.has(kyivDate)) ordersByDay.set(kyivDate, []);
+      ordersByDay.get(kyivDate)!.push(order);
+    }
+
+    const todayKyiv = toKyivDate(new Date().toISOString());
+    let created = 0;
+
+    for (const [kyivDate, dayOrders] of ordersByDay) {
+      // Never auto-create for the current Kyiv day
+      if (kyivDate >= todayKyiv) continue;
+
+      const dayStart = kyivDayStartUTC(kyivDate);
+      const dayEnd = kyivDayEndUTC(kyivDate);
+
+      // Check if any shift was opened on this Kyiv day
+      const existing = await shiftQuery.count({
+        where: { openedAt: { $gte: dayStart, $lte: dayEnd } },
+      });
+      if (existing > 0) continue;
+
+      // Calculate totals from completed orders
+      const completed = dayOrders.filter((o: any) => o.status !== 'cancelled');
+      const totalSales = completed.reduce((s: number, o: any) => s + (parseFloat(o.total) || 0), 0);
+      const cashSales = completed
+        .filter((o: any) => o.payment?.method === 'cash')
+        .reduce((s: number, o: any) => s + (parseFloat(o.total) || 0), 0);
+      const cardSales = totalSales - cashSales;
+
+      await shiftQuery.create({
+        data: {
+          openedAt: dayStart,
+          closedAt: dayEnd,
+          openedBy: 'Автозміна',
+          closedBy: 'Автозміна',
+          openingCash: 0,
+          closingCash: 0,
+          status: 'closed',
+          totalSales,
+          cashSales,
+          cardSales,
+          ordersCount: completed.length,
+          writeOffsTotal: 0,
+          suppliesTotal: 0,
+        },
+      });
+      created++;
+    }
+
+    if (created > 0) {
+      strapi.log.info(`[bootstrap] ensureDailyShifts: created ${created} auto-shift(s) for past days`);
+    }
+  } catch (error) {
+    strapi.log.error('[bootstrap] ensureDailyShifts failed:');
     console.error(error);
   }
 }

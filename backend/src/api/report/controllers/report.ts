@@ -1,11 +1,51 @@
 /**
  * Report controller - Virtual API (no content type)
  * Aggregates data from orders, shifts, and inventory
+ *
+ * All date/time boundaries use Kyiv timezone (Europe/Kiev = UTC+2 winter / UTC+3 summer).
  */
+
+// ============================================================
+// Kyiv timezone helpers
+// ============================================================
+const KYIV_TZ = 'Europe/Kiev';
+
+/** Convert a UTC ISO string to Kyiv local date (YYYY-MM-DD). */
+function toKyivDate(isoString: string): string {
+  return new Intl.DateTimeFormat('sv-SE', { timeZone: KYIV_TZ }).format(new Date(isoString));
+}
+
+/** Return the UTC ISO string for Kyiv midnight (00:00:00) on a given Kyiv date. */
+function kyivDayStartUTC(kyivDateStr: string): string {
+  for (const offset of ['+02:00', '+03:00']) {
+    const candidate = new Date(`${kyivDateStr}T00:00:00.000${offset}`);
+    if (toKyivDate(candidate.toISOString()) !== kyivDateStr) continue;
+    const hour = parseInt(
+      new Intl.DateTimeFormat('en-US', { timeZone: KYIV_TZ, hour: 'numeric', hour12: false, hourCycle: 'h23' }).format(candidate),
+      10
+    );
+    if (hour === 0) return candidate.toISOString();
+  }
+  return new Date(`${kyivDateStr}T00:00:00.000+02:00`).toISOString();
+}
+
+/** Return the UTC ISO string for Kyiv 23:59:59.999 on a given Kyiv date. */
+function kyivDayEndUTC(kyivDateStr: string): string {
+  for (const offset of ['+02:00', '+03:00']) {
+    const candidate = new Date(`${kyivDateStr}T23:59:59.999${offset}`);
+    if (toKyivDate(candidate.toISOString()) !== kyivDateStr) continue;
+    const hour = parseInt(
+      new Intl.DateTimeFormat('en-US', { timeZone: KYIV_TZ, hour: 'numeric', hour12: false, hourCycle: 'h23' }).format(candidate),
+      10
+    );
+    if (hour === 23) return candidate.toISOString();
+  }
+  return new Date(`${kyivDateStr}T23:59:59.999+02:00`).toISOString();
+}
 
 export default {
   /**
-   * GET /reports/daily?date=YYYY-MM-DD
+   * GET /reports/daily?date=YYYY-MM-DD  (date is a Kyiv calendar date)
    */
   async daily(ctx) {
     const { date } = ctx.query;
@@ -15,8 +55,8 @@ export default {
     }
 
     const strapi = (global as any).strapi;
-    const startOfDay = `${date}T00:00:00.000Z`;
-    const endOfDay = `${date}T23:59:59.999Z`;
+    const startOfDay = kyivDayStartUTC(date as string);
+    const endOfDay = kyivDayEndUTC(date as string);
 
     // Get orders for the day
     const orders = await strapi.db.query('api::order.order').findMany({
@@ -161,8 +201,10 @@ export default {
     const strapi = (global as any).strapi;
     const y = parseInt(year as string);
     const m = parseInt(month as string) - 1; // JS months are 0-indexed
-    const startOfMonth = new Date(y, m, 1).toISOString();
-    const endOfMonth = new Date(y, m + 1, 0, 23, 59, 59, 999).toISOString();
+    const daysInMonth = new Date(y, m + 1, 0).getDate();
+    const mm = String(m + 1).padStart(2, '0');
+    const startOfMonth = kyivDayStartUTC(`${y}-${mm}-01`);
+    const endOfMonth = kyivDayEndUTC(`${y}-${mm}-${String(daysInMonth).padStart(2, '0')}`);
 
     // Get all orders for the month
     const orders = await strapi.db.query('api::order.order').findMany({
@@ -199,8 +241,10 @@ export default {
     // Get previous month orders for comparison
     const prevM = m === 0 ? 11 : m - 1;
     const prevY = m === 0 ? y - 1 : y;
-    const startOfPrevMonth = new Date(prevY, prevM, 1).toISOString();
-    const endOfPrevMonth = new Date(prevY, prevM + 1, 0, 23, 59, 59, 999).toISOString();
+    const prevDaysInMonth = new Date(prevY, prevM + 1, 0).getDate();
+    const pmm = String(prevM + 1).padStart(2, '0');
+    const startOfPrevMonth = kyivDayStartUTC(`${prevY}-${pmm}-01`);
+    const endOfPrevMonth = kyivDayEndUTC(`${prevY}-${pmm}-${String(prevDaysInMonth).padStart(2, '0')}`);
 
     const prevMonthOrders = await strapi.db.query('api::order.order').findMany({
       where: {
@@ -214,12 +258,11 @@ export default {
       0
     );
 
-    // Group by day
-    const daysInMonth = new Date(y, m + 1, 0).getDate();
+    // Group by Kyiv calendar day
     const dailyData: Record<string, any> = {};
 
     for (let d = 1; d <= daysInMonth; d++) {
-      const dateKey = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      const dateKey = `${y}-${mm}-${String(d).padStart(2, '0')}`;
       dailyData[dateKey] = {
         date: dateKey,
         revenue: 0,
@@ -233,7 +276,7 @@ export default {
     }
 
     for (const order of orders) {
-      const dateKey = order.createdAt.split('T')[0];
+      const dateKey = toKyivDate(order.createdAt);
       if (dailyData[dateKey]) {
         const total = parseFloat(order.total) || 0;
         dailyData[dateKey].revenue += total;
@@ -247,21 +290,21 @@ export default {
     }
 
     for (const shift of shifts) {
-      const dateKey = shift.openedAt.split('T')[0];
+      const dateKey = toKyivDate(shift.openedAt);
       if (dailyData[dateKey]) {
         dailyData[dateKey].shiftsCount += 1;
       }
     }
 
     for (const wo of writeOffs) {
-      const dateKey = wo.createdAt.split('T')[0];
+      const dateKey = toKyivDate(wo.createdAt);
       if (dailyData[dateKey]) {
         dailyData[dateKey].writeOffsTotal += parseFloat(wo.totalCost) || 0;
       }
     }
 
     for (const supply of monthlySupplies) {
-      const dateKey = supply.createdAt.split('T')[0];
+      const dateKey = toKyivDate(supply.createdAt);
       if (dailyData[dateKey]) {
         dailyData[dateKey].suppliesTotal += parseFloat(supply.totalCost) || 0;
       }
@@ -306,8 +349,8 @@ export default {
     }
 
     const strapi = (global as any).strapi;
-    const startDate = `${from}T00:00:00.000Z`;
-    const endDate = `${to}T23:59:59.999Z`;
+    const startDate = kyivDayStartUTC(from as string);
+    const endDate = kyivDayEndUTC(to as string);
 
     // Get completed orders with items
     const orders = await strapi.db.query('api::order.order').findMany({
