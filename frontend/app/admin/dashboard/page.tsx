@@ -10,8 +10,8 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import {
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -25,7 +25,7 @@ import {
 import { Text, Icon, GlassCard, Badge, Spinner, Button, Modal } from '@/components/atoms';
 import { SegmentedControl, OrderAccordion, SupplyAccordion, WriteoffAccordion, ActivityInline } from '@/components/molecules';
 import type { OrderData, SupplyAccordionData, WriteoffAccordionData } from '@/components/molecules';
-import { useDailyReport, useMonthlyReport, useCurrentShift } from '@/lib/hooks';
+import { useDailyReport, useMonthlyReport, useCurrentShift, useShifts } from '@/lib/hooks';
 import type { MonthlyDayData, ShiftActivity } from '@/lib/api';
 import styles from './page.module.css';
 
@@ -129,6 +129,7 @@ interface DayCell {
   writeOffsTotal: number;
   suppliesTotal: number;
   shiftsCount: number;
+  shiftEmployees: string[];
 }
 
 type LegacyActivityType = 'order' | 'supply' | 'writeoff';
@@ -296,6 +297,10 @@ export default function AnalyticsPage() {
   const { data: calendarMonthly, isLoading: isCalendarMonthlyLoading } = useMonthlyReport(currentYear, currentMonth + 1);
   const { data: selectedDayReport, isLoading: isDayLoading } = useDailyReport(selectedDayKey || '');
 
+  const startOfMonth = useMemo(() => new Date(currentYear, currentMonth, 1).toISOString(), [currentYear, currentMonth]);
+  const endOfMonth = useMemo(() => new Date(currentYear, currentMonth + 1, 0, 23, 59, 59, 999).toISOString(), [currentYear, currentMonth]);
+  const { data: monthShifts = [] } = useShifts({ startDate: startOfMonth, endDate: endOfMonth, pageSize: 100 });
+
   const dayDataMap = useMemo(() => {
     const map = new Map<string, MonthlyDayData>();
     if (calendarMonthly?.days) {
@@ -317,6 +322,16 @@ export default function AnalyticsPage() {
   const calendarDays = useMemo((): DayCell[] => {
     const days = getCalendarDays(currentYear, currentMonth);
     const todayKeyLocal = getDateKey(today);
+
+    const shiftsByDay = new Map<string, string[]>();
+    for (const shift of monthShifts) {
+      const key = shift.openedAt.split('T')[0];
+      const names = shiftsByDay.get(key) || [];
+      if (shift.openedBy && !names.includes(shift.openedBy)) names.push(shift.openedBy);
+      if (shift.closedBy && !names.includes(shift.closedBy)) names.push(shift.closedBy);
+      shiftsByDay.set(key, names);
+    }
+
     return days.map((date) => {
       const dateKey = getDateKey(date);
       const apiData = dayDataMap.get(dateKey);
@@ -333,9 +348,10 @@ export default function AnalyticsPage() {
         writeOffsTotal: apiData?.writeOffsTotal || 0,
         suppliesTotal: apiData?.suppliesTotal || 0,
         shiftsCount: apiData?.shiftsCount || 0,
+        shiftEmployees: shiftsByDay.get(dateKey) || [],
       };
     });
-  }, [currentMonth, currentYear, today, dayDataMap]);
+  }, [currentMonth, currentYear, today, dayDataMap, monthShifts]);
 
   const monthSummary = useMemo(() => {
     if (calendarMonthly?.summary) {
@@ -618,13 +634,27 @@ export default function AnalyticsPage() {
                   <div className={styles.loadingState}><Spinner size="md" /></div>
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={revenueChartData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke={chartColors.gridStroke} />
+                    <AreaChart data={revenueChartData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+                      <defs>
+                        <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor={chartColors.brand} stopOpacity={0.25} />
+                          <stop offset="95%" stopColor={chartColors.brand} stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke={chartColors.gridStroke} vertical={false} />
                       <XAxis dataKey="date" tick={{ fontSize: 12, fill: chartColors.textSecondary }} axisLine={{ stroke: chartColors.gridStroke }} tickLine={false} />
                       <YAxis width={40} tick={{ fontSize: 11, fill: chartColors.textSecondary }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
                       <Tooltip content={<CustomTooltip />} />
-                      <Line type="monotone" dataKey="revenue" stroke={chartColors.brand} strokeWidth={2.5} dot={{ fill: chartColors.brand, strokeWidth: 0, r: 4 }} activeDot={{ r: 6, fill: chartColors.brand, strokeWidth: 2, stroke: chartColors.white }} />
-                    </LineChart>
+                      <Area
+                        type="monotone"
+                        dataKey="revenue"
+                        stroke={chartColors.brand}
+                        strokeWidth={2.5}
+                        fill="url(#revenueGrad)"
+                        dot={{ fill: chartColors.brand, strokeWidth: 0, r: 3 }}
+                        activeDot={{ r: 5, fill: chartColors.brand, strokeWidth: 2, stroke: chartColors.white }}
+                      />
+                    </AreaChart>
                   </ResponsiveContainer>
                 )}
               </div>
@@ -639,7 +669,7 @@ export default function AnalyticsPage() {
                 {isTodayLoading ? <Spinner size="md" /> : (
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                      <Pie data={paymentPieData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={3} dataKey="value">
+                      <Pie data={paymentPieData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={3} dataKey="value">
                         {paymentPieData.map((_entry, index) => (
                           <Cell key={`cell-${index}`} fill={chartColors.paymentColors[index % chartColors.paymentColors.length]} />
                         ))}
@@ -791,6 +821,16 @@ export default function AnalyticsPage() {
                           <Text variant="labelSmall" weight="semibold" color="accent">₴{formatNumber(day.revenue)}</Text>
                           <Text variant="caption" color="tertiary">{day.ordersCount} зам.</Text>
                         </div>
+                        {/* Employee initials chips */}
+                        {day.shiftEmployees.length > 0 && (
+                          <div className={styles.dayEmployees}>
+                            {day.shiftEmployees.map((name) => (
+                              <span key={name} className={styles.employeeChip}>
+                                {name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                         {/* Secondary: supplies only if present */}
                         {day.suppliesTotal > 0 && (
                           <div className={styles.dayIndicator}>

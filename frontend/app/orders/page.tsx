@@ -249,10 +249,11 @@ export default function HistoryPage() {
                 )}
               </GlassCard>
             ) : (
-              filteredOrderData.map((orderData) => (
+              filteredOrderData.map((orderData, idx) => (
                 <OrderAccordion
                   key={orderData.id}
                   order={orderData}
+                  index={idx + 1}
                   isExpanded={expandedOrderId === orderData.id}
                   onToggle={() => toggleOrder(orderData.id)}
                   showPaymentMethod

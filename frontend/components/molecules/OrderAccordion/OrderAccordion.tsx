@@ -40,6 +40,7 @@ export interface OrderData {
 
 export interface OrderAccordionProps {
   order: OrderData;
+  index?: number;
   isExpanded: boolean;
   onToggle: () => void;
   showTable?: boolean;
@@ -93,6 +94,7 @@ function getPaymentIcon(method?: 'cash' | 'card' | 'other'): 'cash' | 'card' | '
 
 export function OrderAccordion({
   order,
+  index,
   isExpanded,
   onToggle,
   showTable = false,
@@ -100,7 +102,7 @@ export function OrderAccordion({
   showPaymentMethod = false,
 }: OrderAccordionProps) {
   const total = calculateOrderTotal(order);
-  const orderNumber = order.id.split('-').pop() || order.id;
+  const displayNumber = index !== undefined ? index : (order.id.split('-').pop() || order.id);
 
   // Compact preview: "Капучіно, Латте ×2, Круасан"
   const itemsPreview = order.items.map((item) =>
@@ -117,7 +119,7 @@ export function OrderAccordion({
       >
         <div className={styles.accordionLeft}>
           <div className={styles.orderBadge}>
-            <Text variant="labelSmall" weight="semibold">#{orderNumber}</Text>
+            <Text variant="labelSmall" weight="semibold">#{displayNumber}</Text>
           </div>
           <div className={styles.accordionMeta}>
             <div className={styles.metaRow}>

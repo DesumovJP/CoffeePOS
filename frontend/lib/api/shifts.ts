@@ -45,6 +45,8 @@ export interface GetShiftsParams {
   pageSize?: number;
   status?: 'open' | 'closed';
   sort?: string;
+  startDate?: string;
+  endDate?: string;
 }
 
 // ============================================
@@ -73,6 +75,12 @@ export const shiftsApi = {
 
     if (params.status) {
       queryParams['filters[status][$eq]'] = params.status;
+    }
+    if (params.startDate) {
+      queryParams['filters[openedAt][$gte]'] = params.startDate;
+    }
+    if (params.endDate) {
+      queryParams['filters[openedAt][$lte]'] = params.endDate;
     }
 
     return apiClient.get<Shift[]>('/shifts', queryParams);

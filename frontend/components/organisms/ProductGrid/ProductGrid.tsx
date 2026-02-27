@@ -150,8 +150,7 @@ export const ProductGrid = forwardRef<HTMLDivElement, ProductGridProps>(
       <div ref={ref} className={classNames} {...props}>
         {/* Header with categories and search */}
         <div className={styles.header}>
-          {/* Normal header row (hidden on mobile when search is open) */}
-          <div className={`${styles.headerRow} ${mobileSearchOpen ? styles.hiddenOnMobile : ''}`}>
+          <div className={styles.headerRow}>
             {/* Categories */}
             <div className={styles.categoriesWrapper}>
               {categories.length > 0 && (
@@ -165,33 +164,32 @@ export const ProductGrid = forwardRef<HTMLDivElement, ProductGridProps>(
               )}
             </div>
 
+            {/* Inline search — appears between categories and shortcuts */}
+            {mobileSearchOpen && (
+              <div className={styles.inlineSearch}>
+                <SearchInput
+                  value={searchQuery}
+                  onChange={onSearchChange}
+                  placeholder="Пошук..."
+                  variant="glass"
+                  autoFocus
+                />
+                <button
+                  type="button"
+                  className={styles.inlineSearchClose}
+                  onClick={() => {
+                    onSearchChange?.('');
+                    onMobileSearchClose?.();
+                  }}
+                  aria-label="Закрити пошук"
+                >
+                  <Icon name="close" size="sm" />
+                </button>
+              </div>
+            )}
+
             {headerExtra}
           </div>
-
-          {/* Mobile search bar (only visible on mobile when active) */}
-          {mobileSearchOpen && (
-            <div className={styles.mobileSearchBar}>
-              <SearchInput
-                value={searchQuery}
-                onChange={onSearchChange}
-                placeholder="Пошук товарів..."
-                variant="glass"
-                fullWidth
-                autoFocus
-              />
-              <button
-                type="button"
-                className={styles.mobileSearchClose}
-                onClick={() => {
-                  onSearchChange?.('');
-                  onMobileSearchClose?.();
-                }}
-                aria-label="Закрити пошук"
-              >
-                <Icon name="close" size="sm" />
-              </button>
-            </div>
-          )}
         </div>
 
         {/* Products grid */}

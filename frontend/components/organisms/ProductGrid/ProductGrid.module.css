@@ -33,32 +33,33 @@
   overflow: hidden;
 }
 
-/* Search bar — shown on all screen sizes when active (JSX controls rendering) */
-.mobileSearchBar {
+/* Inline search — between category tabs and shortcuts button */
+.inlineSearch {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  width: 100%;
+  flex: 1;
+  min-width: 0;
+  max-width: 280px;
 }
 
-.mobileSearchClose {
+.inlineSearchClose {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-  width: 2rem;
-  height: 2rem;
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-md);
+  background: none;
+  border: none;
   cursor: pointer;
   color: var(--text-secondary);
-  transition: all var(--duration-fast) var(--ease-default);
+  border-radius: var(--radius-md);
+  transition: background var(--duration-fast) var(--ease-default);
 }
 
-.mobileSearchClose:hover {
-  background: var(--bg-tertiary);
-  color: var(--text-primary);
+.inlineSearchClose:hover {
+  background: var(--glass-bg-hover, var(--glass-bg));
 }
 
 @media (max-width: 1024px) {
@@ -178,8 +179,8 @@
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   }
 
-  .hiddenOnMobile {
-    display: none;
+  .inlineSearch {
+    max-width: none;
   }
 }
 

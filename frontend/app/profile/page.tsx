@@ -311,6 +311,12 @@ export default function ProfilePage() {
                   data={empStats.dailySales}
                   margin={{ top: 4, right: 8, left: -12, bottom: 0 }}
                 >
+                  <defs>
+                    <linearGradient id="profileSalesGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={colors.accent} stopOpacity={0.9} />
+                      <stop offset="100%" stopColor={colors.accent} stopOpacity={0.4} />
+                    </linearGradient>
+                  </defs>
                   <CartesianGrid
                     strokeDasharray="3 3"
                     stroke={colors.gridStroke}
@@ -328,7 +334,7 @@ export default function ProfilePage() {
                     tickLine={false}
                   />
                   <Tooltip content={<ChartTooltip valuePrefix="₴" />} cursor={{ fill: 'var(--glass-bg-subtle)' }} />
-                  <Bar dataKey="sales" fill={colors.accent} radius={[4, 4, 0, 0]} maxBarSize={40} />
+                  <Bar dataKey="sales" fill="url(#profileSalesGrad)" radius={[6, 6, 0, 0]} maxBarSize={40} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -342,6 +348,12 @@ export default function ProfilePage() {
                   data={empStats.dailyHours}
                   margin={{ top: 4, right: 8, left: -12, bottom: 0 }}
                 >
+                  <defs>
+                    <linearGradient id="profileHoursGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={colors.info} stopOpacity={0.9} />
+                      <stop offset="100%" stopColor={colors.info} stopOpacity={0.4} />
+                    </linearGradient>
+                  </defs>
                   <CartesianGrid
                     strokeDasharray="3 3"
                     stroke={colors.gridStroke}
@@ -359,7 +371,7 @@ export default function ProfilePage() {
                     tickLine={false}
                   />
                   <Tooltip content={<ChartTooltip />} cursor={{ fill: 'var(--glass-bg-subtle)' }} />
-                  <Bar dataKey="hours" fill={colors.info} radius={[4, 4, 0, 0]} maxBarSize={40} />
+                  <Bar dataKey="hours" fill="url(#profileHoursGrad)" radius={[6, 6, 0, 0]} maxBarSize={40} />
                 </BarChart>
               </ResponsiveContainer>
             </div>

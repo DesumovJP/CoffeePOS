@@ -446,11 +446,17 @@ function AnalyticsTab() {
           <div className={styles.chartContainer}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={performance || []} layout="vertical" margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={chartColors.gridStroke} />
-                <XAxis type="number" tick={{ fontSize: 11, fill: chartColors.textSecondary }} tickLine={false} />
-                <YAxis type="category" dataKey="employeeName" width={130} tick={{ fontSize: 12, fill: chartColors.textSecondary }} tickLine={false} />
+                <defs>
+                  <linearGradient id="horzSalesGrad" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor={chartColors.accent} stopOpacity={0.5} />
+                    <stop offset="100%" stopColor={chartColors.accent} stopOpacity={0.9} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke={chartColors.gridStroke} vertical={false} />
+                <XAxis type="number" tick={{ fontSize: 11, fill: chartColors.textSecondary }} tickLine={false} axisLine={false} />
+                <YAxis type="category" dataKey="employeeName" width={130} tick={{ fontSize: 12, fill: chartColors.textSecondary }} tickLine={false} axisLine={false} />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="totalSales" fill={chartColors.accent} radius={[0, 4, 4, 0]} />
+                <Bar dataKey="totalSales" fill="url(#horzSalesGrad)" radius={[0, 6, 6, 0]} maxBarSize={32} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -464,11 +470,17 @@ function AnalyticsTab() {
           <div className={styles.chartContainer}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={performance || []} layout="vertical" margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={chartColors.gridStroke} />
-                <XAxis type="number" tick={{ fontSize: 11, fill: chartColors.textSecondary }} tickLine={false} />
-                <YAxis type="category" dataKey="employeeName" width={130} tick={{ fontSize: 12, fill: chartColors.textSecondary }} tickLine={false} />
+                <defs>
+                  <linearGradient id="horzHoursGrad" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor={chartColors.info} stopOpacity={0.5} />
+                    <stop offset="100%" stopColor={chartColors.info} stopOpacity={0.9} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke={chartColors.gridStroke} vertical={false} />
+                <XAxis type="number" tick={{ fontSize: 11, fill: chartColors.textSecondary }} tickLine={false} axisLine={false} />
+                <YAxis type="category" dataKey="employeeName" width={130} tick={{ fontSize: 12, fill: chartColors.textSecondary }} tickLine={false} axisLine={false} />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="totalHours" fill={chartColors.info} radius={[0, 4, 4, 0]} />
+                <Bar dataKey="totalHours" fill="url(#horzHoursGrad)" radius={[0, 6, 6, 0]} maxBarSize={32} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -482,11 +494,17 @@ function AnalyticsTab() {
           <div className={styles.chartContainer}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={performance || []} layout="vertical" margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={chartColors.gridStroke} />
-                <XAxis type="number" tick={{ fontSize: 11, fill: chartColors.textSecondary }} tickLine={false} />
-                <YAxis type="category" dataKey="employeeName" width={130} tick={{ fontSize: 12, fill: chartColors.textSecondary }} tickLine={false} />
+                <defs>
+                  <linearGradient id="horzOrdersGrad" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor={chartColors.success} stopOpacity={0.5} />
+                    <stop offset="100%" stopColor={chartColors.success} stopOpacity={0.9} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke={chartColors.gridStroke} vertical={false} />
+                <XAxis type="number" tick={{ fontSize: 11, fill: chartColors.textSecondary }} tickLine={false} axisLine={false} />
+                <YAxis type="category" dataKey="employeeName" width={130} tick={{ fontSize: 12, fill: chartColors.textSecondary }} tickLine={false} axisLine={false} />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="totalOrders" fill={chartColors.success} radius={[0, 4, 4, 0]} />
+                <Bar dataKey="totalOrders" fill="url(#horzOrdersGrad)" radius={[0, 6, 6, 0]} maxBarSize={32} />
               </BarChart>
             </ResponsiveContainer>
           </div>

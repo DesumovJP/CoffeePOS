@@ -317,11 +317,17 @@ export function EmployeeDetailModal({
                 <div className={styles.chartContainer}>
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={stats.dailySales} margin={{ top: 5, right: 5, left: -15, bottom: 5 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke={chartColors.gridStroke} />
-                      <XAxis dataKey="date" tick={{ fontSize: 11, fill: chartColors.textSecondary }} tickLine={false} />
+                      <defs>
+                        <linearGradient id="empSalesGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor={chartColors.accent} stopOpacity={0.9} />
+                          <stop offset="100%" stopColor={chartColors.accent} stopOpacity={0.4} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke={chartColors.gridStroke} vertical={false} />
+                      <XAxis dataKey="date" tick={{ fontSize: 11, fill: chartColors.textSecondary }} tickLine={false} axisLine={false} />
                       <YAxis tick={{ fontSize: 11, fill: chartColors.textSecondary }} axisLine={false} tickLine={false} />
                       <Tooltip content={<CustomTooltip />} />
-                      <Bar dataKey="sales" fill={chartColors.accent} radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="sales" fill="url(#empSalesGrad)" radius={[6, 6, 0, 0]} maxBarSize={40} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -333,11 +339,17 @@ export function EmployeeDetailModal({
                 <div className={styles.chartContainer}>
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={stats.dailyHours} margin={{ top: 5, right: 5, left: -15, bottom: 5 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke={chartColors.gridStroke} />
-                      <XAxis dataKey="date" tick={{ fontSize: 11, fill: chartColors.textSecondary }} tickLine={false} />
+                      <defs>
+                        <linearGradient id="empHoursGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor={chartColors.info} stopOpacity={0.9} />
+                          <stop offset="100%" stopColor={chartColors.info} stopOpacity={0.4} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke={chartColors.gridStroke} vertical={false} />
+                      <XAxis dataKey="date" tick={{ fontSize: 11, fill: chartColors.textSecondary }} tickLine={false} axisLine={false} />
                       <YAxis tick={{ fontSize: 11, fill: chartColors.textSecondary }} axisLine={false} tickLine={false} />
                       <Tooltip content={<CustomTooltip />} />
-                      <Bar dataKey="hours" fill={chartColors.info} radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="hours" fill="url(#empHoursGrad)" radius={[6, 6, 0, 0]} maxBarSize={40} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
