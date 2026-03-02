@@ -11,8 +11,9 @@ import { apiClient, type ApiResponse } from './client';
 export type SupplyStatus = 'draft' | 'ordered' | 'shipped' | 'received' | 'cancelled';
 
 export interface SupplyItem {
-  ingredientId: number;
-  ingredientName: string;
+  ingredientId?: number;
+  ingredientName?: string;
+  name?: string; // legacy field used in seed data
   quantity: number;
   unitCost: number;
   totalCost: number;

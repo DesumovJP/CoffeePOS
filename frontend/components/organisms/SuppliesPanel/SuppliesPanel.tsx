@@ -243,7 +243,7 @@ function ReceiveSupplyModal({ isOpen, onClose, supply, onReceive, isReceiving }:
             <Text variant="labelSmall" weight="medium" color="secondary">Позиції</Text>
             {supply.items.map((item, idx) => (
               <div key={idx} className={styles.itemRow}>
-                <Text variant="bodySmall">{item.ingredientName}</Text>
+                <Text variant="bodySmall">{item.ingredientName || item.name || '—'}</Text>
                 <Text variant="bodySmall" color="secondary">{item.quantity}</Text>
                 <Text variant="labelSmall" weight="semibold">₴{item.totalCost.toFixed(2)}</Text>
               </div>

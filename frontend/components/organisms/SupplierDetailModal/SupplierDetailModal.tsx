@@ -103,7 +103,7 @@ function SupplyItemsDetail({ supply }: { supply: Supply }) {
       </div>
       {supply.items.map((item, i) => (
         <div key={i} className={styles.itemsRow}>
-          <Text variant="bodySmall" className={styles.itemsCol}>{item.ingredientName}</Text>
+          <Text variant="bodySmall" className={styles.itemsCol}>{item.ingredientName || item.name || '—'}</Text>
           <Text variant="bodySmall" color="secondary" className={styles.itemsColRight}>{item.quantity}</Text>
           <Text variant="bodySmall" color="secondary" className={styles.itemsColRight}>₴{item.unitCost}</Text>
           <Text variant="bodySmall" weight="semibold" className={styles.itemsColRight}>₴{formatCurrency(item.totalCost)}</Text>
