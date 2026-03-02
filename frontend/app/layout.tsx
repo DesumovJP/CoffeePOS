@@ -1,15 +1,15 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
+import { Manrope } from 'next/font/google';
 import { ThemeProvider } from '@/design-system/providers';
 import { QueryProvider, AuthProvider } from '@/lib/providers';
 import { AppShell, ErrorBoundary } from '@/components';
 import { ToastProvider } from '@/components/atoms/Toast';
 import './globals.css';
 
-const inter = Inter({
+const manrope = Manrope({
   subsets: ['latin', 'cyrillic'],
   display: 'swap',
-  variable: '--font-inter',
+  variable: '--font-manrope',
 });
 
 export const metadata: Metadata = {
@@ -61,7 +61,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="uk" className={`light ${inter.variable}`} suppressHydrationWarning>
+    <html lang="uk" className={`light ${manrope.variable}`} suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{

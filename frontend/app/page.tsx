@@ -254,11 +254,6 @@ export default function LandingPage() {
 
           {/* Left */}
           <div className={styles.heroLeft}>
-            <div className={styles.heroBadge}>
-              <span className={styles.badgePulse} />
-              Відкрито на продакшені · Railway + Vercel
-            </div>
-
             <h1 className={styles.heroTitle}>
               POS-система,<br />
               яку бариста<br />
