@@ -1,0 +1,115 @@
+/**
+ * Suppliers Page Styles
+ */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--grid-margin);
+  padding-top: var(--space-4);
+  max-width: var(--grid-max-width);
+  margin-inline: auto;
+  width: 100%;
+  overflow-y: auto;
+  height: 100%;
+}
+
+/* ============================================
+   SEARCH BAR
+   ============================================ */
+
+.searchBar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.searchBar > :first-child {
+  flex: 1;
+}
+
+/* ============================================
+   SUMMARY STATS
+   ============================================ */
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-3);
+}
+
+.summaryItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-2);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  text-align: center;
+  backdrop-filter: blur(var(--blur-md));
+  -webkit-backdrop-filter: blur(var(--blur-md));
+}
+
+.summaryValue {
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.summaryWarning {
+  color: var(--color-warning);
+}
+
+.summaryLabel {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+/* ============================================
+   SUPPLIER ICON
+   ============================================ */
+
+.supplierIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: var(--glass-bg-elevated);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  flex-shrink: 0;
+}
+
+/* ============================================
+   LOADING STATE
+   ============================================ */
+
+.loadingState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-12);
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 768px) {
+  .summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

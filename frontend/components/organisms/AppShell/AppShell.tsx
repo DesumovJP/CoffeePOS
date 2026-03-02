@@ -41,6 +41,7 @@ const navigation: NavGroup[] = [
     items: [
       { id: 'analytics', label: 'Аналітика', icon: 'chart', href: '/admin/dashboard' },
       { id: 'employees', label: 'Працівники', icon: 'user', href: '/admin/employees' },
+      { id: 'suppliers', label: 'Постачальники', icon: 'truck', href: '/admin/suppliers' },
     ],
   },
 ];
@@ -55,6 +56,7 @@ const routeToNavId: Record<string, string> = {
   '/admin/products': 'products',
   '/admin/recipes': 'recipes',
   '/admin/employees': 'employees',
+  '/admin/suppliers': 'suppliers',
   '/tasks': 'tasks',
   '/profile': 'profile',
 };
@@ -78,6 +80,7 @@ const pageMeta: Record<string, PageMeta> = {
   '/admin/products': { title: 'Продукція', icon: 'package', search: true, action: { label: 'Додати', icon: 'plus' } },
   '/admin/recipes': { title: 'Рецепти', icon: 'receipt', search: true, action: { label: 'Додати рецепт', icon: 'plus' } },
   '/admin/employees': { title: 'Працівники', icon: 'user', search: true, action: { label: 'Додати', icon: 'plus' } },
+  '/admin/suppliers': { title: 'Постачальники', icon: 'truck', search: true },
   '/tasks': { title: 'Завдання', icon: 'check', search: true, action: { label: 'Додати', icon: 'plus' } },
   '/profile': { title: 'Профіль', icon: 'user' },
 };

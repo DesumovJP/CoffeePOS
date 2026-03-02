@@ -28,3 +28,4 @@ export * from './ErrorBoundary';
 export * from './EmployeeFormModal';
 export * from './EmployeeDetailModal';
 export * from './TaskFormModal';
+export * from './SupplierDetailModal';
