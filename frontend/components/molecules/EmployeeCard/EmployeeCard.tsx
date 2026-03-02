@@ -56,6 +56,7 @@ export const EmployeeCard = memo(function EmployeeCard({
       tabIndex={onClick ? 0 : undefined}
     >
       <Avatar
+        src={employee.avatar?.url}
         fallback={employee.name}
         size={compact ? 'sm' : 'md'}
         status={showStatus ? (employee.isActive ? 'online' : 'offline') : undefined}

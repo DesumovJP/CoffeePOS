@@ -3,6 +3,7 @@
  */
 
 import { apiClient, type ApiResponse } from './client';
+import type { StrapiMedia } from './types';
 
 // ============================================
 // TYPES
@@ -22,6 +23,7 @@ export interface Employee {
   hireDate: string;
   salary?: number;
   notes?: string;
+  avatar?: StrapiMedia;
   createdAt: string;
   updatedAt: string;
 }
@@ -36,6 +38,7 @@ export interface EmployeeInput {
   hireDate?: string;
   salary?: number;
   notes?: string;
+  avatar?: number;
 }
 
 export interface EmployeeStats {
@@ -74,6 +77,7 @@ export const employeesApi = {
     const queryParams: Record<string, string | number | boolean | undefined> = {
       'pagination[pageSize]': 100,
       'sort': 'name:asc',
+      'populate': 'avatar',
     };
 
     if (params.role) {
@@ -91,7 +95,7 @@ export const employeesApi = {
   },
 
   async getById(documentId: string): Promise<ApiResponse<Employee>> {
-    return apiClient.get<Employee>(`/employees/${documentId}`);
+    return apiClient.get<Employee>(`/employees/${documentId}`, { populate: 'avatar' });
   },
 
   async create(data: EmployeeInput): Promise<ApiResponse<Employee>> {

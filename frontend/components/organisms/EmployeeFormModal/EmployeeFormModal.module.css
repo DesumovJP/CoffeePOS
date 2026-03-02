@@ -127,6 +127,90 @@
   color: var(--text-primary);
 }
 
+/* ============================================
+   AVATAR UPLOAD
+   ============================================ */
+
+.avatarUploadRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.avatarHint {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.avatarArea {
+  flex-shrink: 0;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 1.5px dashed var(--glass-border-strong);
+  background: var(--glass-bg-elevated);
+  cursor: pointer;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    border-color var(--duration-fast) var(--ease-default),
+    background var(--duration-fast) var(--ease-default);
+  padding: 0;
+}
+
+.avatarArea:hover:not(:disabled) {
+  border-color: var(--color-accent);
+  background: var(--glass-bg-hover);
+}
+
+.avatarArea:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.avatarPlaceholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatarThumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.uploadSpinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--glass-border-strong);
+  border-top-color: var(--color-accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.removeBtn {
+  font-size: var(--text-xs);
+  color: var(--color-error);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  text-align: left;
+}
+
+.hiddenInput {
+  display: none;
+}
+
 @media (max-width: 640px) {
   .row {
     grid-template-columns: 1fr;

@@ -567,9 +567,13 @@ export default function ProductsAdminPage() {
         const isOutOfStock = ingredient.quantity <= 0;
         return (
           <div className={styles.nameCell}>
-            <div className={styles.thumbnailPlaceholder}>
-              <Icon name="package" size="sm" color="tertiary" />
-            </div>
+            {ingredient.image?.url ? (
+              <img src={ingredient.image.url} alt={ingredient.name} className={styles.thumbnail} />
+            ) : (
+              <div className={styles.thumbnailPlaceholder}>
+                <Icon name="package" size="sm" color="tertiary" />
+              </div>
+            )}
             <div className={styles.itemName}>
               <Text variant="bodyMedium" weight="medium">{ingredient.name}</Text>
               {isOutOfStock

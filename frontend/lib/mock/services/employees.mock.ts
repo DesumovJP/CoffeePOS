@@ -83,9 +83,10 @@ export const mockEmployeesApi = {
     const idx = store.employees.findIndex((e) => e.documentId === documentId);
     if (idx === -1) throw { status: 404, name: 'NotFoundError', message: 'Employee not found' };
 
+    const { avatar: _avatar, ...rest } = data;
     store.employees[idx] = {
       ...store.employees[idx],
-      ...data,
+      ...rest,
       updatedAt: nowISO(),
     };
 

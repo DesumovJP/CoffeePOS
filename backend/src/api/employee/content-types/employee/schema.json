@@ -49,6 +49,12 @@
       "type": "text",
       "maxLength": 2000
     },
+    "avatar": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": ["images"]
+    },
     "cafe": {
       "type": "relation",
       "relation": "manyToOne",

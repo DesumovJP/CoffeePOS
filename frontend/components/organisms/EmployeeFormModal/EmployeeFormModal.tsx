@@ -6,9 +6,9 @@
  * Modal form for creating and editing employees.
  */
 
-import { useState, useEffect, useCallback, type FormEvent } from 'react';
-import { Text, Button, Input, Modal } from '@/components/atoms';
-import { employeesApi } from '@/lib/api';
+import { useState, useEffect, useCallback, useRef, type FormEvent } from 'react';
+import { Text, Button, Input, Modal, Icon } from '@/components/atoms';
+import { employeesApi, uploadFile } from '@/lib/api';
 import type { Employee, EmployeeInput } from '@/lib/api';
 import styles from './EmployeeFormModal.module.css';
 
@@ -75,6 +75,12 @@ export function EmployeeFormModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  // Avatar upload state
+  const [avatarId, setAvatarId] = useState<number | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     if (employee) {
       setForm({
@@ -88,8 +94,12 @@ export function EmployeeFormModal({
         notes: employee.notes || '',
         isActive: employee.isActive ?? true,
       });
+      setAvatarId(employee.avatar?.id ?? null);
+      setAvatarPreview(employee.avatar?.url ?? null);
     } else {
       setForm(INITIAL_STATE);
+      setAvatarId(null);
+      setAvatarPreview(null);
     }
     setErrors({});
     setSubmitError(null);
@@ -117,6 +127,39 @@ export function EmployeeFormModal({
       },
     [errors]
   );
+
+  const handleAvatarSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    if (!file.type.startsWith('image/')) {
+      setSubmitError('Оберіть файл зображення (JPG, PNG, WebP)');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setSubmitError('Розмір файлу не повинен перевищувати 5 МБ');
+      return;
+    }
+    setAvatarPreview(URL.createObjectURL(file));
+    setSubmitError(null);
+    try {
+      setIsUploading(true);
+      const uploaded = await uploadFile(file);
+      setAvatarId(uploaded.id);
+      setAvatarPreview(uploaded.url);
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : 'Помилка завантаження');
+      setAvatarId(null);
+      setAvatarPreview(null);
+    } finally {
+      setIsUploading(false);
+    }
+  }, []);
+
+  const handleRemoveAvatar = useCallback(() => {
+    setAvatarId(null);
+    setAvatarPreview(null);
+  }, []);
 
   const validate = useCallback((): boolean => {
     const newErrors: Partial<Record<keyof EmployeeFormState, string>> = {};
@@ -153,6 +196,7 @@ export function EmployeeFormModal({
         salary: form.salary ? Number(form.salary) : undefined,
         notes: form.notes.trim() || undefined,
         isActive: form.isActive,
+        avatar: avatarId ?? undefined,
       };
 
       try {
@@ -200,6 +244,44 @@ export function EmployeeFormModal({
             <Text variant="bodySmall" color="error">{submitError}</Text>
           </div>
         )}
+
+        {/* Avatar upload */}
+        <div className={styles.avatarUploadRow}>
+          <button
+            type="button"
+            className={styles.avatarArea}
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isUploading}
+            aria-label="Завантажити аватарку"
+          >
+            {isUploading ? (
+              <span className={styles.uploadSpinner} />
+            ) : avatarPreview ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={avatarPreview} alt="" className={styles.avatarThumb} />
+            ) : (
+              <div className={styles.avatarPlaceholder}>
+                <Icon name="user" size="lg" color="tertiary" />
+              </div>
+            )}
+          </button>
+          <div className={styles.avatarHint}>
+            <Text variant="bodySmall" weight="medium">Фото працівника</Text>
+            <Text variant="caption" color="tertiary">JPG, PNG, WebP · до 5 МБ</Text>
+            {avatarId && (
+              <button type="button" className={styles.removeBtn} onClick={handleRemoveAvatar}>
+                Видалити фото
+              </button>
+            )}
+          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className={styles.hiddenInput}
+            onChange={handleAvatarSelect}
+          />
+        </div>
 
         <Input
           label="Ім'я *"
