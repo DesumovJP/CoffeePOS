@@ -11,17 +11,16 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Text, Button, Icon, Badge, Spinner } from '@/components/atoms';
 import { SearchInput } from '@/components/molecules';
-import { DataTable, SupplierDetailModal, type Column } from '@/components/organisms';
-import type { SupplierProfile } from '@/components/organisms/SupplierDetailModal/SupplierDetailModal';
+import { DataTable, SupplierDetailModal, type Column, type SupplierProfile } from '@/components/organisms';
 import { useSupplies } from '@/lib/hooks';
-import type { Supply } from '@/lib/api';
+import type { Supply, SupplyStatus } from '@/lib/api';
 import styles from './page.module.css';
 
 // ============================================
 // CONSTANTS
 // ============================================
 
-const PENDING_STATUSES = new Set(['draft', 'ordered', 'shipped']);
+const PENDING_STATUSES = new Set<SupplyStatus>(['draft', 'ordered', 'shipped']);
 
 // ============================================
 // HELPERS

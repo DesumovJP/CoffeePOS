@@ -290,7 +290,7 @@ export function SupplierDetailModal({
               <button
                 key={tab.id}
                 className={`${styles.tab} ${activeTab === tab.id ? styles.tabActive : ''}`}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => { setActiveTab(tab.id); setExpandedId(null); }}
               >
                 {tab.label}
                 {count > 0 && <span className={styles.tabCount}>{count}</span>}
