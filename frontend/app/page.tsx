@@ -9,13 +9,6 @@ import styles from './page.module.css';
 // DATA
 // ============================================
 
-const heroStats = [
-  { value: '3 ролі', label: 'Власник · Менеджер · Бариста' },
-  { value: '18', label: 'Типів даних' },
-  { value: '<200ms', label: 'Час відповіді' },
-  { value: '100%', label: 'Українська мова' },
-];
-
 const features = [
   {
     icon: 'package' as const,
@@ -273,8 +266,7 @@ export default function LandingPage() {
             </h1>
 
             <p className={styles.heroSub}>
-              Від замовлення до чеку — три натиски. Інвентар,
-              кухонний екран та аналітика в одній платформі.
+              Від замовлення до чеку — три натиски.
             </p>
 
             <div className={styles.heroCTAs}>
@@ -285,18 +277,9 @@ export default function LandingPage() {
               </Link>
               <Link href="#features">
                 <Button variant="ghost" size="lg">
-                  Переглянути можливості
+                  Можливості
                 </Button>
               </Link>
-            </div>
-
-            <div className={styles.heroStats}>
-              {heroStats.map((s) => (
-                <div key={s.label} className={styles.heroStat}>
-                  <span className={styles.heroStatVal}>{s.value}</span>
-                  <span className={styles.heroStatLbl}>{s.label}</span>
-                </div>
-              ))}
             </div>
           </div>
 
