@@ -225,6 +225,7 @@ export default function ProfilePage() {
         <div className={styles.heroTop}>
           <div className={styles.heroIdentity}>
             <Avatar
+              src={myEmployee.avatar?.url}
               fallback={myEmployee.name}
               size="xl"
               status={myEmployee.isActive ? 'online' : 'offline'}

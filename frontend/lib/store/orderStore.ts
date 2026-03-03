@@ -29,6 +29,7 @@ export interface OrderItem {
   name: string;
   price: number;
   quantity: number;
+  image?: string;
   modifiers?: OrderItemModifier[];
   notes?: string;
   addedAt: number;

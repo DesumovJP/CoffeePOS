@@ -163,6 +163,7 @@ export function AppShell({ children }: AppShellProps) {
     ? {
         name: myEmployee?.name || authUser.username,
         role: myEmployee?.position || authUser.role?.name || 'Користувач',
+        avatar: myEmployee?.avatar?.url,
       }
     : { name: '', role: '' };
 

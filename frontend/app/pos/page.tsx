@@ -253,6 +253,7 @@ export default function POSPage() {
       name: item.name,
       price: item.price,
       quantity: item.quantity,
+      image: item.image,
       modifiers: item.modifiers,
       notes: item.notes,
     }));
@@ -314,6 +315,7 @@ export default function POSPage() {
       sizeId: size?.id,
       name: itemName,
       price: itemPrice,
+      image: product.image,
     });
   }, [addItem]);
 
@@ -323,6 +325,7 @@ export default function POSPage() {
       productDocumentId: result.productDocumentId,
       name: selectedProductForModifier?.name || '',
       price: result.totalPrice / result.quantity,
+      image: selectedProductForModifier?.image,
       modifiers: result.modifiers,
       notes: result.notes,
     });

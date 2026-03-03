@@ -237,7 +237,7 @@ export function EmployeeDetailModal({
         {/* Header */}
         <div className={styles.header}>
           <div className={styles.headerLeft}>
-            <Avatar fallback={employee.name} size="lg" status={employee.isActive ? 'online' : 'offline'} />
+            <Avatar src={employee.avatar?.url} fallback={employee.name} size="lg" status={employee.isActive ? 'online' : 'offline'} />
             <div className={styles.headerInfo}>
               <Text variant="h4" weight="bold">{employee.name}</Text>
               <div className={styles.headerMeta}>
