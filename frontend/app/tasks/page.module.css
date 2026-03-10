@@ -128,15 +128,23 @@
 .cardDone         { opacity: 0.55; }
 .cardDone:hover   { opacity: 0.8;  }
 
-/* ── body: title + description ── */
+/* ── body ── */
 .body {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
-  padding: var(--space-3) var(--space-4) var(--space-2);
+  padding: var(--space-3) var(--space-3) var(--space-2-5);
+}
+
+/* title row: text + hover-manage icons */
+.titleRow {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-1-5);
 }
 
 .title {
+  flex: 1;
   font-size: var(--text-sm);
   font-weight: var(--font-semibold);
   color: var(--text-primary);
@@ -159,70 +167,61 @@
   overflow: hidden;
 }
 
-/* ── meta row: chips + manage icons ── */
-.meta {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-4);
-}
-
-.chips {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1-5);
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-}
-
-/* chips */
-.chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  font-size: 10px;
-  font-weight: var(--font-medium);
-  white-space: nowrap;
-  border-radius: var(--radius-full);
-  padding: 2px 6px;
-  flex-shrink: 0;
-}
-
-.chipPriority {
-  font-weight: var(--font-semibold);
-}
-.chipHigh   { color: var(--color-error);   background: color-mix(in srgb, var(--color-error)   12%, transparent); }
-.chipMedium { color: var(--color-warning);  background: color-mix(in srgb, var(--color-warning) 12%, transparent); }
-.chipLow    { color: var(--color-info);     background: color-mix(in srgb, var(--color-info)    12%, transparent); }
-
-.chipType {
-  color: var(--text-tertiary);
-  background: var(--bg-tertiary);
-}
-
-.chipDate {
-  color: var(--text-tertiary);
-}
-
-.chipOverdue {
-  color: var(--color-error);
-  background: color-mix(in srgb, var(--color-error) 8%, transparent);
-}
-
-.chipAssignee {
-  color: var(--text-tertiary);
-  max-width: 6rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* manage icon buttons */
+/* manage icon buttons — fade in on card hover */
 .manage {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 1px;
   flex-shrink: 0;
+  opacity: 0;
+  transition: opacity var(--duration-fast);
+}
+.card:hover .manage { opacity: 1; }
+
+/* ── compact footer meta: dot · date · type · assignee ── */
+.footerMeta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1-5);
+  margin-top: var(--space-1);
+  flex-wrap: wrap;
+}
+
+.priorityDot {
+  width: 5px;
+  height: 5px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+.dot_high   { background: var(--color-error);   }
+.dot_medium { background: var(--color-warning);  }
+.dot_low    { background: var(--color-info);     }
+
+.metaSep {
+  font-size: 9px;
+  color: var(--text-disabled);
+  line-height: 1;
+  user-select: none;
+}
+
+.metaMuted {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 10px;
+  color: var(--text-disabled);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.metaOverdue {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 10px;
+  color: var(--color-error);
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .iconBtn {

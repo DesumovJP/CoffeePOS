@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { Text, Icon, Button, GlassCard, Modal } from '@/components/atoms';
 import { SearchInput } from '@/components/molecules';
 import { TaskFormModal, TaskCompleteModal } from '@/components/organisms';
@@ -86,53 +86,50 @@ function TaskCard({ task, canManage, onStart, onComplete, onEdit, onDelete }: Ta
   const isRunning = task.status === 'in_progress';
   const overdue   = !!task.dueDate && !isDone && isOverdue(task.dueDate);
 
-  const priorityChipClass = {
-    high: styles.chipHigh, medium: styles.chipMedium, low: styles.chipLow,
-  }[task.priority];
+  // Compact footer meta parts
+  const metaParts: React.ReactNode[] = [];
+  if (task.dueDate) {
+    metaParts.push(
+      <span key="date" className={overdue ? styles.metaOverdue : styles.metaMuted}>
+        {overdue && <Icon name="clock" size="xs" />}{fmtDate(task.dueDate)}
+      </span>
+    );
+  }
+  if (task.type === 'daily') metaParts.push(<span key="type" className={styles.metaMuted}>Щоденне</span>);
+  if (task.assignedTo)       metaParts.push(<span key="who"  className={styles.metaMuted}>{task.assignedTo}</span>);
 
   return (
     <GlassCard className={`${styles.card} ${styles[`p_${task.priority}`]} ${isDone ? styles.cardDone : ''}`}>
 
-      {/* ── title + description ── */}
+      {/* ── body ── */}
       <div className={styles.body}>
-        <span className={`${styles.title} ${isDone ? styles.titleDone : ''}`}>
-          {task.title}
-        </span>
-        {task.description && (
-          <span className={styles.desc}>{task.description}</span>
-        )}
-      </div>
-
-      {/* ── meta: chips + edit/delete ── */}
-      <div className={styles.meta}>
-        <div className={styles.chips}>
-          <span className={`${styles.chip} ${styles.chipPriority} ${priorityChipClass}`}>
-            {PRIORITY_LABEL[task.priority]}
+        <div className={styles.titleRow}>
+          <span className={`${styles.title} ${isDone ? styles.titleDone : ''}`}>
+            {task.title}
           </span>
-          {task.type === 'daily' && (
-            <span className={`${styles.chip} ${styles.chipType}`}>{TYPE_LABEL[task.type]}</span>
-          )}
-          {task.dueDate && (
-            <span className={`${styles.chip} ${overdue ? styles.chipOverdue : styles.chipDate}`}>
-              {overdue && <Icon name="clock" size="xs" />}
-              {fmtDate(task.dueDate)}
-            </span>
-          )}
-          {task.assignedTo && (
-            <span className={`${styles.chip} ${styles.chipAssignee}`}>{task.assignedTo}</span>
+          {canManage && (
+            <div className={styles.manage}>
+              <button className={styles.iconBtn} onClick={() => onEdit(task)} aria-label="Редагувати завдання">
+                <Icon name="settings" size="sm" />
+              </button>
+              <button className={styles.iconBtn} onClick={() => onDelete(task)} aria-label="Видалити завдання">
+                <Icon name="close" size="sm" />
+              </button>
+            </div>
           )}
         </div>
 
-        {canManage && (
-          <div className={styles.manage}>
-            <button className={styles.iconBtn} onClick={() => onEdit(task)}
-              aria-label="Редагувати завдання">
-              <Icon name="settings" size="sm" />
-            </button>
-            <button className={styles.iconBtn} onClick={() => onDelete(task)}
-              aria-label="Видалити завдання">
-              <Icon name="close" size="sm" />
-            </button>
+        {task.description && <span className={styles.desc}>{task.description}</span>}
+
+        {metaParts.length > 0 && (
+          <div className={styles.footerMeta}>
+            <span className={`${styles.priorityDot} ${styles[`dot_${task.priority}`]}`} />
+            {metaParts.map((part, i) => (
+              <React.Fragment key={i}>
+                {i > 0 && <span className={styles.metaSep}>·</span>}
+                {part}
+              </React.Fragment>
+            ))}
           </div>
         )}
       </div>
