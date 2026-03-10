@@ -8,9 +8,15 @@ import { apiClient, type ApiResponse } from './client';
 // TYPES
 // ============================================
 
-export type TaskStatus = 'todo' | 'in_progress' | 'done';
+export type TaskStatus   = 'todo' | 'in_progress' | 'done';
 export type TaskPriority = 'low' | 'medium' | 'high';
-export type TaskType = 'daily' | 'task';
+export type TaskType     = 'daily' | 'task';
+
+export interface TaskMedia {
+  id: number;
+  url: string;
+  name: string;
+}
 
 export interface Task {
   id: number;
@@ -22,9 +28,14 @@ export interface Task {
   assignedTo?: string;
   dueDate?: string;
   type: TaskType;
+  // timing
+  startedAt?: string;
   completedAt?: string;
   completedBy?: string;
-  createdBy?: string;
+  duration?: number;        // seconds
+  // completion details
+  completionNote?: string;
+  completionPhoto?: TaskMedia;
   createdAt: string;
   updatedAt: string;
 }
@@ -47,6 +58,14 @@ export interface TaskUpdateData {
   assignedTo?: string;
   dueDate?: string;
   type?: TaskType;
+  startedAt?: string;
+}
+
+export interface TaskCompleteData {
+  completedBy: string;
+  duration?: number;
+  completionNote?: string;
+  completionPhotoId?: number;
 }
 
 export interface GetTasksParams {
@@ -66,34 +85,25 @@ export interface GetTasksParams {
 
 export const tasksApi = {
   async getAll(params: GetTasksParams = {}): Promise<ApiResponse<Task[]>> {
-    const queryParams: Record<string, string | number | boolean | undefined> = {
-      'pagination[page]': params.page,
+    const q: Record<string, string | number | boolean | undefined> = {
       'pagination[pageSize]': params.pageSize || 100,
       'sort': params.sort || 'createdAt:desc',
+      'populate': 'completionPhoto',
     };
-
-    if (params.status) {
-      queryParams['filters[status][$eq]'] = params.status;
-    }
-    if (params.priority) {
-      queryParams['filters[priority][$eq]'] = params.priority;
-    }
-    if (params.type) {
-      queryParams['filters[type][$eq]'] = params.type;
-    }
-    if (params.assignedTo) {
-      queryParams['filters[assignedTo][$eq]'] = params.assignedTo;
-    }
+    if (params.page)       q['pagination[page]']             = params.page;
+    if (params.status)     q['filters[status][$eq]']         = params.status;
+    if (params.priority)   q['filters[priority][$eq]']       = params.priority;
+    if (params.type)       q['filters[type][$eq]']           = params.type;
+    if (params.assignedTo) q['filters[assignedTo][$eq]']     = params.assignedTo;
     if (params.search) {
-      queryParams['filters[$or][0][title][$containsi]'] = params.search;
-      queryParams['filters[$or][1][description][$containsi]'] = params.search;
+      q['filters[$or][0][title][$containsi]']       = params.search;
+      q['filters[$or][1][description][$containsi]'] = params.search;
     }
-
-    return apiClient.get<Task[]>('/tasks', queryParams);
+    return apiClient.get<Task[]>('/tasks', q);
   },
 
   async getById(documentId: string): Promise<ApiResponse<Task>> {
-    return apiClient.get<Task>(`/tasks/${documentId}`);
+    return apiClient.get<Task>(`/tasks/${documentId}`, { populate: 'completionPhoto' });
   },
 
   async create(data: TaskCreateData): Promise<ApiResponse<Task>> {
@@ -104,8 +114,8 @@ export const tasksApi = {
     return apiClient.put<Task>(`/tasks/${documentId}`, { data });
   },
 
-  async complete(documentId: string, completedBy: string): Promise<ApiResponse<Task>> {
-    return apiClient.post<Task>(`/tasks/${documentId}/complete`, { data: { completedBy } });
+  async complete(documentId: string, data: TaskCompleteData): Promise<ApiResponse<Task>> {
+    return apiClient.post<Task>(`/tasks/${documentId}/complete`, { data });
   },
 
   async delete(documentId: string): Promise<ApiResponse<Task>> {

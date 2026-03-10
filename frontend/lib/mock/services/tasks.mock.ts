@@ -3,7 +3,7 @@
  */
 
 import type { ApiResponse } from '@/lib/api/client';
-import type { Task, TaskCreateData, TaskUpdateData, GetTasksParams } from '@/lib/api/tasks';
+import type { Task, TaskCreateData, TaskUpdateData, TaskCompleteData, GetTasksParams } from '@/lib/api/tasks';
 import { getStore } from '../store';
 import { mockDelay, wrapResponse, generateDocumentId, nowISO } from '../helpers';
 
@@ -61,7 +61,6 @@ export const mockTasksApi = {
       assignedTo: data.assignedTo,
       dueDate: data.dueDate,
       type: data.type || 'task',
-      createdBy: undefined,
       createdAt: now,
       updatedAt: now,
     };
@@ -85,7 +84,7 @@ export const mockTasksApi = {
     return wrapResponse(store.tasks[idx]);
   },
 
-  async complete(documentId: string, completedBy: string): Promise<ApiResponse<Task>> {
+  async complete(documentId: string, data: TaskCompleteData): Promise<ApiResponse<Task>> {
     await mockDelay();
     const store = getStore();
     const idx = store.tasks.findIndex((t) => t.documentId === documentId);
@@ -96,7 +95,9 @@ export const mockTasksApi = {
       ...store.tasks[idx],
       status: 'done',
       completedAt: now,
-      completedBy,
+      completedBy: data.completedBy,
+      duration: data.duration,
+      completionNote: data.completionNote,
       updatedAt: now,
     };
 

@@ -45,12 +45,28 @@
       "default": "task",
       "required": true
     },
+    "startedAt": {
+      "type": "datetime"
+    },
     "completedAt": {
       "type": "datetime"
     },
     "completedBy": {
       "type": "string",
       "maxLength": 200
+    },
+    "duration": {
+      "type": "integer"
+    },
+    "completionNote": {
+      "type": "text",
+      "maxLength": 1000
+    },
+    "completionPhoto": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": ["images"]
     }
   }
 }

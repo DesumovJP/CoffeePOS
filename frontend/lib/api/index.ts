@@ -45,7 +45,7 @@ export {
 } from './reports';
 export { type ApiRecipe, type ApiRecipeInput, type GetRecipesParams } from './recipes';
 export { type GetModifierGroupsParams } from './modifier-groups';
-export { type Task, type TaskStatus, type TaskPriority, type TaskType, type TaskCreateData, type TaskUpdateData, type GetTasksParams } from './tasks';
+export { type Task, type TaskMedia, type TaskStatus, type TaskPriority, type TaskType, type TaskCreateData, type TaskUpdateData, type TaskCompleteData, type GetTasksParams } from './tasks';
 export { type ApiInventoryTransaction, type ApiTransactionType, type GetTransactionsParams } from './inventory-transactions';
 export { type GetTablesParams } from './tables';
 export { type GetActivitiesParams, type ActivitiesResponse } from './activities';
