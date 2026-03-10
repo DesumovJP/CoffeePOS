@@ -86,23 +86,25 @@ function TaskCard({ task, canManage, onStart, onComplete, onEdit, onDelete }: Ta
   const isRunning = task.status === 'in_progress';
   const overdue   = !!task.dueDate && !isDone && isOverdue(task.dueDate);
 
-  // Compact footer meta parts
-  const metaParts: React.ReactNode[] = [];
+  // Meta items: date · type · assignee
+  const metaItems: React.ReactNode[] = [];
   if (task.dueDate) {
-    metaParts.push(
+    metaItems.push(
       <span key="date" className={overdue ? styles.metaOverdue : styles.metaMuted}>
         {overdue && <Icon name="clock" size="xs" />}{fmtDate(task.dueDate)}
       </span>
     );
   }
-  if (task.type === 'daily') metaParts.push(<span key="type" className={styles.metaMuted}>Щоденне</span>);
-  if (task.assignedTo)       metaParts.push(<span key="who"  className={styles.metaMuted}>{task.assignedTo}</span>);
+  if (task.type === 'daily') metaItems.push(<span key="type" className={styles.metaMuted}>Щоденне</span>);
+  if (task.assignedTo)       metaItems.push(<span key="who"  className={styles.metaMuted}>{task.assignedTo}</span>);
 
   return (
     <GlassCard className={`${styles.card} ${styles[`p_${task.priority}`]} ${isDone ? styles.cardDone : ''}`}>
 
       {/* ── body ── */}
       <div className={styles.body}>
+
+        {/* title row + manage icons */}
         <div className={styles.titleRow}>
           <span className={`${styles.title} ${isDone ? styles.titleDone : ''}`}>
             {task.title}
@@ -119,35 +121,32 @@ function TaskCard({ task, canManage, onStart, onComplete, onEdit, onDelete }: Ta
           )}
         </div>
 
+        {/* description */}
         {task.description && <span className={styles.desc}>{task.description}</span>}
 
-        {metaParts.length > 0 && (
+        {/* meta line */}
+        {metaItems.length > 0 && (
           <div className={styles.footerMeta}>
             <span className={`${styles.priorityDot} ${styles[`dot_${task.priority}`]}`} />
-            {metaParts.map((part, i) => (
+            {metaItems.map((item, i) => (
               <React.Fragment key={i}>
                 {i > 0 && <span className={styles.metaSep}>·</span>}
-                {part}
+                {item}
               </React.Fragment>
             ))}
           </div>
         )}
       </div>
 
-      {/* ── single action strip ── */}
+      {/* ── action strip (todo / in_progress) ── */}
       {!isDone && (
         <div className={styles.actionStrip}>
           {isRunning ? (
             <>
-              {/* Left: live timer (non-interactive) */}
               <div className={styles.timerSide}>
                 <TimerDisplay documentId={task.documentId} status={task.status} />
               </div>
-              {/* Right: Виконано */}
-              <button
-                className={`${styles.stripBtn} ${styles.stripBtnDone}`}
-                onClick={() => onComplete(task)}
-              >
+              <button className={`${styles.stripBtn} ${styles.stripBtnDone}`} onClick={() => onComplete(task)}>
                 <Icon name="check" size="sm" />
                 Виконано
               </button>
@@ -161,31 +160,42 @@ function TaskCard({ task, canManage, onStart, onComplete, onEdit, onDelete }: Ta
         </div>
       )}
 
-      {/* ── done stamp ── */}
+      {/* ── done footer ── */}
       {isDone && (
-        <div className={styles.doneStamp}>
-          <Icon name="check" size="xs" color="success" />
-          <span>
-            {task.completedAt && new Date(task.completedAt).toLocaleString('uk-UA', {
-              day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
-            })}
-            {task.duration != null && ` · ${formatDurationHuman(task.duration)}`}
-            {task.completedBy && ` — ${task.completedBy}`}
-          </span>
-          {task.completionNote && (
-            <span className={styles.doneNote} title={task.completionNote}>
-              📝
+        <div className={styles.doneFooter}>
+          {/* info row */}
+          <div className={styles.doneStamp}>
+            <Icon name="check" size="xs" color="success" />
+            <span className={styles.doneStampText}>
+              {task.completedAt && new Date(task.completedAt).toLocaleString('uk-UA', {
+                day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
+              })}
+              {task.duration != null && ` · ${formatDurationHuman(task.duration)}`}
+              {task.completedBy && ` — ${task.completedBy}`}
             </span>
-          )}
+            {task.completionNote && (
+              <span className={styles.doneNote} title={task.completionNote}>📝</span>
+            )}
+          </div>
+
+          {/* photo thumbnail — full-width preview */}
           {task.completionPhoto?.url && (
             <a
               href={task.completionPhoto.url}
               target="_blank"
               rel="noreferrer"
-              className={styles.donePhoto}
-              title="Фото виконання"
+              className={styles.photoThumbWrap}
+              title="Фото виконання — натисніть для перегляду"
             >
-              📷
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={task.completionPhoto.url}
+                alt="Фото виконання"
+                className={styles.photoThumb}
+              />
+              <div className={styles.photoOverlay}>
+                <Icon name="plus" size="sm" />
+              </div>
             </a>
           )}
         </div>
