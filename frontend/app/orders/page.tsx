@@ -200,13 +200,13 @@ export default function HistoryPage() {
         />
         <div className={styles.headerStats}>
           <div className={styles.statItem}>
-            <Icon name="cart" size="sm" color="accent" />
+            <Text variant="caption" color="tertiary">Замовлень</Text>
             <Text variant="labelMedium" weight="semibold">{summary.ordersCount}</Text>
           </div>
           <div className={styles.statDivider} />
           <div className={styles.statItem}>
-            <Icon name="cash" size="sm" color="success" />
-            <Text variant="labelMedium" weight="semibold">₴{formatCurrency(summary.totalRevenue)}</Text>
+            <Text variant="caption" color="tertiary">Виручка</Text>
+            <Text variant="labelMedium" weight="semibold" color="success">₴{formatCurrency(summary.totalRevenue)}</Text>
           </div>
         </div>
       </div>

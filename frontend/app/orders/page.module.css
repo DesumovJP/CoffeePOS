@@ -119,8 +119,9 @@
 
 .statItem {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: var(--space-1);
+  gap: 1px;
 }
 
 .statDivider {

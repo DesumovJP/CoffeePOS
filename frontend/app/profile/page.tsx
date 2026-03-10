@@ -241,22 +241,16 @@ export default function ProfilePage() {
                   <Text variant="bodySmall" color="secondary">{myEmployee.phone}</Text>
                 )}
               </div>
+              {myEmployee.hireDate && (
+                <div className={styles.hireBadge}>
+                  <Icon name="calendar" size="sm" color="tertiary" />
+                  <Text variant="caption" color="tertiary">
+                    {daysSince(myEmployee.hireDate)} днів в команді · з {new Date(myEmployee.hireDate).toLocaleDateString('uk-UA')}
+                  </Text>
+                </div>
+              )}
             </div>
           </div>
-
-          {myEmployee.hireDate && (
-            <div className={styles.hireBadge}>
-              <Icon name="calendar" size="sm" color="tertiary" />
-              <div className={styles.hireText}>
-                <Text variant="bodySmall" weight="semibold">
-                  {daysSince(myEmployee.hireDate)} днів в команді
-                </Text>
-                <Text variant="caption" color="tertiary">
-                  з {new Date(myEmployee.hireDate).toLocaleDateString('uk-UA')}
-                </Text>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Stats strip */}
