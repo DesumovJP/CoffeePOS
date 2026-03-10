@@ -69,13 +69,19 @@ interface TaskCardProps {
 }
 
 function TaskCard({ task, canManage, onStart, onComplete, onEdit, onDelete }: TaskCardProps) {
-  const isDone    = task.status === 'done';
-  const overdue   = !!task.dueDate && !isDone && isOverdue(task.dueDate);
+  const isDone  = task.status === 'done';
+  const overdue = !!task.dueDate && !isDone && isOverdue(task.dueDate);
+
+  const priorityChipClass = {
+    high:   styles.chipHigh,
+    medium: styles.chipMedium,
+    low:    styles.chipLow,
+  }[task.priority];
 
   return (
     <GlassCard className={`${styles.card} ${styles[`p_${task.priority}`]} ${isDone ? styles.cardDone : ''}`}>
 
-      {/* ── body ── */}
+      {/* ── title + description ── */}
       <div className={styles.body}>
         <span className={`${styles.title} ${isDone ? styles.titleDone : ''}`}>
           {task.title}
@@ -85,75 +91,75 @@ function TaskCard({ task, canManage, onStart, onComplete, onEdit, onDelete }: Ta
         )}
       </div>
 
-      {/* ── footer: meta + actions ── */}
-      <div className={styles.footer}>
-
-        {/* left: meta chips */}
+      {/* ── meta: chips + edit/delete ── */}
+      <div className={styles.meta}>
         <div className={styles.chips}>
-          <span className={`${styles.priorityChip} ${styles[`chip_${task.priority}`]}`}>
+          <span className={`${styles.chip} ${styles.chipPriority} ${priorityChipClass}`}>
             {PRIORITY_LABEL[task.priority]}
           </span>
-
           {task.type === 'daily' && (
-            <span className={styles.typeChip}>{TYPE_LABEL[task.type]}</span>
+            <span className={`${styles.chip} ${styles.chipType}`}>
+              {TYPE_LABEL[task.type]}
+            </span>
           )}
-
           {task.dueDate && (
-            <span className={`${styles.dateChip} ${overdue ? styles.dateChipOverdue : ''}`}>
+            <span className={`${styles.chip} ${overdue ? styles.chipOverdue : styles.chipDate}`}>
               {overdue && <Icon name="clock" size="xs" />}
               {fmtDate(task.dueDate)}
             </span>
           )}
-
           {task.assignedTo && (
-            <span className={styles.assigneeChip}>{task.assignedTo}</span>
-          )}
-        </div>
-
-        {/* right: actions */}
-        <div className={styles.actions}>
-          {!isDone && (
-            <>
-              {task.status === 'todo' && (
-                <button className={styles.actionBtn} onClick={() => onStart(task.documentId)}>
-                  Почати
-                </button>
-              )}
-              <button className={`${styles.actionBtn} ${styles.actionBtnDone}`} onClick={() => onComplete(task.documentId)}>
-                Виконано
-              </button>
-            </>
-          )}
-
-          {isDone && task.completedAt && (
-            <span className={styles.completedStamp}>
-              <Icon name="check" size="xs" color="success" />
-              {new Date(task.completedAt).toLocaleString('uk-UA', {
-                day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
-              })}
+            <span className={`${styles.chip} ${styles.chipAssignee}`}>
+              {task.assignedTo}
             </span>
           )}
-
-          {canManage && (
-            <div className={styles.manage}>
-              <button
-                className={styles.iconBtn}
-                onClick={() => onEdit(task)}
-                aria-label="Редагувати завдання"
-              >
-                <Icon name="settings" size="sm" />
-              </button>
-              <button
-                className={styles.iconBtn}
-                onClick={() => onDelete(task)}
-                aria-label="Видалити завдання"
-              >
-                <Icon name="close" size="sm" />
-              </button>
-            </div>
-          )}
         </div>
+
+        {canManage && (
+          <div className={styles.manage}>
+            <button className={styles.iconBtn} onClick={() => onEdit(task)}
+              aria-label="Редагувати завдання">
+              <Icon name="settings" size="sm" />
+            </button>
+            <button className={styles.iconBtn} onClick={() => onDelete(task)}
+              aria-label="Видалити завдання">
+              <Icon name="close" size="sm" />
+            </button>
+          </div>
+        )}
       </div>
+
+      {/* ── iOS action strip ── */}
+      {!isDone && (
+        <div className={styles.actionStrip}>
+          {task.status === 'todo' && (
+            <button className={styles.stripBtn} onClick={() => onStart(task.documentId)}>
+              <Icon name="clock" size="sm" />
+              Почати
+            </button>
+          )}
+          <button
+            className={`${styles.stripBtn} ${styles.stripBtnDone}`}
+            onClick={() => onComplete(task.documentId)}
+          >
+            <Icon name="check" size="sm" />
+            Виконано
+          </button>
+        </div>
+      )}
+
+      {/* ── completed stamp ── */}
+      {isDone && task.completedAt && (
+        <div className={styles.completedStamp}>
+          <Icon name="check" size="xs" color="success" />
+          <span>
+            {new Date(task.completedAt).toLocaleString('uk-UA', {
+              day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
+            })}
+            {task.completedBy && ` — ${task.completedBy}`}
+          </span>
+        </div>
+      )}
     </GlassCard>
   );
 }

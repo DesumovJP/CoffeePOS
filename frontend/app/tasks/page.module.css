@@ -20,7 +20,6 @@
   gap: var(--space-2);
   flex-shrink: 0;
 }
-
 .searchBar > :first-child { flex: 1; }
 
 /* ─── Board ──────────────────────────────────────────────────────────────────── */
@@ -93,7 +92,7 @@
   gap: var(--space-2);
   flex: 1;
   overflow-y: auto;
-  padding-right: var(--space-0-5);
+  padding-right: 2px;
 }
 
 /* ─── Task card ──────────────────────────────────────────────────────────────── */
@@ -102,7 +101,6 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 0;
   padding: 0;
   overflow: hidden;
   transition:
@@ -110,19 +108,16 @@
     box-shadow var(--duration-fast) var(--ease-default);
 }
 
-.card:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-card-hover);
-}
+.card:hover { transform: translateY(-1px); box-shadow: var(--shadow-card-hover); }
 
-/* Priority stripe — top edge only */
+/* Priority stripe */
 .p_high::before,
 .p_medium::before,
 .p_low::before {
   content: '';
   position: absolute;
   inset: 0 0 auto 0;
-  height: 2px;
+  height: 2.5px;
   border-radius: var(--radius-xl) var(--radius-xl) 0 0;
 }
 .p_high::before   { background: var(--color-error);   }
@@ -130,17 +125,15 @@
 .p_low::before    { background: var(--color-info);     }
 
 /* Done: dimmed */
-.cardDone {
-  opacity: 0.55;
-}
-.cardDone:hover { opacity: 0.8; }
+.cardDone         { opacity: 0.55; }
+.cardDone:hover   { opacity: 0.8;  }
 
-/* ── body ── */
+/* ── body: title + description ── */
 .body {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
-  padding: var(--space-3) var(--space-3-5) var(--space-2-5);
+  padding: var(--space-3) var(--space-4) var(--space-2);
 }
 
 .title {
@@ -166,126 +159,78 @@
   overflow: hidden;
 }
 
-/* ── footer: single row ── */
-.footer {
+/* ── meta row: chips + manage icons ── */
+.meta {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  padding: var(--space-2) var(--space-3-5) var(--space-2-5);
-  border-top: 1px solid var(--glass-border);
+  padding: var(--space-2) var(--space-4);
 }
 
-/* ── meta chips ── */
 .chips {
   display: flex;
   align-items: center;
   gap: var(--space-1-5);
   flex: 1;
   min-width: 0;
-  flex-wrap: nowrap;
   overflow: hidden;
 }
 
-/* base chip */
-.priorityChip,
-.typeChip,
-.dateChip,
-.assigneeChip {
+/* chips */
+.chip {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-1);
+  gap: 3px;
   font-size: 10px;
   font-weight: var(--font-medium);
   white-space: nowrap;
   border-radius: var(--radius-full);
-  padding: 2px var(--space-1-5);
+  padding: 2px 6px;
   flex-shrink: 0;
 }
 
-.priorityChip {
+.chipPriority {
   font-weight: var(--font-semibold);
 }
-.chip_high   { color: var(--color-error);   background: color-mix(in srgb, var(--color-error)   12%, transparent); }
-.chip_medium { color: var(--color-warning);  background: color-mix(in srgb, var(--color-warning) 12%, transparent); }
-.chip_low    { color: var(--color-info);     background: color-mix(in srgb, var(--color-info)    12%, transparent); }
+.chipHigh   { color: var(--color-error);   background: color-mix(in srgb, var(--color-error)   12%, transparent); }
+.chipMedium { color: var(--color-warning);  background: color-mix(in srgb, var(--color-warning) 12%, transparent); }
+.chipLow    { color: var(--color-info);     background: color-mix(in srgb, var(--color-info)    12%, transparent); }
 
-.typeChip {
+.chipType {
   color: var(--text-tertiary);
   background: var(--bg-tertiary);
 }
 
-.dateChip {
+.chipDate {
   color: var(--text-tertiary);
 }
 
-.dateChipOverdue {
+.chipOverdue {
   color: var(--color-error);
+  background: color-mix(in srgb, var(--color-error) 8%, transparent);
 }
 
-.assigneeChip {
+.chipAssignee {
   color: var(--text-tertiary);
-  max-width: 5rem;
+  max-width: 6rem;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* ── actions ── */
-.actions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  flex-shrink: 0;
-}
-
-.actionBtn {
-  font-size: 11px;
-  font-weight: var(--font-medium);
-  color: var(--text-tertiary);
-  background: none;
-  border: none;
-  padding: var(--space-1) var(--space-1-5);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: color var(--duration-fast), background var(--duration-fast);
-  white-space: nowrap;
-}
-
-.actionBtn:hover {
-  color: var(--text-primary);
-  background: var(--bg-tertiary);
-}
-
-.actionBtnDone {
-  color: color-mix(in srgb, var(--color-success) 80%, transparent);
-}
-
-.actionBtnDone:hover {
-  color: var(--color-success);
-  background: color-mix(in srgb, var(--color-success) 10%, transparent);
-}
-
-.completedStamp {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  font-size: 10px;
-  color: var(--text-tertiary);
-  white-space: nowrap;
-}
-
+/* manage icon buttons */
 .manage {
   display: flex;
   align-items: center;
   gap: 2px;
-  margin-left: var(--space-1);
+  flex-shrink: 0;
 }
 
 .iconBtn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 1.625rem;
+  height: 1.625rem;
   border-radius: var(--radius-md);
   background: none;
   border: none;
@@ -299,6 +244,60 @@
   background: var(--bg-tertiary);
 }
 
+/* ── action strip — iOS style ── */
+.actionStrip {
+  display: flex;
+  border-top: 1px solid var(--glass-border);
+  margin-top: var(--space-1);
+}
+
+.actionStrip > * + * {
+  border-left: 1px solid var(--glass-border);
+}
+
+.stripBtn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1-5);
+  height: 2.5rem;            /* 40px — iOS minimum touch target */
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-tertiary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color var(--duration-fast), background var(--duration-fast);
+  letter-spacing: -0.01em;
+}
+
+.stripBtn:hover {
+  color: var(--text-primary);
+  background: color-mix(in srgb, var(--glass-border) 40%, transparent);
+}
+
+/* "Виконано" — accent color */
+.stripBtnDone {
+  color: var(--color-success);
+}
+
+.stripBtnDone:hover {
+  color: var(--color-success);
+  background: color-mix(in srgb, var(--color-success) 8%, transparent);
+}
+
+/* completed stamp (done column) */
+.completedStamp {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: 10px;
+  color: var(--text-tertiary);
+  padding: var(--space-2) var(--space-4) var(--space-2-5);
+  border-top: 1px solid var(--glass-border);
+}
+
 /* ─── Skeleton ───────────────────────────────────────────────────────────────── */
 
 @keyframes pulse {
@@ -310,7 +309,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  padding: var(--space-3) var(--space-3-5);
+  padding: var(--space-3) var(--space-4) var(--space-3);
   background: var(--glass-bg-elevated);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-xl);
@@ -334,7 +333,7 @@
 
 .skeletonFoot {
   height: 0.625rem;
-  width: 50%;
+  width: 45%;
   background: var(--bg-tertiary);
   border-radius: var(--radius-sm);
   opacity: 0.4;
@@ -382,17 +381,8 @@
 
 /* ─── Delete modal ───────────────────────────────────────────────────────────── */
 
-.deleteBody {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
-
-.deleteRow {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--space-3);
-}
+.deleteBody { display: flex; flex-direction: column; gap: var(--space-4); }
+.deleteRow  { display: flex; justify-content: flex-end; gap: var(--space-3); }
 
 /* ─── Responsive ─────────────────────────────────────────────────────────────── */
 
@@ -407,5 +397,6 @@
 }
 
 @media (hover: none) and (pointer: coarse) {
-  .card:hover { transform: none; }
+  .card:hover     { transform: none; }
+  .stripBtn       { height: 2.75rem; } /* larger tap on touch */
 }
