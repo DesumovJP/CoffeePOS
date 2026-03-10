@@ -156,7 +156,6 @@ export function TaskFormModal({
             type: form.type,
             dueDate: form.dueDate || undefined,
             assignedTo,
-            createdBy: currentUserName,
           },
           {
             onSuccess: () => {
@@ -171,7 +170,7 @@ export function TaskFormModal({
         );
       }
     },
-    [form, isEditMode, task, validate, currentUserName, createMutation, updateMutation, addToast, onSuccess, onClose]
+    [form, isEditMode, task, validate, createMutation, updateMutation, addToast, onSuccess, onClose]
   );
 
   const isSubmitting = createMutation.isPending || updateMutation.isPending;

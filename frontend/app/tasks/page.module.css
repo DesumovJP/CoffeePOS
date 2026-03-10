@@ -84,6 +84,14 @@
   color: var(--text-secondary);
 }
 
+.columnCountSkeleton {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: var(--radius-full);
+  background: var(--bg-tertiary);
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
 .taskList {
   display: flex;
   flex-direction: column;
@@ -91,6 +99,45 @@
   flex: 1;
   overflow-y: auto;
   padding-right: var(--space-1);
+}
+
+/* ============================================
+   SKELETON LOADING
+   ============================================ */
+
+@keyframes shimmer {
+  0%   { opacity: 1; }
+  50%  { opacity: 0.4; }
+  100% { opacity: 1; }
+}
+
+.skeletonCard {
+  padding: var(--space-4);
+  background: var(--glass-bg-elevated);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+.skeletonLine {
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-sm);
+}
+
+.skeletonMeta {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+}
+
+.skeletonPill {
+  width: 4rem;
+  height: 1.25rem;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-full);
 }
 
 /* ============================================
@@ -104,12 +151,22 @@
   flex-direction: column;
   transition:
     transform var(--duration-fast) var(--ease-spring),
-    box-shadow var(--duration-fast) var(--ease-default);
+    box-shadow var(--duration-fast) var(--ease-default),
+    opacity var(--duration-fast) var(--ease-default);
 }
 
 .taskCard:hover {
   transform: translateY(-1px);
   box-shadow: var(--shadow-card-hover);
+}
+
+/* Done cards — visually dimmed */
+.taskCardDone {
+  opacity: 0.6;
+}
+
+.taskCardDone:hover {
+  opacity: 0.8;
 }
 
 /* Body: title + description */
@@ -118,6 +175,12 @@
   flex-direction: column;
   gap: var(--space-1-5);
   padding: var(--space-4) var(--space-4) var(--space-3);
+}
+
+/* Strikethrough on done card title */
+.taskTitleDone {
+  text-decoration: line-through;
+  color: var(--text-tertiary);
 }
 
 .taskDescription {
@@ -158,8 +221,11 @@
   gap: var(--space-1);
 }
 
-.createdByLabel {
-  font-style: italic;
+/* Overdue date highlight */
+.overdue {
+  background: color-mix(in srgb, var(--color-error) 8%, transparent);
+  padding: var(--space-0-5) var(--space-1-5);
+  border-radius: var(--radius-sm);
 }
 
 /* Action buttons */
@@ -209,6 +275,35 @@
 .priorityLow::before { background: var(--color-info); }
 
 /* ============================================
+   EMPTY STATE
+   ============================================ */
+
+.emptyColumn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  flex: 1;
+  padding: var(--space-6);
+  color: var(--text-disabled);
+  font-size: var(--text-sm);
+  text-align: center;
+  border: 2px dashed var(--glass-border);
+  border-radius: var(--radius-lg);
+  background: var(--glass-bg-subtle);
+}
+
+.emptyColumnCta {
+  opacity: 0.7;
+  transition: opacity var(--duration-fast) var(--ease-default);
+}
+
+.emptyColumnCta:hover {
+  opacity: 1;
+}
+
+/* ============================================
    DELETE MODAL
    ============================================ */
 
@@ -222,24 +317,6 @@
   display: flex;
   justify-content: flex-end;
   gap: var(--space-3);
-}
-
-/* ============================================
-   EMPTY STATE
-   ============================================ */
-
-.emptyColumn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex: 1;
-  padding: var(--space-6);
-  color: var(--text-disabled);
-  font-size: var(--text-sm);
-  text-align: center;
-  border: 2px dashed var(--glass-border);
-  border-radius: var(--radius-lg);
-  background: var(--glass-bg-subtle);
 }
 
 /* ============================================

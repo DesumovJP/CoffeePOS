@@ -37,7 +37,6 @@ export interface TaskCreateData {
   assignedTo?: string;
   dueDate?: string;
   type?: TaskType;
-  createdBy?: string;
 }
 
 export interface TaskUpdateData {

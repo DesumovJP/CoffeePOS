@@ -44,6 +44,40 @@ const TYPE_LABELS: Record<TaskType, string> = {
   task: 'Завдання',
 };
 
+// ============================================
+// HELPERS
+// ============================================
+
+function isOverdue(dueDate: string): boolean {
+  // Parse date-only string without UTC shift (treat as local midnight)
+  const [y, m, d] = dueDate.split('-').map(Number);
+  const due = new Date(y, m - 1, d);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return due < today;
+}
+
+function formatDate(dueDate: string): string {
+  const [y, m, d] = dueDate.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString('uk-UA');
+}
+
+// ============================================
+// SKELETON CARD
+// ============================================
+
+function SkeletonCard() {
+  return (
+    <div className={styles.skeletonCard} aria-hidden="true">
+      <div className={styles.skeletonLine} style={{ width: '70%', height: '1rem' }} />
+      <div className={styles.skeletonLine} style={{ width: '90%', height: '0.75rem', marginTop: '0.5rem' }} />
+      <div className={styles.skeletonMeta}>
+        <div className={styles.skeletonPill} />
+        <div className={styles.skeletonPill} />
+      </div>
+    </div>
+  );
+}
 
 // ============================================
 // TASK CARD
@@ -56,21 +90,29 @@ interface TaskCardProps {
   onComplete: (documentId: string) => void;
   onEdit: (task: Task) => void;
   onDelete: (task: Task) => void;
+  onAdd?: () => void;
 }
 
 function TaskCard({ task, canManage, onStart, onComplete, onEdit, onDelete }: TaskCardProps) {
+  const isDone = task.status === 'done';
   const priorityClass = {
     high: styles.priorityHigh,
     medium: styles.priorityMedium,
     low: styles.priorityLow,
   }[task.priority];
 
-  const showCreatedBy = task.createdBy && task.createdBy !== task.assignedTo;
+  const dueDateOverdue = task.dueDate && !isDone && isOverdue(task.dueDate);
 
   return (
-    <GlassCard className={`${styles.taskCard} ${priorityClass}`}>
+    <GlassCard className={`${styles.taskCard} ${priorityClass} ${isDone ? styles.taskCardDone : ''}`}>
       <div className={styles.taskBody}>
-        <Text variant="labelLarge" weight="semibold">{task.title}</Text>
+        <Text
+          variant="labelLarge"
+          weight="semibold"
+          className={isDone ? styles.taskTitleDone : undefined}
+        >
+          {task.title}
+        </Text>
         {task.description && (
           <Text variant="bodySmall" color="secondary" className={styles.taskDescription}>
             {task.description}
@@ -88,13 +130,14 @@ function TaskCard({ task, canManage, onStart, onComplete, onEdit, onDelete }: Ta
           </Badge>
         </div>
 
-        {(task.dueDate || task.assignedTo || showCreatedBy) && (
+        {(task.dueDate || task.assignedTo) && (
           <div className={styles.taskDetails}>
             {task.dueDate && (
-              <div className={styles.detailItem}>
-                <Icon name="calendar" size="xs" color="tertiary" />
-                <Text variant="caption" color="tertiary">
-                  {new Date(task.dueDate).toLocaleDateString('uk-UA')}
+              <div className={`${styles.detailItem} ${dueDateOverdue ? styles.overdue : ''}`}>
+                <Icon name="calendar" size="xs" color={dueDateOverdue ? 'error' : 'tertiary'} />
+                <Text variant="caption" color={dueDateOverdue ? 'error' : 'tertiary'}>
+                  {formatDate(task.dueDate)}
+                  {dueDateOverdue && ' — прострочено'}
                 </Text>
               </div>
             )}
@@ -106,17 +149,11 @@ function TaskCard({ task, canManage, onStart, onComplete, onEdit, onDelete }: Ta
             )}
           </div>
         )}
-
-        {showCreatedBy && (
-          <Text variant="caption" color="tertiary" className={styles.createdByLabel}>
-            Від: {task.createdBy}
-          </Text>
-        )}
       </div>
 
       {/* Actions */}
       <div className={styles.taskActions}>
-        {task.status !== 'done' && (
+        {!isDone && (
           <>
             {task.status === 'todo' && (
               <Button variant="ghost" size="sm" onClick={() => onStart(task.documentId)}>
@@ -131,7 +168,7 @@ function TaskCard({ task, canManage, onStart, onComplete, onEdit, onDelete }: Ta
           </>
         )}
 
-        {task.status === 'done' && task.completedAt && (
+        {isDone && task.completedAt && (
           <div className={styles.taskCompleted}>
             <Icon name="check" size="xs" color="success" />
             <Text variant="caption" color="tertiary">
@@ -145,10 +182,20 @@ function TaskCard({ task, canManage, onStart, onComplete, onEdit, onDelete }: Ta
 
         {canManage && (
           <div className={styles.taskManageActions}>
-            <Button variant="ghost" size="sm" onClick={() => onEdit(task)}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onEdit(task)}
+              aria-label="Редагувати завдання"
+            >
               <Icon name="settings" size="sm" />
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => onDelete(task)}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onDelete(task)}
+              aria-label="Видалити завдання"
+            >
               <Icon name="close" size="sm" />
             </Button>
           </div>
@@ -177,15 +224,16 @@ export default function TasksPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
+  const openCreate = useCallback(() => {
+    setEditingTask(null);
+    setFormModalOpen(true);
+  }, []);
+
   // Listen for AppShell events
   useEffect(() => {
-    const actionHandler = () => {
-      setEditingTask(null);
-      setFormModalOpen(true);
-    };
-    window.addEventListener('appshell:action', actionHandler);
-    return () => window.removeEventListener('appshell:action', actionHandler);
-  }, []);
+    window.addEventListener('appshell:action', openCreate);
+    return () => window.removeEventListener('appshell:action', openCreate);
+  }, [openCreate]);
 
   useEffect(() => {
     const searchHandler = () => setMobileSearchOpen(true);
@@ -193,22 +241,15 @@ export default function TasksPage() {
     return () => window.removeEventListener('appshell:search', searchHandler);
   }, []);
 
-  // Build query params based on role only (barista sees own tasks, admins see all)
+  // Build query params
   const queryParams = useMemo<GetTasksParams>(() => {
     const params: GetTasksParams = {};
-
-    if (!isAdmin) {
-      params.assignedTo = currentUserName;
-    }
-
-    if (searchQuery.trim()) {
-      params.search = searchQuery.trim();
-    }
-
+    if (!isAdmin) params.assignedTo = currentUserName;
+    if (searchQuery.trim()) params.search = searchQuery.trim();
     return params;
   }, [searchQuery, isAdmin, currentUserName]);
 
-  const { data: tasks } = useTasks(queryParams);
+  const { data: tasks, isLoading } = useTasks(queryParams);
   const updateMutation = useUpdateTask();
   const completeMutation = useCompleteTask();
   const deleteMutation = useDeleteTask();
@@ -223,8 +264,11 @@ export default function TasksPage() {
   }, [tasks]);
 
   const handleStart = useCallback((id: string) => {
-    updateMutation.mutate({ id, data: { status: 'in_progress' } });
-  }, [updateMutation]);
+    updateMutation.mutate(
+      { id, data: { status: 'in_progress' } },
+      { onSuccess: () => addToast({ type: 'success', title: 'Завдання розпочато' }) }
+    );
+  }, [updateMutation, addToast]);
 
   const handleComplete = useCallback((id: string) => {
     completeMutation.mutate(
@@ -295,13 +339,33 @@ export default function TasksPage() {
             <div key={col.id} className={styles.column}>
               <div className={styles.columnHeader}>
                 <Text variant="labelMedium" weight="semibold">{col.label}</Text>
-                <span className={styles.columnCount}>{columnTasks.length}</span>
+                {isLoading ? (
+                  <div className={styles.columnCountSkeleton} />
+                ) : (
+                  <span className={styles.columnCount}>{columnTasks.length}</span>
+                )}
               </div>
 
               <div className={styles.taskList}>
-                {columnTasks.length === 0 ? (
+                {isLoading ? (
+                  <>
+                    <SkeletonCard />
+                    {col.id === 'todo' && <SkeletonCard />}
+                  </>
+                ) : columnTasks.length === 0 ? (
                   <div className={styles.emptyColumn}>
                     <Text variant="bodySmall" color="tertiary">Немає завдань</Text>
+                    {col.id === 'todo' && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={openCreate}
+                        className={styles.emptyColumnCta}
+                      >
+                        <Icon name="plus" size="sm" />
+                        Додати завдання
+                      </Button>
+                    )}
                   </div>
                 ) : (
                   columnTasks.map((task) => (

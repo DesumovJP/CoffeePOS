@@ -61,7 +61,7 @@ export const mockTasksApi = {
       assignedTo: data.assignedTo,
       dueDate: data.dueDate,
       type: data.type || 'task',
-      createdBy: data.createdBy,
+      createdBy: undefined,
       createdAt: now,
       updatedAt: now,
     };
