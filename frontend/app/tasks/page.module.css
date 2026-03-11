@@ -194,6 +194,13 @@
   color: var(--text-tertiary);
   transition: color var(--duration-fast), background var(--duration-fast);
 }
+
+@media (hover: none) and (pointer: coarse) {
+  .iconBtn {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+}
 .iconBtn:hover {
   color: var(--text-primary);
   background: var(--bg-tertiary);

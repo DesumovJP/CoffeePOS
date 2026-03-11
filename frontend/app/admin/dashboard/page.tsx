@@ -287,8 +287,6 @@ export default function AnalyticsPage() {
   const [selectedDayKey, setSelectedDayKey] = useState<string | null>(null);
   const [selectedDayCell, setSelectedDayCell] = useState<DayCell | null>(null);
   const [expandedAccordionId, setExpandedAccordionId] = useState<string | null>(null);
-  const [selectedShiftId, setSelectedShiftId] = useState<string | null>(null);
-  const [shiftExpandedAccordionId, setShiftExpandedAccordionId] = useState<string | null>(null);
 
   const { data: calendarMonthly, isLoading: isCalendarMonthlyLoading } = useMonthlyReport(currentYear, currentMonth + 1);
   const { data: selectedDayReport, isLoading: isDayLoading } = useDailyReport(selectedDayKey || '');
@@ -376,8 +374,6 @@ export default function AnalyticsPage() {
     setSelectedDayKey(null);
     setSelectedDayCell(null);
     setExpandedAccordionId(null);
-    setSelectedShiftId(null);
-    setShiftExpandedAccordionId(null);
   };
 
   const toggleAccordion = (id: string) => {
@@ -528,30 +524,6 @@ export default function AnalyticsPage() {
     dailyWriteoffs.forEach((wo) => { items.push({ kind: 'accordion', id: `writeoff-${wo.id}`, type: 'writeoff', createdAt: wo.createdAt, data: wo }); });
     return items.sort((a, b) => b.createdAt - a.createdAt);
   }, [selectedDayReport, dailyOrders, dailySupplies, dailyWriteoffs, ordersById, suppliesById, writeoffsById]);
-
-  const selectedShift = dailyShifts.find(s => s.documentId === selectedShiftId) || null;
-
-  const shiftActivities = useMemo((): DailyActivityItem[] => {
-    if (!selectedShift) return [];
-    const start = selectedShift.openedAtRaw;
-    const end = selectedShift.closedAtRaw || Date.now();
-    return dailyActivities.filter(item => item.createdAt >= start && item.createdAt <= end);
-  }, [selectedShift, dailyActivities]);
-
-  const shiftDuration = useMemo(() => {
-    if (!selectedShift || !selectedShift.openedAtRaw) return '';
-    const end = selectedShift.closedAtRaw || Date.now();
-    const diffMs = end - selectedShift.openedAtRaw;
-    const hours = Math.floor(diffMs / 3600000);
-    const minutes = Math.floor((diffMs % 3600000) / 60000);
-    if (hours > 0 && minutes > 0) return `${hours}г ${minutes}хв`;
-    if (hours > 0) return `${hours}г`;
-    return `${minutes}хв`;
-  }, [selectedShift]);
-
-  const toggleShiftAccordion = (id: string) => {
-    setShiftExpandedAccordionId(shiftExpandedAccordionId === id ? null : id);
-  };
 
   // ============================================
   // RENDER
@@ -948,7 +920,6 @@ export default function AnalyticsPage() {
                   <div
                     key={shift.id}
                     className={`${styles.shiftCard} ${shift.status === 'open' ? styles.shiftCardOpen : ''}`}
-                    onClick={() => { setSelectedShiftId(shift.documentId); setShiftExpandedAccordionId(null); }}
                   >
                     <div className={styles.shiftCardTop}>
                       <div className={styles.shiftCardTime}>
@@ -979,9 +950,6 @@ export default function AnalyticsPage() {
                           </Text>
                         </span>
                       )}
-                      <span className={styles.shiftCardArrow}>
-                        <Icon name="chevron-right" size="sm" color="tertiary" />
-                      </span>
                     </div>
                   </div>
                 ))}
@@ -1014,118 +982,6 @@ export default function AnalyticsPage() {
         )}
       </Modal>
 
-      {/* =========== SHIFT DETAIL MODAL =========== */}
-      <Modal
-        isOpen={!!selectedShiftId && !!selectedShift}
-        onClose={() => { setSelectedShiftId(null); setShiftExpandedAccordionId(null); }}
-        title={selectedShift ? `Зміна ${selectedShift.startTime} — ${selectedShift.status === 'open' ? 'зараз' : selectedShift.endTime}` : ''}
-        subtitle={selectedShift ? `${selectedShift.employee}${selectedShift.closedBy && selectedShift.closedBy !== selectedShift.employee ? ` → ${selectedShift.closedBy}` : ''} • ${shiftDuration}` : ''}
-        icon="clock"
-        size="lg"
-      >
-        {selectedShift && (
-          <div className={styles.modalContent}>
-            <div className={styles.summaryCards}>
-              <div className={styles.summaryCard}>
-                <div className={styles.summaryCardHeader}>
-                  <Text variant="caption" weight="semibold" color="tertiary">ПРОДАЖІ</Text>
-                  <Text variant="caption" weight="semibold" color="success">{selectedShift.ordersCount} зам.</Text>
-                </div>
-                <Text variant="h3" weight="bold">
-                  {Math.round(selectedShift.totalSales).toLocaleString()}
-                  <span className={styles.currencySmall}>₴</span>
-                </Text>
-                <div className={styles.summaryCardRow}>
-                  <div className={styles.summaryCardDetail}>
-                    <Icon name="cash" size="sm" color="success" />
-                    <Text variant="bodySmall" color="secondary">Готівка</Text>
-                    <Text variant="labelMedium" weight="bold">₴{Math.round(selectedShift.cashSales)}</Text>
-                  </div>
-                  <div className={styles.summaryCardDetail}>
-                    <Icon name="card" size="sm" color="info" />
-                    <Text variant="bodySmall" color="secondary">Картка</Text>
-                    <Text variant="labelMedium" weight="bold">₴{Math.round(selectedShift.cardSales)}</Text>
-                  </div>
-                </div>
-              </div>
-
-              <div className={styles.summaryCard}>
-                <div className={styles.summaryCardHeader}>
-                  <Text variant="caption" weight="semibold" color="tertiary">КАСА</Text>
-                </div>
-                <div className={styles.shiftCashFlow}>
-                  <div className={styles.shiftCashRow}>
-                    <Text variant="bodySmall" color="secondary">Відкриття</Text>
-                    <Text variant="labelMedium" weight="semibold">₴{Math.round(selectedShift.openingCash)}</Text>
-                  </div>
-                  <div className={styles.shiftCashRow}>
-                    <Text variant="bodySmall" color="secondary">Очікувана</Text>
-                    <Text variant="labelMedium" weight="semibold">₴{Math.round(selectedShift.openingCash + selectedShift.cashSales)}</Text>
-                  </div>
-                  {selectedShift.status !== 'open' && (
-                    <>
-                      <div className={styles.shiftCashDivider} />
-                      <div className={styles.shiftCashRow}>
-                        <Text variant="bodySmall" color="secondary">Закриття</Text>
-                        <Text variant="labelMedium" weight="semibold">₴{Math.round(selectedShift.closingCash)}</Text>
-                      </div>
-                      <div className={styles.shiftCashRow}>
-                        <Text variant="bodySmall" color={selectedShift.difference >= 0 ? 'success' : 'error'}>Різниця</Text>
-                        <Text variant="labelMedium" weight="bold" color={selectedShift.difference >= 0 ? 'success' : 'error'}>
-                          {selectedShift.difference > 0 ? '+' : ''}₴{Math.round(selectedShift.difference)}
-                        </Text>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              <div className={styles.summaryCard}>
-                <div className={styles.summaryCardHeader}>
-                  <Text variant="caption" weight="semibold" color="tertiary">СПИСАННЯ</Text>
-                </div>
-                <Text variant="h3" weight="bold">
-                  {Math.round(selectedShift.writeOffs).toLocaleString()}
-                  <span className={styles.currencySmall}>₴</span>
-                </Text>
-              </div>
-
-              <div className={styles.summaryCard}>
-                <div className={styles.summaryCardHeader}>
-                  <Text variant="caption" weight="semibold" color="tertiary">ПОСТАВКИ</Text>
-                </div>
-                <Text variant="h3" weight="bold">
-                  {Math.round(selectedShift.suppliesTotal).toLocaleString()}
-                  <span className={styles.currencySmall}>₴</span>
-                </Text>
-              </div>
-            </div>
-
-            <div className={styles.activityList}>
-              <div className={styles.activityListHeader}>
-                <Text variant="labelMedium" weight="semibold">Дії ({shiftActivities.length})</Text>
-              </div>
-              {shiftActivities.length === 0 ? (
-                <div className={styles.emptyActivity}>
-                  <Text variant="bodySmall" color="tertiary">Немає записів за цю зміну</Text>
-                </div>
-              ) : (
-                <div className={styles.activityItems}>
-                  {shiftActivities.map((item) => {
-                    if (item.kind === 'inline') {
-                      return <ActivityInline key={item.activity.id} type={item.activity.type} timestamp={item.activity.timestamp} details={item.activity.details} />;
-                    }
-                    const isExpanded = shiftExpandedAccordionId === item.id;
-                    if (item.type === 'order') return <OrderAccordion key={item.id} order={item.data as OrderData} isExpanded={isExpanded} onToggle={() => toggleShiftAccordion(item.id)} />;
-                    if (item.type === 'supply') return <SupplyAccordion key={item.id} supply={item.data as SupplyAccordionData} isExpanded={isExpanded} onToggle={() => toggleShiftAccordion(item.id)} />;
-                    return <WriteoffAccordion key={item.id} writeoff={item.data as WriteoffAccordionData} isExpanded={isExpanded} onToggle={() => toggleShiftAccordion(item.id)} />;
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-      </Modal>
     </div>
   );
 }
