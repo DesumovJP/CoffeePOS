@@ -912,7 +912,7 @@ export default function AnalyticsPage() {
                         <Text variant="labelMedium" weight="bold">₴{Math.round(selectedDayCell.cardSales)}</Text>
                       </div>
                     </div>
-                    {dailyShifts.some(s => s.difference !== 0) && (
+                    {dailyShifts.some(s => s.status !== 'open' && s.difference !== 0) && (
                       <Text variant="caption" weight="semibold" color={dailyShifts.reduce((s, sh) => s + sh.difference, 0) >= 0 ? 'success' : 'error'}>
                         Різниця {dailyShifts.reduce((s, sh) => s + sh.difference, 0) > 0 ? '+' : ''}₴{Math.round(dailyShifts.reduce((s, sh) => s + sh.difference, 0))}
                       </Text>
@@ -972,7 +972,7 @@ export default function AnalyticsPage() {
                       <span className={styles.shiftCardStat}>
                         <Text variant="bodySmall" color="secondary">{shift.employee}</Text>
                       </span>
-                      {shift.difference !== 0 && (
+                      {shift.status !== 'open' && shift.difference !== 0 && (
                         <span className={styles.shiftCardStat}>
                           <Text variant="labelSmall" weight="semibold" color={shift.difference >= 0 ? 'success' : 'error'}>
                             {shift.difference > 0 ? '+' : ''}₴{Math.round(shift.difference)}

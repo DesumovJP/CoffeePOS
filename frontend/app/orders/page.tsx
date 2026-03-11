@@ -181,9 +181,11 @@ export default function HistoryPage() {
 
       {/* Shift context — single subtle line */}
       {currentShift ? (
-        <Text variant="bodySmall" color="tertiary" className={styles.shiftContext}>
-          Зміна · {currentShift.openedBy} · {formatDateTime(currentShift.openedAt)} · {formatDuration(shiftDuration)}
-        </Text>
+        <div className={styles.shiftContext}>
+          <Text variant="bodySmall" color={shiftDuration > 86400000 ? 'warning' : 'tertiary'}>
+            {shiftDuration > 86400000 && '⚠ '}Зміна · {currentShift.openedBy} · {formatDateTime(currentShift.openedAt)} · {formatDuration(shiftDuration)}
+          </Text>
+        </div>
       ) : (
         <Text variant="bodySmall" color="tertiary" className={styles.shiftContext}>
           Зміна не відкрита — замовлення за сьогодні
