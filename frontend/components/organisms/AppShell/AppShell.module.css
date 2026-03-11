@@ -76,6 +76,8 @@
   height: 100dvh;
   overflow: hidden;
   background: var(--bg-secondary);
+  /* Expose bottom nav height as a CSS variable for child pages */
+  --bottom-nav-height: 3.5rem;
 }
 
 .navbar {
@@ -127,5 +129,54 @@
   min-width: 0;
   min-height: 0;
   overflow: auto;
+}
+
+/* ============================================
+   BOTTOM NAV (Mobile only)
+   ============================================ */
+
+.bottomNav {
+  flex-shrink: 0;
+  display: flex;
+  align-items: stretch;
+  background: var(--glass-bg-elevated);
+  backdrop-filter: blur(var(--blur-2xl));
+  -webkit-backdrop-filter: blur(var(--blur-2xl));
+  border-top: 1px solid var(--glass-border);
+  /* Safe area for iPhone home indicator */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.bottomNavItem {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: var(--space-2) var(--space-1);
+  min-height: 3.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-tertiary);
+  transition: color var(--duration-fast) var(--ease-default),
+              background var(--duration-fast) var(--ease-default);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.bottomNavItem:active {
+  background: var(--glass-bg-hover, rgba(0,0,0,0.04));
+}
+
+.bottomNavActive {
+  color: var(--color-brand);
+}
+
+.bottomNavLabel {
+  font-size: 0.6875rem; /* 11px */
+  font-weight: var(--font-medium);
+  line-height: 1;
+  white-space: nowrap;
 }
 

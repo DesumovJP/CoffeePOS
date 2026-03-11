@@ -24,27 +24,38 @@ import styles from './AppShell.module.css';
 // NAVIGATION CONFIG
 // ============================================
 
-const navigation: NavGroup[] = [
-  {
-    id: 'main',
-    items: [
-      { id: 'pos', label: 'Каса', icon: 'cart', href: '/pos' },
-      { id: 'orders', label: 'Історія', icon: 'clock', href: '/orders' },
-      { id: 'products', label: 'Продукція', icon: 'package', href: '/admin/products' },
-      { id: 'recipes', label: 'Рецепти', icon: 'receipt', href: '/admin/recipes' },
-      { id: 'tasks', label: 'Завдання', icon: 'check', href: '/tasks' },
-    ],
-  },
-  {
-    id: 'management',
-    label: 'Управління',
-    items: [
-      { id: 'analytics', label: 'Аналітика', icon: 'chart', href: '/admin/dashboard' },
-      { id: 'employees', label: 'Працівники', icon: 'user', href: '/admin/employees' },
-      { id: 'suppliers', label: 'Постачальники', icon: 'truck', href: '/admin/suppliers' },
-    ],
-  },
-];
+function buildNavigation(role?: string): NavGroup[] {
+  const isAdmin = role === 'owner' || role === 'manager';
+
+  const groups: NavGroup[] = [
+    {
+      id: 'main',
+      items: [
+        { id: 'pos',      label: 'Каса',      icon: 'cart',    href: '/pos' },
+        { id: 'orders',   label: 'Історія',   icon: 'clock',   href: '/orders' },
+        { id: 'tasks',    label: 'Завдання',  icon: 'check',   href: '/tasks' },
+        ...(isAdmin ? [
+          { id: 'products', label: 'Продукція', icon: 'package' as const, href: '/admin/products' },
+          { id: 'recipes',  label: 'Рецепти',   icon: 'receipt' as const, href: '/admin/recipes' },
+        ] : []),
+      ],
+    },
+  ];
+
+  if (isAdmin) {
+    groups.push({
+      id: 'management',
+      label: 'Управління',
+      items: [
+        { id: 'analytics',  label: 'Аналітика',      icon: 'chart', href: '/admin/dashboard' },
+        { id: 'employees',  label: 'Працівники',     icon: 'user',  href: '/admin/employees' },
+        { id: 'suppliers',  label: 'Постачальники',  icon: 'truck', href: '/admin/suppliers' },
+      ],
+    });
+  }
+
+  return groups;
+}
 
 // User info is now provided by AuthProvider (see useAuth() below)
 
@@ -167,6 +178,9 @@ export function AppShell({ children }: AppShellProps) {
       }
     : { name: '', role: '' };
 
+  // Role-filtered navigation
+  const navigation = buildNavigation(authUser?.role?.type);
+
   // Don't show shell on landing page or login page
   if (pathname === '/' || pathname === '/login') {
     return <>{children}</>;
@@ -254,22 +268,21 @@ export function AppShell({ children }: AppShellProps) {
     );
   }
 
-  // Mobile: Navbar + Drawer layout
+  // Bottom nav items — top 4 most-used pages for quick access
+  const bottomNavItems = [
+    { id: 'pos',     label: 'Каса',     icon: 'cart'  as IconName, href: '/pos' },
+    { id: 'orders',  label: 'Історія',  icon: 'clock' as IconName, href: '/orders' },
+    { id: 'tasks',   label: 'Завдання', icon: 'check' as IconName, href: '/tasks' },
+    { id: 'more',    label: 'Ще',       icon: 'menu'  as IconName, href: null },
+  ];
+
+  // Mobile: Navbar + Bottom nav + Drawer layout
   return (
     <div className={styles.shellMobile}>
-      {/* Top Navbar */}
+      {/* Top Navbar — title + contextual actions only */}
       <header className={styles.navbar}>
         <div className={styles.navbarInner}>
           <div className={styles.navbarLeft}>
-            <Button
-              variant="ghost"
-              size="sm"
-              iconOnly
-              onClick={() => setDrawerOpen(true)}
-              aria-label="Відкрити меню"
-            >
-              <Icon name="menu" size="md" />
-            </Button>
             <Text variant="h5" weight="bold" className={styles.brandName}>
               {meta.title}
             </Text>
@@ -303,10 +316,30 @@ export function AppShell({ children }: AppShellProps) {
         </div>
       </header>
 
-      {/* Content */}
+      {/* Content — bottom padding so it doesn't hide behind bottom nav */}
       <div className={styles.content}>
         {children}
       </div>
+
+      {/* Bottom navigation bar */}
+      <nav className={styles.bottomNav} aria-label="Навігація">
+        {bottomNavItems.map((item) => {
+          const isActive = item.id !== 'more' && activeItemId === item.id;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              className={`${styles.bottomNavItem} ${isActive ? styles.bottomNavActive : ''}`}
+              onClick={() => item.href ? handleNavigation(item.id, item.href) : setDrawerOpen(true)}
+              aria-label={item.label}
+              aria-current={isActive ? 'page' : undefined}
+            >
+              <Icon name={item.icon} size="md" color={isActive ? 'accent' : 'secondary'} />
+              <span className={styles.bottomNavLabel}>{item.label}</span>
+            </button>
+          );
+        })}
+      </nav>
 
       {/* Drawer (mobile only) */}
       <Drawer
@@ -316,6 +349,7 @@ export function AppShell({ children }: AppShellProps) {
         activeItemId={activeItemId}
         onNavigate={handleNavigation}
         user={user}
+        onLogout={logout}
       />
     </div>
   );

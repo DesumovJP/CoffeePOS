@@ -216,10 +216,10 @@
 
   .order {
     position: fixed;
-    bottom: 0;
+    bottom: 3.5rem; /* bottom nav height */
     left: 0;
     right: 0;
-    max-height: 70vh;
+    max-height: calc(70vh - 3.5rem);
     border-radius: var(--radius-xl) var(--radius-xl) 0 0;
     box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.08);
     z-index: var(--z-dropdown);
@@ -237,7 +237,7 @@
   }
 
   .products {
-    padding-bottom: 72px;
+    padding-bottom: calc(72px + 3.5rem); /* product grid + bottom nav */
     border-radius: 0;
     border: none;
   }

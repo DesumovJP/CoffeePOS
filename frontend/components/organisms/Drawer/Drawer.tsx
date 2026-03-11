@@ -29,6 +29,8 @@ export interface DrawerProps {
   onNavigate?: (itemId: string, href?: string) => void;
   /** Current user info */
   user?: UserInfo;
+  /** Logout callback */
+  onLogout?: () => void;
 }
 
 // ============================================
@@ -42,6 +44,7 @@ export function Drawer({
   activeItemId,
   onNavigate,
   user,
+  onLogout,
 }: DrawerProps) {
   const drawerRef = useRef<HTMLDivElement>(null);
   const previousActiveElement = useRef<HTMLElement | null>(null);
@@ -175,7 +178,7 @@ export function Drawer({
           ))}
         </nav>
 
-        {/* Footer — User profile */}
+        {/* Footer — User profile + logout */}
         {user && (
           <div className={styles.footer}>
             <button
@@ -197,6 +200,16 @@ export function Drawer({
                 </Text>
               </div>
             </button>
+            {onLogout && (
+              <button
+                type="button"
+                className={styles.logoutButton}
+                onClick={() => { onClose(); onLogout(); }}
+              >
+                <Icon name="logout" size="sm" color="secondary" />
+                <Text variant="labelSmall" color="secondary">Вийти</Text>
+              </button>
+            )}
           </div>
         )}
       </div>
