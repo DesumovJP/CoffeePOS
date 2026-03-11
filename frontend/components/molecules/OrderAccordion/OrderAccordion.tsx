@@ -124,6 +124,12 @@ export function OrderAccordion({
           <div className={styles.accordionMeta}>
             <div className={styles.metaRow}>
               <Text variant="labelMedium" weight="medium">{formatTime(order.createdAt)}</Text>
+              {index !== undefined && order.id.startsWith('ORD-') && (
+                <>
+                  <span className={styles.metaDot} />
+                  <Text variant="caption" color="tertiary">{order.id}</Text>
+                </>
+              )}
               {showTable && order.table && (
                 <>
                   <span className={styles.metaDot} />

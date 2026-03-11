@@ -214,11 +214,7 @@ export default function AnalyticsPage() {
 
   const paymentPieData = useMemo(() => {
     if (!todayReport?.paymentBreakdown) {
-      return [
-        { name: 'Готівка', value: 35, key: 'cash' },
-        { name: 'Картка', value: 55, key: 'card' },
-        { name: 'QR', value: 10, key: 'qr' },
-      ];
+      return [{ name: 'Немає даних', value: 1, key: 'none' }];
     }
     const { cash, card, qr, other } = todayReport.paymentBreakdown;
     const data = [];
@@ -643,7 +639,7 @@ export default function AnalyticsPage() {
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke={chartColors.gridStroke} vertical={false} />
                       <XAxis dataKey="date" tick={{ fontSize: 12, fill: chartColors.textSecondary }} axisLine={{ stroke: chartColors.gridStroke }} tickLine={false} />
-                      <YAxis width={40} tick={{ fontSize: 11, fill: chartColors.textSecondary }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                      <YAxis width={40} tick={{ fontSize: 11, fill: chartColors.textSecondary }} axisLine={false} tickLine={false} tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v.toString()} />
                       <Tooltip content={<CustomTooltip />} />
                       <Area
                         type="monotone"
@@ -771,7 +767,12 @@ export default function AnalyticsPage() {
               <div className={styles.monthTitle}>
                 <Text variant="h4" weight="semibold">{MONTHS[currentMonth]} {currentYear}</Text>
               </div>
-              <Button variant="ghost" size="sm" onClick={goToNextMonth}>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={goToNextMonth}
+                disabled={currentMonth === today.getMonth() && currentYear === today.getFullYear()}
+              >
                 <Icon name="chevron-right" size="md" />
               </Button>
             </div>
