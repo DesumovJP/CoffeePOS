@@ -47,6 +47,7 @@ export { type ApiRecipe, type ApiRecipeInput, type GetRecipesParams } from './re
 export { type GetModifierGroupsParams } from './modifier-groups';
 export { type Task, type TaskMedia, type TaskStatus, type TaskPriority, type TaskType, type TaskCreateData, type TaskUpdateData, type TaskCompleteData, type GetTasksParams } from './tasks';
 export { type ApiInventoryTransaction, type ApiTransactionType, type GetTransactionsParams } from './inventory-transactions';
+export { type Supplier, type SupplierCreateData } from './suppliers';
 export { type GetTablesParams } from './tables';
 export { type GetActivitiesParams, type ActivitiesResponse } from './activities';
 export {
@@ -74,6 +75,7 @@ import { tasksApi as _realTasksApi } from './tasks';
 import { modifierGroupsApi as _realModifierGroupsApi, modifiersApi as _realModifiersApi } from './modifier-groups';
 import { activitiesApi as _realActivitiesApi } from './activities';
 import { employeesApi as _realEmployeesApi } from './employees';
+import { suppliersApi as _realSuppliersApi } from './suppliers';
 
 // Conditional mock/real services
 const IS_MOCK = process.env.NEXT_PUBLIC_API_MODE === 'mock';
@@ -98,6 +100,7 @@ let modifierGroupsApi = _realModifierGroupsApi;
 let modifiersApi = _realModifiersApi;
 let activitiesApi = _realActivitiesApi;
 let employeesApi = _realEmployeesApi;
+let suppliersApi = _realSuppliersApi;
 
 if (IS_MOCK) {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -143,4 +146,5 @@ export {
   modifiersApi,
   activitiesApi,
   employeesApi,
+  suppliersApi,
 };

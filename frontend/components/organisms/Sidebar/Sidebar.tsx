@@ -6,7 +6,7 @@
  * Main navigation sidebar for the application
  */
 
-import { forwardRef, type HTMLAttributes } from 'react';
+import { forwardRef, type ReactNode, type HTMLAttributes } from 'react';
 import { Text, Icon, Avatar, Button, Divider, type IconName } from '@/components/atoms';
 import styles from './Sidebar.module.css';
 
@@ -39,6 +39,8 @@ export interface UserInfo {
 export interface SidebarProps extends HTMLAttributes<HTMLElement> {
   /** Navigation groups */
   navigation: NavGroup[];
+  /** Optional widget rendered between nav and footer */
+  widget?: ReactNode;
   /** Current user info */
   user?: UserInfo;
   /** Collapsed state */
@@ -69,6 +71,7 @@ export const Sidebar = forwardRef<HTMLElement, SidebarProps>(
   (
     {
       navigation,
+      widget,
       user,
       collapsed = false,
       activeItemId,
@@ -165,6 +168,9 @@ export const Sidebar = forwardRef<HTMLElement, SidebarProps>(
             </div>
           ))}
         </nav>
+
+        {/* Widget slot */}
+        {widget}
 
         {/* Footer */}
         <div className={styles.footer}>

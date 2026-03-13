@@ -12,6 +12,7 @@ import { useState, useCallback, useEffect, type ReactNode } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { Sidebar } from '@/components/organisms/Sidebar';
 import { Drawer } from '@/components/organisms/Drawer';
+import { TaskWidget } from '@/components/organisms/TaskWidget';
 import { NotificationCenter } from '@/components/organisms/NotificationCenter';
 import { Text, Button, Icon, type IconName, MockBanner } from '@/components/atoms';
 import type { NavGroup } from '@/components/organisms/Sidebar';
@@ -33,7 +34,6 @@ function buildNavigation(role?: string): NavGroup[] {
       items: [
         { id: 'pos',      label: 'Каса',      icon: 'cart',    href: '/pos' },
         { id: 'orders',   label: 'Історія',   icon: 'clock',   href: '/orders' },
-        { id: 'tasks',    label: 'Завдання',  icon: 'check',   href: '/tasks' },
         ...(isAdmin ? [
           { id: 'products', label: 'Продукція', icon: 'package' as const, href: '/admin/products' },
           { id: 'recipes',  label: 'Рецепти',   icon: 'receipt' as const, href: '/admin/recipes' },
@@ -202,6 +202,7 @@ export function AppShell({ children }: AppShellProps) {
       <div className={styles.shell}>
         <Sidebar
           navigation={navigation}
+          widget={<TaskWidget collapsed={effectiveCollapsed} />}
           user={user}
           collapsed={effectiveCollapsed}
           activeItemId={activeItemId}
@@ -269,11 +270,13 @@ export function AppShell({ children }: AppShellProps) {
     );
   }
 
+  const [mobileTasksOpen, setMobileTasksOpen] = useState(false);
+
   // Bottom nav items — top 4 most-used pages for quick access
   const bottomNavItems = [
     { id: 'pos',     label: 'Каса',     icon: 'cart'  as IconName, href: '/pos' },
     { id: 'orders',  label: 'Історія',  icon: 'clock' as IconName, href: '/orders' },
-    { id: 'tasks',   label: 'Завдання', icon: 'check' as IconName, href: '/tasks' },
+    { id: 'tasks',   label: 'Завдання', icon: 'check' as IconName, href: null },
     { id: 'more',    label: 'Ще',       icon: 'menu'  as IconName, href: null },
   ];
 
@@ -331,7 +334,11 @@ export function AppShell({ children }: AppShellProps) {
               key={item.id}
               type="button"
               className={`${styles.bottomNavItem} ${isActive ? styles.bottomNavActive : ''}`}
-              onClick={() => item.href ? handleNavigation(item.id, item.href) : setDrawerOpen(true)}
+              onClick={() => {
+                if (item.id === 'tasks') { setMobileTasksOpen(true); }
+                else if (item.href) { handleNavigation(item.id, item.href); }
+                else { setDrawerOpen(true); }
+              }}
               aria-label={item.label}
               aria-current={isActive ? 'page' : undefined}
             >
@@ -352,6 +359,11 @@ export function AppShell({ children }: AppShellProps) {
         user={user}
         onLogout={logout}
       />
+
+      {/* Tasks modal (mobile — triggered from bottom nav) */}
+      {mobileTasksOpen && (
+        <TaskWidget collapsed={false} defaultOpen onModalClose={() => setMobileTasksOpen(false)} />
+      )}
     </div>
   );
 }

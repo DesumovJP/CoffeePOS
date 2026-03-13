@@ -287,6 +287,7 @@ async function ensurePermissions(strapi: Core.Strapi) {
       'api::payment.payment',
       'api::shift.shift',
       'api::supply.supply',
+      'api::supplier.supplier',
       'api::task.task',
       'api::modifier-group.modifier-group',
       'api::modifier.modifier',

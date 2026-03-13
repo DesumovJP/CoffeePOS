@@ -29,4 +29,6 @@ export * from './EmployeeFormModal';
 export * from './EmployeeDetailModal';
 export * from './TaskFormModal';
 export * from './TaskCompleteModal';
+export * from './TaskWidget';
 export * from './SupplierDetailModal';
+export * from './SupplierFormModal';

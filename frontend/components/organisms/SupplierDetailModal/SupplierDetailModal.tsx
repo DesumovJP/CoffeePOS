@@ -3,13 +3,14 @@
 /**
  * CoffeePOS - SupplierDetailModal
  *
- * Shows full supplier profile: stats + paginated supply history with item details.
+ * Shows full supplier profile: contact strip, next delivery status,
+ * active deliveries, and history.
  */
 
 import { useState, useMemo } from 'react';
 import { Text, Button, Icon, Badge, Modal } from '@/components/atoms';
-import { DataTable, type Column } from '@/components/organisms';
-import type { Supply, SupplyStatus } from '@/lib/api';
+import { DataTable, SupplierFormModal, type Column } from '@/components/organisms';
+import type { Supply, SupplyStatus, Supplier } from '@/lib/api';
 import styles from './SupplierDetailModal.module.css';
 
 // ============================================
@@ -18,6 +19,7 @@ import styles from './SupplierDetailModal.module.css';
 
 export interface SupplierProfile {
   name: string;
+  supplier?: Supplier | null; // real Supplier entity (may be null for legacy records)
   totalDeliveries: number;
   receivedDeliveries: number;
   pendingDeliveries: number;
@@ -31,6 +33,7 @@ export interface SupplierDetailModalProps {
   onClose: () => void;
   supplier: SupplierProfile | null;
   onNewSupply?: (supplierName: string) => void;
+  onSupplierUpdated?: () => void;
 }
 
 // ============================================
@@ -53,15 +56,6 @@ const STATUS_VARIANTS: Record<SupplyStatus, 'default' | 'info' | 'warning' | 'su
   cancelled: 'error',
 };
 
-type FilterTab = 'all' | 'pending' | 'received' | 'cancelled';
-
-const FILTER_TABS: { id: FilterTab; label: string }[] = [
-  { id: 'all',       label: 'Всі' },
-  { id: 'pending',   label: 'Очікується' },
-  { id: 'received',  label: 'Отримано' },
-  { id: 'cancelled', label: 'Скасовано' },
-];
-
 const PENDING_STATUSES: SupplyStatus[] = ['draft', 'ordered', 'shipped'];
 
 // ============================================
@@ -79,6 +73,144 @@ function formatDate(iso: string | undefined | null): string {
 
 function formatCurrency(v: number): string {
   return new Intl.NumberFormat('uk-UA', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(v);
+}
+
+function formatTelegram(handle: string): string {
+  const h = handle.trim();
+  if (h.startsWith('+') || /^\d/.test(h)) return `https://t.me/${h}`;
+  return `https://t.me/${h.replace(/^@/, '')}`;
+}
+
+// ============================================
+// NEXT DELIVERY STATUS CARD
+// ============================================
+
+function NextDeliveryCard({ supplier }: { supplier: SupplierProfile }) {
+  const activeDeliveries = supplier.supplies.filter((s) => PENDING_STATUSES.includes(s.status));
+  const shipped = activeDeliveries.filter((s) => s.status === 'shipped');
+  const ordered = activeDeliveries.filter((s) => s.status === 'ordered');
+  const drafts = activeDeliveries.filter((s) => s.status === 'draft');
+
+  // Find nearest expected delivery
+  const withExpected = activeDeliveries
+    .filter((s) => s.expectedAt)
+    .sort((a, b) => new Date(a.expectedAt!).getTime() - new Date(b.expectedAt!).getTime());
+
+  if (shipped.length > 0) {
+    return (
+      <div className={`${styles.deliveryCard} ${styles.deliveryCardWarning}`}>
+        <Icon name="truck" size="sm" />
+        <div className={styles.deliveryCardText}>
+          <Text variant="labelMedium" weight="semibold">
+            {shipped.length === 1 ? 'Посилка в дорозі' : `${shipped.length} посилки в дорозі`}
+          </Text>
+          {withExpected.length > 0 && (
+            <Text variant="bodySmall" color="secondary">
+              Очікується: {formatDate(withExpected[0].expectedAt)}
+            </Text>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (ordered.length > 0) {
+    return (
+      <div className={`${styles.deliveryCard} ${styles.deliveryCardInfo}`}>
+        <Icon name="clock" size="sm" />
+        <div className={styles.deliveryCardText}>
+          <Text variant="labelMedium" weight="semibold">
+            {ordered.length === 1 ? 'Замовлення підтверджено' : `${ordered.length} замовлення підтверджено`}
+          </Text>
+          {withExpected.length > 0 && (
+            <Text variant="bodySmall" color="secondary">
+              Очікується: {formatDate(withExpected[0].expectedAt)}
+            </Text>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (drafts.length > 0) {
+    return (
+      <div className={`${styles.deliveryCard} ${styles.deliveryCardDraft}`}>
+        <Icon name="edit" size="sm" />
+        <div className={styles.deliveryCardText}>
+          <Text variant="labelMedium" weight="semibold">
+            Є чернетка замовлення
+          </Text>
+          <Text variant="bodySmall" color="secondary">Підтвердіть або скасуйте</Text>
+        </div>
+      </div>
+    );
+  }
+
+  // No pending — suggest reorder
+  if (supplier.supplier?.reorderEveryDays && supplier.lastDeliveryDate) {
+    const nextDate = new Date(supplier.lastDeliveryDate);
+    nextDate.setDate(nextDate.getDate() + supplier.supplier.reorderEveryDays);
+    const isPast = nextDate < new Date();
+    return (
+      <div className={`${styles.deliveryCard} ${isPast ? styles.deliveryCardWarning : styles.deliveryCardOk}`}>
+        <Icon name={isPast ? 'warning' : 'check'} size="sm" />
+        <div className={styles.deliveryCardText}>
+          <Text variant="labelMedium" weight="semibold">
+            {isPast ? 'Час замовляти!' : 'Наступне замовлення'}
+          </Text>
+          <Text variant="bodySmall" color="secondary">
+            {formatDate(nextDate.toISOString())} (кожні {supplier.supplier.reorderEveryDays} днів)
+          </Text>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+}
+
+// ============================================
+// CONTACT STRIP
+// ============================================
+
+function ContactStrip({ entity }: { entity: Supplier }) {
+  const hasContacts = entity.phone || entity.telegram || entity.email || entity.contactPerson;
+  if (!hasContacts) return null;
+
+  return (
+    <div className={styles.contactStrip}>
+      {entity.contactPerson && (
+        <div className={styles.contactItem}>
+          <Icon name="user" size="sm" color="tertiary" />
+          <Text variant="bodySmall" color="secondary">{entity.contactPerson}</Text>
+        </div>
+      )}
+      {entity.phone && (
+        <a href={`tel:${entity.phone}`} className={styles.contactLink}>
+          <Icon name="phone" size="sm" color="tertiary" />
+          <Text variant="bodySmall">{entity.phone}</Text>
+        </a>
+      )}
+      {entity.telegram && (
+        <a href={formatTelegram(entity.telegram)} target="_blank" rel="noopener noreferrer" className={styles.contactLink}>
+          <Icon name="message-circle" size="sm" color="tertiary" />
+          <Text variant="bodySmall">{entity.telegram}</Text>
+        </a>
+      )}
+      {entity.email && (
+        <a href={`mailto:${entity.email}`} className={styles.contactLink}>
+          <Icon name="mail" size="sm" color="tertiary" />
+          <Text variant="bodySmall">{entity.email}</Text>
+        </a>
+      )}
+      {entity.paymentTerms && (
+        <div className={styles.contactItem}>
+          <Icon name="card" size="sm" color="tertiary" />
+          <Text variant="bodySmall" color="secondary">{entity.paymentTerms}</Text>
+        </div>
+      )}
+    </div>
+  );
 }
 
 // ============================================
@@ -126,23 +258,21 @@ export function SupplierDetailModal({
   onClose,
   supplier,
   onNewSupply,
+  onSupplierUpdated,
 }: SupplierDetailModalProps) {
-  const [activeTab, setActiveTab] = useState<FilterTab>('all');
+  const [showHistory, setShowHistory] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
 
-  const filteredSupplies = useMemo(() => {
-    if (!supplier) return [];
-    switch (activeTab) {
-      case 'pending':
-        return supplier.supplies.filter((s) => PENDING_STATUSES.includes(s.status));
-      case 'received':
-        return supplier.supplies.filter((s) => s.status === 'received');
-      case 'cancelled':
-        return supplier.supplies.filter((s) => s.status === 'cancelled');
-      default:
-        return supplier.supplies;
-    }
-  }, [supplier, activeTab]);
+  const activeSupplies = useMemo(
+    () => supplier?.supplies.filter((s) => PENDING_STATUSES.includes(s.status)) ?? [],
+    [supplier],
+  );
+
+  const historySupplies = useMemo(
+    () => supplier?.supplies.filter((s) => s.status === 'received' || s.status === 'cancelled') ?? [],
+    [supplier],
+  );
 
   const columns: Column<Supply>[] = useMemo(() => [
     {
@@ -166,14 +296,23 @@ export function SupplierDetailModal({
       ),
     },
     {
+      key: 'expectedAt',
+      header: 'Очікується',
+      width: '120px',
+      hideOnMobile: true,
+      render: (s) => (
+        <Text variant="bodySmall" color="secondary">
+          {formatDate(s.expectedAt)}
+        </Text>
+      ),
+    },
+    {
       key: 'items',
       header: 'Позицій',
       width: '90px',
       align: 'right',
       render: (s) => (
-        <Text variant="bodySmall" color="secondary">
-          {s.items?.length ?? 0}
-        </Text>
+        <Text variant="bodySmall" color="secondary">{s.items?.length ?? 0}</Text>
       ),
     },
     {
@@ -182,20 +321,7 @@ export function SupplierDetailModal({
       width: '110px',
       align: 'right',
       render: (s) => (
-        <Text variant="labelSmall" weight="semibold">
-          ₴{formatCurrency(s.totalCost)}
-        </Text>
-      ),
-    },
-    {
-      key: 'receivedBy',
-      header: 'Отримав',
-      width: '130px',
-      hideOnMobile: true,
-      render: (s) => (
-        <Text variant="bodySmall" color="tertiary">
-          {s.receivedBy || '—'}
-        </Text>
+        <Text variant="labelSmall" weight="semibold">₴{formatCurrency(s.totalCost)}</Text>
       ),
     },
     {
@@ -214,10 +340,7 @@ export function SupplierDetailModal({
           }}
           aria-label={expandedId === s.documentId ? 'Згорнути' : 'Деталі'}
         >
-          <Icon
-            name={expandedId === s.documentId ? 'chevron-up' : 'chevron-down'}
-            size="sm"
-          />
+          <Icon name={expandedId === s.documentId ? 'chevron-up' : 'chevron-down'} size="sm" />
         </Button>
       ),
     },
@@ -225,8 +348,16 @@ export function SupplierDetailModal({
 
   if (!supplier) return null;
 
+  const entity = supplier.supplier;
+
   const footer = (
     <div className={styles.footer}>
+      {entity && (
+        <Button variant="secondary" size="sm" onClick={() => setEditOpen(true)}>
+          <Icon name="edit" size="sm" />
+          Редагувати
+        </Button>
+      )}
       {onNewSupply && (
         <Button
           variant="primary"
@@ -240,94 +371,131 @@ export function SupplierDetailModal({
     </div>
   );
 
-  return (
-    <Modal
-      open={isOpen}
-      onClose={onClose}
-      title={supplier.name}
-      icon="truck"
-      size="xl"
-      footer={footer}
-    >
-      <div className={styles.content}>
-
-        {/* Stats */}
-        <div className={styles.stats}>
-          <div className={styles.stat}>
-            <span className={styles.statValue}>{supplier.totalDeliveries}</span>
-            <span className={styles.statLabel}>Всього поставок</span>
-          </div>
-          <div className={styles.stat}>
-            <span className={`${styles.statValue} ${styles.statSuccess}`}>{supplier.receivedDeliveries}</span>
-            <span className={styles.statLabel}>Отримано</span>
-          </div>
-          <div className={styles.stat}>
-            <span className={`${styles.statValue} ${styles.statWarning}`}>{supplier.pendingDeliveries}</span>
-            <span className={styles.statLabel}>Очікується</span>
-          </div>
-          <div className={styles.stat}>
-            <span className={styles.statValue}>₴{formatCurrency(supplier.totalSpent)}</span>
-            <span className={styles.statLabel}>Витрачено</span>
-          </div>
-          <div className={styles.stat}>
-            <span className={styles.statValue}>{formatDate(supplier.lastDeliveryDate)}</span>
-            <span className={styles.statLabel}>Остання поставка</span>
-          </div>
+  const renderExpandedDetail = (supplies: Supply[]) => {
+    if (!expandedId) return null;
+    const supply = supplies.find((s) => s.documentId === expandedId);
+    if (!supply) return null;
+    return (
+      <div className={styles.expandedWrap}>
+        <div className={styles.expandedHeader}>
+          <Text variant="labelMedium" weight="semibold">
+            Деталі поставки від {formatDate(supply.receivedAt || supply.orderedAt || supply.createdAt)}
+          </Text>
+          <Button variant="ghost" size="sm" iconOnly onClick={() => setExpandedId(null)}>
+            <Icon name="close" size="sm" />
+          </Button>
         </div>
-
-        {/* Tabs */}
-        <div className={styles.tabs}>
-          {FILTER_TABS.map((tab) => {
-            const count = tab.id === 'all'
-              ? supplier.supplies.length
-              : tab.id === 'pending'
-              ? supplier.supplies.filter((s) => PENDING_STATUSES.includes(s.status)).length
-              : tab.id === 'received'
-              ? supplier.supplies.filter((s) => s.status === 'received').length
-              : supplier.supplies.filter((s) => s.status === 'cancelled').length;
-
-            return (
-              <button
-                key={tab.id}
-                className={`${styles.tab} ${activeTab === tab.id ? styles.tabActive : ''}`}
-                onClick={() => { setActiveTab(tab.id); setExpandedId(null); }}
-              >
-                {tab.label}
-                {count > 0 && <span className={styles.tabCount}>{count}</span>}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Table */}
-        <DataTable
-          columns={columns}
-          data={filteredSupplies}
-          getRowKey={(s) => s.documentId}
-          emptyState={{ icon: 'truck', title: 'Поставок не знайдено' }}
-          onRowClick={(s) => setExpandedId((prev) => (prev === s.documentId ? null : s.documentId))}
-        />
-
-        {/* Expanded detail */}
-        {expandedId && (() => {
-          const supply = filteredSupplies.find((s) => s.documentId === expandedId);
-          if (!supply) return null;
-          return (
-            <div className={styles.expandedWrap}>
-              <div className={styles.expandedHeader}>
-                <Text variant="labelMedium" weight="semibold">
-                  Деталі поставки від {formatDate(supply.receivedAt || supply.orderedAt || supply.createdAt)}
-                </Text>
-                <Button variant="ghost" size="sm" iconOnly onClick={() => setExpandedId(null)}>
-                  <Icon name="close" size="sm" />
-                </Button>
-              </div>
-              <SupplyItemsDetail supply={supply} />
-            </div>
-          );
-        })()}
+        <SupplyItemsDetail supply={supply} />
       </div>
-    </Modal>
+    );
+  };
+
+  return (
+    <>
+      <Modal
+        open={isOpen}
+        onClose={onClose}
+        title={supplier.name}
+        icon="truck"
+        size="xl"
+        footer={footer}
+      >
+        <div className={styles.content}>
+
+          {/* Contact strip */}
+          {entity && <ContactStrip entity={entity} />}
+
+          {/* Category / notes pill */}
+          {entity?.category && (
+            <div className={styles.metaRow}>
+              <Badge variant="default" size="sm">{entity.category}</Badge>
+              {entity.notes && (
+                <Text variant="bodySmall" color="tertiary">{entity.notes}</Text>
+              )}
+            </div>
+          )}
+
+          {/* Next delivery status */}
+          <NextDeliveryCard supplier={supplier} />
+
+          {/* Active deliveries */}
+          {activeSupplies.length > 0 && (
+            <div className={styles.section}>
+              <div className={styles.sectionHeader}>
+                <Text variant="labelMedium" weight="semibold">Активні поставки</Text>
+                <Badge variant="warning" size="sm">{activeSupplies.length}</Badge>
+              </div>
+              <DataTable
+                columns={columns}
+                data={activeSupplies}
+                getRowKey={(s) => s.documentId}
+                emptyState={{ icon: 'truck', title: 'Немає активних поставок' }}
+                onRowClick={(s) => setExpandedId((prev) => (prev === s.documentId ? null : s.documentId))}
+              />
+              {renderExpandedDetail(activeSupplies)}
+            </div>
+          )}
+
+          {/* Stats row */}
+          <div className={styles.stats}>
+            <div className={styles.stat}>
+              <span className={styles.statValue}>{supplier.totalDeliveries}</span>
+              <span className={styles.statLabel}>Всього поставок</span>
+            </div>
+            <div className={styles.stat}>
+              <span className={`${styles.statValue} ${styles.statSuccess}`}>{supplier.receivedDeliveries}</span>
+              <span className={styles.statLabel}>Отримано</span>
+            </div>
+            <div className={styles.stat}>
+              <span className={styles.statValue}>₴{formatCurrency(supplier.totalSpent)}</span>
+              <span className={styles.statLabel}>Витрачено</span>
+            </div>
+            <div className={styles.stat}>
+              <span className={styles.statValue}>{formatDate(supplier.lastDeliveryDate)}</span>
+              <span className={styles.statLabel}>Остання поставка</span>
+            </div>
+          </div>
+
+          {/* History (collapsed by default) */}
+          {historySupplies.length > 0 && (
+            <div className={styles.section}>
+              <button
+                className={styles.historyToggle}
+                onClick={() => { setShowHistory((v) => !v); setExpandedId(null); }}
+              >
+                <Text variant="labelMedium" weight="semibold">
+                  Історія поставок ({historySupplies.length})
+                </Text>
+                <Icon name={showHistory ? 'chevron-up' : 'chevron-down'} size="sm" />
+              </button>
+              {showHistory && (
+                <>
+                  <DataTable
+                    columns={columns}
+                    data={historySupplies}
+                    getRowKey={(s) => s.documentId}
+                    emptyState={{ icon: 'truck', title: 'Немає записів' }}
+                    onRowClick={(s) => setExpandedId((prev) => (prev === s.documentId ? null : s.documentId))}
+                  />
+                  {renderExpandedDetail(historySupplies)}
+                </>
+              )}
+            </div>
+          )}
+
+        </div>
+      </Modal>
+
+      {/* Edit supplier form */}
+      {entity && (
+        <SupplierFormModal
+          isOpen={editOpen}
+          onClose={() => setEditOpen(false)}
+          supplier={entity}
+          onSuccess={() => { onSupplierUpdated?.(); setEditOpen(false); }}
+        />
+      )}
+    </>
   );
 }
 

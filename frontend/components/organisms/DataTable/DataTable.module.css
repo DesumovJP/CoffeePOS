@@ -42,10 +42,7 @@
   border-bottom: none;
 }
 
-/* Zebra striping */
-.table tbody tr:nth-child(even) {
-  background: var(--glass-bg-subtle);
-}
+/* No zebra striping — spacious bento-style rows */
 
 .table tbody tr:hover {
   background: var(--color-accent-subtle);
@@ -57,7 +54,7 @@
 
 /* Cells */
 .table td {
-  padding: var(--space-3) var(--space-3);
+  padding: var(--space-4) var(--space-3);
   vertical-align: middle;
 }
 
@@ -135,7 +132,7 @@
 
   .table th,
   .table td {
-    padding: var(--space-2) var(--space-3);
+    padding: var(--space-3) var(--space-3);
   }
 }
 

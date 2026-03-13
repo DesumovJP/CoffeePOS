@@ -30,59 +30,104 @@
 }
 
 /* ============================================
-   SUMMARY STATS
+   HEADER ROW
    ============================================ */
 
-.summary {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
+.headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: var(--space-3);
 }
 
-.summaryItem {
+.statusBanner {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: var(--space-1);
-  padding: var(--space-3) var(--space-2);
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-warning-bg, rgba(255, 160, 0, 0.08));
+  border: 1px solid var(--color-warning);
   border-radius: var(--radius-xl);
-  text-align: center;
-  backdrop-filter: blur(var(--blur-md));
-  -webkit-backdrop-filter: blur(var(--blur-md));
-}
-
-.summaryValue {
-  font-size: var(--text-xl);
-  font-weight: 700;
-  color: var(--text-primary);
-  line-height: 1.2;
-}
-
-.summaryWarning {
   color: var(--color-warning);
 }
 
-.summaryLabel {
-  font-size: var(--text-xs);
-  color: var(--text-tertiary);
-}
-
 /* ============================================
-   SUPPLIER ICON
+   NAME CELL
    ============================================ */
+
+.nameCell {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
 
 .supplierIcon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 64px;
+  height: 64px;
   background: var(--glass-bg-elevated);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   flex-shrink: 0;
+}
+
+.nameInfo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+/* ============================================
+   CONTACT LINK (in table cell)
+   ============================================ */
+
+.contactLink {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1-5);
+  color: var(--color-accent);
+  text-decoration: none;
+  overflow: hidden;
+  max-width: 100%;
+}
+
+.contactLink:hover {
+  text-decoration: underline;
+}
+
+/* ============================================
+   STATUS CELL
+   ============================================ */
+
+.statusCell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+/* ============================================
+   ROW ACTIONS
+   ============================================ */
+
+.rowActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  opacity: 0;
+  transition: opacity var(--duration-fast) var(--ease-default);
+}
+
+/* Show on row hover via DataTable */
+:global(tr:hover) .rowActions {
+  opacity: 1;
+}
+
+.deleteBtn {
+  color: var(--color-error) !important;
 }
 
 /* ============================================
@@ -103,13 +148,8 @@
    ============================================ */
 
 @media (max-width: 768px) {
-  .summary {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 480px) {
-  .summary {
-    grid-template-columns: repeat(2, 1fr);
+  .headerRow {
+    flex-direction: row;
+    flex-wrap: wrap;
   }
 }

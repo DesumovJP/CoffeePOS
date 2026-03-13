@@ -9,8 +9,8 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import {
-  BarChart,
-  Bar,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -297,81 +297,37 @@ export default function ProfilePage() {
           CHARTS — sales + hours last 7 days
           ══════════════════════════════════════════════ */}
       {empStats && (
-        <div className={styles.chartsRow}>
-          <GlassCard className={styles.chartCard}>
-            <Text variant="labelLarge" weight="semibold">Продажі за 7 днів</Text>
-            <div className={styles.chartContainer}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={empStats.dailySales}
-                  margin={{ top: 4, right: 8, left: -12, bottom: 0 }}
-                >
-                  <defs>
-                    <linearGradient id="profileSalesGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={colors.accent} stopOpacity={0.9} />
-                      <stop offset="100%" stopColor={colors.accent} stopOpacity={0.4} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke={colors.gridStroke}
-                    vertical={false}
-                  />
-                  <XAxis
-                    dataKey="date"
-                    tick={{ fontSize: 11, fill: colors.textSecondary }}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <YAxis
-                    tick={{ fontSize: 11, fill: colors.textSecondary }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <Tooltip content={<ChartTooltip valuePrefix="₴" />} cursor={{ fill: 'var(--glass-bg-subtle)' }} />
-                  <Bar dataKey="sales" fill="url(#profileSalesGrad)" radius={[6, 6, 0, 0]} maxBarSize={40} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </GlassCard>
-
-          <GlassCard className={styles.chartCard}>
-            <Text variant="labelLarge" weight="semibold">Години за 7 днів</Text>
-            <div className={styles.chartContainer}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={empStats.dailyHours}
-                  margin={{ top: 4, right: 8, left: -12, bottom: 0 }}
-                >
-                  <defs>
-                    <linearGradient id="profileHoursGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={colors.info} stopOpacity={0.9} />
-                      <stop offset="100%" stopColor={colors.info} stopOpacity={0.4} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke={colors.gridStroke}
-                    vertical={false}
-                  />
-                  <XAxis
-                    dataKey="date"
-                    tick={{ fontSize: 11, fill: colors.textSecondary }}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <YAxis
-                    tick={{ fontSize: 11, fill: colors.textSecondary }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <Tooltip content={<ChartTooltip />} cursor={{ fill: 'var(--glass-bg-subtle)' }} />
-                  <Bar dataKey="hours" fill="url(#profileHoursGrad)" radius={[6, 6, 0, 0]} maxBarSize={40} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </GlassCard>
-        </div>
+        <GlassCard className={styles.chartCard}>
+          <Text variant="labelLarge" weight="semibold">Продажі за 7 днів</Text>
+          <div className={styles.chartContainer}>
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart
+                data={empStats.dailySales}
+                margin={{ top: 4, right: 8, left: -12, bottom: 0 }}
+              >
+                <defs>
+                  <linearGradient id="profileSalesGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={colors.accent} stopOpacity={0.25} />
+                    <stop offset="95%" stopColor={colors.accent} stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke={colors.gridStroke} vertical={false} />
+                <XAxis dataKey="date" tick={{ fontSize: 11, fill: colors.textSecondary }} tickLine={false} axisLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: colors.textSecondary }} axisLine={false} tickLine={false} />
+                <Tooltip content={<ChartTooltip valuePrefix="₴" />} />
+                <Area
+                  type="monotone"
+                  dataKey="sales"
+                  stroke={colors.accent}
+                  strokeWidth={2.5}
+                  fill="url(#profileSalesGrad)"
+                  dot={{ fill: colors.accent, strokeWidth: 0, r: 3 }}
+                  activeDot={{ r: 5, fill: colors.accent, strokeWidth: 2, stroke: '#fff' }}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </GlassCard>
       )}
 
       {/* ══════════════════════════════════════════════

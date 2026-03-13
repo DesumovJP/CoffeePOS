@@ -120,28 +120,7 @@ function EmployeesListTab() {
     {
       key: 'name',
       header: "Ім'я",
-      render: (emp) => <EmployeeCard employee={emp} compact showStatus />,
-    },
-    {
-      key: 'role',
-      header: 'Роль',
-      width: '120px',
-      hideOnMobile: true,
-      render: (emp) => (
-        <Badge variant={ROLE_VARIANTS[emp.role] || 'default'} size="sm">
-          {ROLE_LABELS[emp.role] || emp.role}
-        </Badge>
-      ),
-    },
-    {
-      key: 'position',
-      header: 'Посада',
-      width: '160px',
-      hideOnMobile: true,
-      hideOnTablet: true,
-      render: (emp) => (
-        <Text variant="bodySmall" color="secondary">{emp.position || '—'}</Text>
-      ),
+      render: (emp) => <EmployeeCard employee={emp} showStatus />,
     },
     {
       key: 'status',

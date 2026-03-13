@@ -39,18 +39,18 @@
 
 /* Thumbnail in recipe table rows */
 .thumbnail {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-md);
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-lg);
   object-fit: cover;
   display: block;
   flex-shrink: 0;
 }
 
 .thumbnailPlaceholder {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-md);
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-lg);
   background: var(--glass-bg-elevated);
   border: 1px solid var(--glass-border);
   display: flex;

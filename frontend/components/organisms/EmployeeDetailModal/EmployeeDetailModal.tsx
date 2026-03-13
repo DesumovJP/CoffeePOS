@@ -9,8 +9,8 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import {
-  BarChart,
-  Bar,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -19,9 +19,8 @@ import {
 } from 'recharts';
 import { Text, Button, Icon, Modal, Badge, Avatar, Spinner } from '@/components/atoms';
 import { StatsGrid, type StatItem } from '@/components/molecules';
-import { DataTable, type Column } from '@/components/organisms';
-import { useEmployeeStats, useShifts } from '@/lib/hooks';
-import type { Employee, Shift } from '@/lib/api';
+import { useEmployeeStats } from '@/lib/hooks';
+import type { Employee } from '@/lib/api';
 import styles from './EmployeeDetailModal.module.css';
 
 // ============================================
@@ -59,15 +58,6 @@ const MONTHS = [
 // ============================================
 // HELPERS
 // ============================================
-
-function calculateDuration(openedAt: string, closedAt?: string): string {
-  const start = new Date(openedAt).getTime();
-  const end = closedAt ? new Date(closedAt).getTime() : Date.now();
-  const diffMs = end - start;
-  const hours = Math.floor(diffMs / (1000 * 60 * 60));
-  const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
-}
 
 // ============================================
 // COMPONENT
@@ -118,7 +108,6 @@ export function EmployeeDetailModal({
     employee?.documentId || '',
     { month: selectedMonth, year: selectedYear }
   );
-  const { data: allShifts } = useShifts();
 
   const [chartColors, setChartColors] = useState({
     accent: '#3D3D3D',
@@ -147,69 +136,6 @@ export function EmployeeDetailModal({
       { id: 'sales', label: 'Продажі', value: `₴${stats.totalSales.toLocaleString('uk-UA')}`, icon: 'cash' as const, iconColor: 'warning' as const },
     ];
   }, [stats]);
-
-  const myShifts = useMemo(() => {
-    if (!allShifts || !employee) return [];
-    return allShifts
-      .filter((s) => s.openedBy === employee.name)
-      .slice(0, 5);
-  }, [allShifts, employee]);
-
-  const shiftColumns: Column<Shift>[] = useMemo(() => [
-    {
-      key: 'date',
-      header: 'Дата',
-      width: '100px',
-      render: (shift) => (
-        <Text variant="bodySmall" weight="medium">
-          {new Date(shift.openedAt).toLocaleDateString('uk-UA')}
-        </Text>
-      ),
-    },
-    {
-      key: 'time',
-      header: 'Час',
-      render: (shift) => (
-        <Text variant="bodySmall" color="secondary">
-          {new Date(shift.openedAt).toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' })}
-          {' — '}
-          {shift.closedAt
-            ? new Date(shift.closedAt).toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' })
-            : 'зараз'
-          }
-        </Text>
-      ),
-    },
-    {
-      key: 'duration',
-      header: 'Тривалість',
-      width: '90px',
-      render: (shift) => (
-        <Text variant="labelSmall" weight="semibold">
-          {calculateDuration(shift.openedAt, shift.closedAt)}
-        </Text>
-      ),
-    },
-    {
-      key: 'status',
-      header: 'Статус',
-      width: '90px',
-      render: (shift) => (
-        <Badge variant={shift.status === 'open' ? 'success' : 'default'} size="sm">
-          {shift.status === 'open' ? 'Активна' : 'Закрита'}
-        </Badge>
-      ),
-    },
-    {
-      key: 'sales',
-      header: 'Продажі',
-      width: '90px',
-      align: 'right',
-      render: (shift) => (
-        <Text variant="labelSmall" weight="semibold">₴{(shift.totalSales || 0).toFixed(0)}</Text>
-      ),
-    },
-  ], []);
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -308,66 +234,40 @@ export function EmployeeDetailModal({
           <>
             <StatsGrid stats={statItems} columns={4} variant="bar" />
 
-            {/* Charts */}
-            <div className={styles.chartsRow}>
-              <div className={styles.chartSection}>
-                <Text variant="labelMedium" weight="semibold" color="secondary">
-                  Продажі за {MONTHS[selectedMonth - 1].toLowerCase()}
-                </Text>
-                <div className={styles.chartContainer}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={stats.dailySales} margin={{ top: 5, right: 5, left: -15, bottom: 5 }}>
-                      <defs>
-                        <linearGradient id="empSalesGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor={chartColors.accent} stopOpacity={0.9} />
-                          <stop offset="100%" stopColor={chartColors.accent} stopOpacity={0.4} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke={chartColors.gridStroke} vertical={false} />
-                      <XAxis dataKey="date" tick={{ fontSize: 11, fill: chartColors.textSecondary }} tickLine={false} axisLine={false} />
-                      <YAxis tick={{ fontSize: 11, fill: chartColors.textSecondary }} axisLine={false} tickLine={false} />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Bar dataKey="sales" fill="url(#empSalesGrad)" radius={[6, 6, 0, 0]} maxBarSize={40} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-              <div className={styles.chartSection}>
-                <Text variant="labelMedium" weight="semibold" color="secondary">
-                  Години за {MONTHS[selectedMonth - 1].toLowerCase()}
-                </Text>
-                <div className={styles.chartContainer}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={stats.dailyHours} margin={{ top: 5, right: 5, left: -15, bottom: 5 }}>
-                      <defs>
-                        <linearGradient id="empHoursGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor={chartColors.info} stopOpacity={0.9} />
-                          <stop offset="100%" stopColor={chartColors.info} stopOpacity={0.4} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke={chartColors.gridStroke} vertical={false} />
-                      <XAxis dataKey="date" tick={{ fontSize: 11, fill: chartColors.textSecondary }} tickLine={false} axisLine={false} />
-                      <YAxis tick={{ fontSize: 11, fill: chartColors.textSecondary }} axisLine={false} tickLine={false} />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Bar dataKey="hours" fill="url(#empHoursGrad)" radius={[6, 6, 0, 0]} maxBarSize={40} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
+            {/* Sales chart */}
+            <div className={styles.chartSection}>
+              <Text variant="labelMedium" weight="semibold" color="secondary">
+                Продажі за {MONTHS[selectedMonth - 1].toLowerCase()}
+              </Text>
+              <div className={styles.chartContainer}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={stats.dailySales} margin={{ top: 5, right: 5, left: -15, bottom: 5 }}>
+                    <defs>
+                      <linearGradient id="empSalesGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={chartColors.accent} stopOpacity={0.25} />
+                        <stop offset="95%" stopColor={chartColors.accent} stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke={chartColors.gridStroke} vertical={false} />
+                    <XAxis dataKey="date" tick={{ fontSize: 11, fill: chartColors.textSecondary }} tickLine={false} axisLine={false} />
+                    <YAxis tick={{ fontSize: 11, fill: chartColors.textSecondary }} axisLine={false} tickLine={false} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Area
+                      type="monotone"
+                      dataKey="sales"
+                      stroke={chartColors.accent}
+                      strokeWidth={2.5}
+                      fill="url(#empSalesGrad)"
+                      dot={{ fill: chartColors.accent, strokeWidth: 0, r: 3 }}
+                      activeDot={{ r: 5, fill: chartColors.accent, strokeWidth: 2, stroke: '#fff' }}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
               </div>
             </div>
           </>
         ) : null}
 
-        {/* Shifts table */}
-        <div className={styles.shiftsSection}>
-          <Text variant="labelMedium" weight="semibold" color="secondary">Останні зміни</Text>
-          <DataTable
-            columns={shiftColumns}
-            data={myShifts}
-            getRowKey={(s) => String(s.id)}
-            emptyState={{ icon: 'clock', title: 'Змін не знайдено' }}
-          />
-        </div>
       </div>
     </Modal>
   );

@@ -23,11 +23,13 @@ export interface Supply {
   id: number;
   documentId: string;
   supplierName: string;
+  supplier?: { id: number; documentId: string; name: string; phone?: string; telegram?: string; contactPerson?: string; };
   status: SupplyStatus;
   items: SupplyItem[];
   totalCost: number;
   notes?: string;
   orderedAt?: string;
+  expectedAt?: string;
   shippedAt?: string;
   receivedAt?: string;
   createdBy_barista?: string;
@@ -38,9 +40,11 @@ export interface Supply {
 
 export interface SupplyCreateData {
   supplierName: string;
+  supplierId?: string;
   items: SupplyItem[];
   totalCost: number;
   notes?: string;
+  expectedAt?: string;
   createdBy_barista?: string;
 }
 

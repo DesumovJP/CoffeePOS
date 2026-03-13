@@ -1,0 +1,79 @@
+{
+  "kind": "collectionType",
+  "collectionName": "suppliers",
+  "info": {
+    "singularName": "supplier",
+    "pluralName": "suppliers",
+    "displayName": "Supplier",
+    "description": "Supplier directory with contact info and ordering settings"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true,
+      "maxLength": 200
+    },
+    "contactPerson": {
+      "type": "string",
+      "maxLength": 200
+    },
+    "phone": {
+      "type": "string",
+      "maxLength": 50
+    },
+    "telegram": {
+      "type": "string",
+      "maxLength": 100
+    },
+    "email": {
+      "type": "email",
+      "maxLength": 100
+    },
+    "website": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "address": {
+      "type": "text",
+      "maxLength": 500
+    },
+    "category": {
+      "type": "string",
+      "maxLength": 100
+    },
+    "paymentTerms": {
+      "type": "text",
+      "maxLength": 500
+    },
+    "notes": {
+      "type": "text",
+      "maxLength": 2000
+    },
+    "isActive": {
+      "type": "boolean",
+      "default": true
+    },
+    "reorderEveryDays": {
+      "type": "integer",
+      "min": 1
+    },
+    "minimumOrderAmount": {
+      "type": "decimal",
+      "min": 0
+    },
+    "supplies": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::supply.supply",
+      "mappedBy": "supplier"
+    },
+    "cafe": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::cafe.cafe"
+    }
+  }
+}

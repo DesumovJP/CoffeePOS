@@ -37,6 +37,9 @@
     "orderedAt": {
       "type": "datetime"
     },
+    "expectedAt": {
+      "type": "datetime"
+    },
     "shippedAt": {
       "type": "datetime"
     },
@@ -50,6 +53,12 @@
     "receivedBy": {
       "type": "string",
       "maxLength": 200
+    },
+    "supplier": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::supplier.supplier",
+      "inversedBy": "supplies"
     },
     "shift": {
       "type": "relation",
