@@ -1482,6 +1482,71 @@ export interface ApiShiftShift extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiSupplierSupplier extends Struct.CollectionTypeSchema {
+  collectionName: 'suppliers';
+  info: {
+    description: 'Suppliers for ingredient orders';
+    displayName: 'Supplier';
+    pluralName: 'suppliers';
+    singularName: 'supplier';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    address: Schema.Attribute.Text;
+    cafe: Schema.Attribute.Relation<'manyToOne', 'api::cafe.cafe'>;
+    category: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 100;
+      }>;
+    contactPerson: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 200;
+      }>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    email: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 200;
+      }>;
+    isActive: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::supplier.supplier'
+    > &
+      Schema.Attribute.Private;
+    minimumOrderAmount: Schema.Attribute.Decimal;
+    name: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 200;
+      }>;
+    notes: Schema.Attribute.Text;
+    paymentTerms: Schema.Attribute.Text;
+    phone: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 50;
+      }>;
+    publishedAt: Schema.Attribute.DateTime;
+    reorderEveryDays: Schema.Attribute.Integer;
+    supplies: Schema.Attribute.Relation<'oneToMany', 'api::supply.supply'>;
+    telegram: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 100;
+      }>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    website: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 500;
+      }>;
+  };
+}
+
 export interface ApiSupplySupply extends Struct.CollectionTypeSchema {
   collectionName: 'supplies';
   info: {
@@ -2173,6 +2238,7 @@ declare module '@strapi/strapi' {
       'api::product.product': ApiProductProduct;
       'api::recipe.recipe': ApiRecipeRecipe;
       'api::shift.shift': ApiShiftShift;
+      'api::supplier.supplier': ApiSupplierSupplier;
       'api::supply.supply': ApiSupplySupply;
       'api::task.task': ApiTaskTask;
       'api::write-off.write-off': ApiWriteOffWriteOff;
