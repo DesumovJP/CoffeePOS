@@ -108,6 +108,21 @@ export const Sidebar = forwardRef<HTMLElement, SidebarProps>(
                 {brandName}
               </Text>
             )}
+            {onToggleCollapse && (
+              <Button
+                variant="ghost"
+                size="sm"
+                iconOnly
+                onClick={onToggleCollapse}
+                className={styles.collapseButton}
+                aria-label={collapsed ? 'Розгорнути меню' : 'Згорнути меню'}
+              >
+                <Icon
+                  name={collapsed ? 'chevron-right' : 'chevron-left'}
+                  size="sm"
+                />
+              </Button>
+            )}
           </div>
         )}
 
@@ -174,23 +189,6 @@ export const Sidebar = forwardRef<HTMLElement, SidebarProps>(
 
         {/* Footer */}
         <div className={styles.footer}>
-          {/* Collapse toggle */}
-          {onToggleCollapse && (
-            <Button
-              variant="ghost"
-              size="sm"
-              iconOnly
-              onClick={onToggleCollapse}
-              className={styles.collapseButton}
-              aria-label={collapsed ? 'Розгорнути меню' : 'Згорнути меню'}
-            >
-              <Icon
-                name={collapsed ? 'chevron-right' : 'chevron-left'}
-                size="sm"
-              />
-            </Button>
-          )}
-
           <Divider spacing="sm" />
 
           {/* User */}

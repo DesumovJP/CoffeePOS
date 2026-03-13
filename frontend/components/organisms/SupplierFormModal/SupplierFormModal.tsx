@@ -20,6 +20,7 @@ export interface SupplierFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   supplier?: Supplier | null;
+  initialName?: string;
   onSuccess: () => void;
 }
 
@@ -69,7 +70,7 @@ const CATEGORY_OPTIONS = [
 // COMPONENT
 // ============================================
 
-export function SupplierFormModal({ isOpen, onClose, supplier, onSuccess }: SupplierFormModalProps) {
+export function SupplierFormModal({ isOpen, onClose, supplier, initialName, onSuccess }: SupplierFormModalProps) {
   const isEditMode = !!supplier;
   const [form, setForm] = useState<FormState>(INITIAL_STATE);
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
@@ -94,11 +95,11 @@ export function SupplierFormModal({ isOpen, onClose, supplier, onSuccess }: Supp
         isActive: supplier.isActive ?? true,
       });
     } else {
-      setForm(INITIAL_STATE);
+      setForm({ ...INITIAL_STATE, name: initialName || '' });
     }
     setErrors({});
     setSubmitError(null);
-  }, [supplier, isOpen]);
+  }, [supplier, isOpen, initialName]);
 
   const handleChange = useCallback(
     (field: keyof FormState) =>

@@ -264,6 +264,7 @@ export function SupplierDetailModal({
   const [showHistory, setShowHistory] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [editOpen, setEditOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
 
   const activeSupplies = useMemo(
     () => supplier?.supplies.filter((s) => PENDING_STATUSES.includes(s.status)) ?? [],
@@ -403,16 +404,31 @@ export function SupplierDetailModal({
       >
         <div className={styles.content}>
 
-          {/* Contact strip */}
-          {entity && <ContactStrip entity={entity} />}
-
-          {/* Category / notes pill */}
-          {entity?.category && (
-            <div className={styles.metaRow}>
-              <Badge variant="default" size="sm">{entity.category}</Badge>
-              {entity.notes && (
-                <Text variant="bodySmall" color="tertiary">{entity.notes}</Text>
+          {/* Contact strip — or CTA to create profile for legacy suppliers */}
+          {entity ? (
+            <>
+              <ContactStrip entity={entity} />
+              {entity.category && (
+                <div className={styles.metaRow}>
+                  <Badge variant="default" size="sm">{entity.category}</Badge>
+                  {entity.notes && (
+                    <Text variant="bodySmall" color="tertiary">{entity.notes}</Text>
+                  )}
+                </div>
               )}
+            </>
+          ) : (
+            <div className={styles.noProfileCta}>
+              <div className={styles.noProfileText}>
+                <Text variant="labelMedium" weight="semibold">Немає контактної інформації</Text>
+                <Text variant="bodySmall" color="tertiary">
+                  Додайте телефон, Telegram, контактну особу та умови роботи
+                </Text>
+              </div>
+              <Button variant="secondary" size="sm" onClick={() => setCreateOpen(true)}>
+                <Icon name="plus" size="sm" />
+                Додати контакти
+              </Button>
             </div>
           )}
 
@@ -496,6 +512,14 @@ export function SupplierDetailModal({
           onSuccess={() => { onSupplierUpdated?.(); setEditOpen(false); }}
         />
       )}
+
+      {/* Create profile for legacy supplier */}
+      <SupplierFormModal
+        isOpen={createOpen}
+        onClose={() => setCreateOpen(false)}
+        initialName={supplier?.name}
+        onSuccess={() => { onSupplierUpdated?.(); setCreateOpen(false); }}
+      />
     </>
   );
 }
