@@ -140,7 +140,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     localStorage.setItem(TOKEN_KEY, response.jwt);
     setToken(response.jwt);
-    setUser(response.user);
+
+    // Login response doesn't populate role.type — fetch full user with role
+    try {
+      const fullUser = await authApi.getMe();
+      setUser(fullUser);
+    } catch {
+      setUser(response.user);
+    }
   }, []);
 
   // ------------------------------------------
