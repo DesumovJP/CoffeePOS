@@ -178,8 +178,9 @@ export function AppShell({ children }: AppShellProps) {
       }
     : { name: '', role: '' };
 
-  // Role-filtered navigation
-  const navigation = buildNavigation(authUser?.role?.type);
+  // Role-filtered navigation: use employee record role (reliable) or fall back to auth role type
+  const effectiveRole = myEmployee?.role || authUser?.role?.type;
+  const navigation = buildNavigation(effectiveRole);
 
   // Don't show shell on landing page or login page
   if (pathname === '/' || pathname === '/login') {
