@@ -3,8 +3,8 @@
 /**
  * CoffeePOS - TaskWidget
  *
- * Sidebar widget showing task preview + count badge.
- * Clicking opens a full-screen modal with the kanban board.
+ * Sidebar widget: embedded card block (expanded) or icon button (collapsed).
+ * Modal: simple list view with Активні / Виконані tabs.
  */
 
 import React, { useState, useMemo, useCallback } from 'react';
@@ -19,16 +19,8 @@ import {
 import { useAuth } from '@/lib/providers/AuthProvider';
 import { uploadFile } from '@/lib/api/upload';
 import { formatDuration, formatDurationHuman } from '@/lib/utils/taskTimer';
-import type { Task, TaskStatus, TaskPriority, GetTasksParams } from '@/lib/api';
+import type { Task, TaskPriority, GetTasksParams } from '@/lib/api';
 import styles from './TaskWidget.module.css';
-
-// ─── constants ────────────────────────────────────────────────────────────────
-
-const COLUMNS: { id: TaskStatus; label: string }[] = [
-  { id: 'todo',        label: 'До виконання' },
-  { id: 'in_progress', label: 'В процесі'    },
-  { id: 'done',        label: 'Виконано'      },
-];
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -46,7 +38,7 @@ function fmtDate(dueDate: string): string {
 
 // ─── skeleton ─────────────────────────────────────────────────────────────────
 
-function SkeletonCard() {
+function SkeletonRow() {
   return (
     <div className={styles.skeletonCard} aria-hidden>
       <div className={styles.skeletonTitle} />
@@ -69,9 +61,9 @@ function TimerDisplay({ documentId, status }: { documentId: string; status: stri
   );
 }
 
-// ─── task card ────────────────────────────────────────────────────────────────
+// ─── task row (list item) ─────────────────────────────────────────────────────
 
-interface TaskCardProps {
+interface TaskRowProps {
   task: Task;
   canManage: boolean;
   onStart:    (id: string) => void;
@@ -80,94 +72,124 @@ interface TaskCardProps {
   onDelete:   (task: Task) => void;
 }
 
-function TaskCard({ task, canManage, onStart, onComplete, onEdit, onDelete }: TaskCardProps) {
+function TaskRow({ task, canManage, onStart, onComplete, onEdit, onDelete }: TaskRowProps) {
+  const [expanded, setExpanded] = useState(false);
+
   const isDone    = task.status === 'done';
   const isRunning = task.status === 'in_progress';
   const overdue   = !!task.dueDate && !isDone && isOverdue(task.dueDate);
 
-  const metaItems: React.ReactNode[] = [];
-  if (task.dueDate) {
-    metaItems.push(
-      <span key="date" className={overdue ? styles.metaOverdue : styles.metaMuted}>
-        {overdue && <Icon name="clock" size="xs" />}{fmtDate(task.dueDate)}
-      </span>
-    );
-  }
-  if (task.type === 'daily') metaItems.push(<span key="type" className={styles.metaMuted}>Щоденне</span>);
-  if (task.assignedTo)       metaItems.push(<span key="who"  className={styles.metaMuted}>{task.assignedTo}</span>);
+  const handleRowClick = (e: React.MouseEvent) => {
+    // Don't toggle when clicking action buttons
+    if ((e.target as HTMLElement).closest('button')) return;
+    setExpanded(prev => !prev);
+  };
 
   return (
-    <div className={`${styles.card} ${styles[`p_${task.priority}`]} ${isDone ? styles.cardDone : ''}`}>
-      <div className={styles.body}>
-        <div className={styles.titleRow}>
-          <span className={`${styles.title} ${isDone ? styles.titleDone : ''}`}>{task.title}</span>
-          {canManage && (
-            <div className={styles.manage}>
-              <button className={styles.iconBtn} onClick={() => onEdit(task)} aria-label="Редагувати">
-                <Icon name="settings" size="sm" />
-              </button>
-              <button className={styles.iconBtn} onClick={() => onDelete(task)} aria-label="Видалити">
-                <Icon name="close" size="sm" />
-              </button>
+    <div
+      className={`${styles.taskRow} ${styles[`p_${task.priority}`]} ${isDone ? styles.taskRowDone : ''} ${expanded ? styles.taskRowExpanded : ''}`}
+      onClick={handleRowClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setExpanded(p => !p); }}
+    >
+      {/* Priority bar */}
+      <div className={`${styles.priorityBar} ${styles[`bar_${task.priority}`]}`} />
+
+      {/* Main content */}
+      <div className={styles.rowContent}>
+        <div className={styles.rowTop}>
+          {/* Title + meta */}
+          <div className={styles.rowLeft}>
+            <span className={`${styles.rowTitle} ${isDone ? styles.rowTitleDone : ''}`}>
+              {task.title}
+            </span>
+            <div className={styles.rowMeta}>
+              {task.assignedTo && (
+                <span className={styles.metaChip}>{task.assignedTo}</span>
+              )}
+              {task.dueDate && (
+                <span className={`${styles.metaChip} ${overdue ? styles.metaChipOverdue : ''}`}>
+                  {overdue && <Icon name="clock" size="xs" />}
+                  {fmtDate(task.dueDate)}
+                </span>
+              )}
+              {isRunning && (
+                <TimerDisplay documentId={task.documentId} status={task.status} />
+              )}
+              {isDone && task.completedAt && (
+                <span className={styles.metaChip}>
+                  {new Date(task.completedAt).toLocaleString('uk-UA', {
+                    day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
+                  })}
+                  {task.duration != null && ` · ${formatDurationHuman(task.duration)}`}
+                </span>
+              )}
             </div>
-          )}
+          </div>
+
+          {/* Action button */}
+          <div className={styles.rowAction}>
+            {isRunning && (
+              <button
+                className={`${styles.actionBtn} ${styles.actionBtnDone}`}
+                onClick={e => { e.stopPropagation(); onComplete(task); }}
+              >
+                <Icon name="check" size="sm" /> Виконано
+              </button>
+            )}
+            {task.status === 'todo' && (
+              <button
+                className={styles.actionBtn}
+                onClick={e => { e.stopPropagation(); onStart(task.documentId); }}
+              >
+                Почати →
+              </button>
+            )}
+            {isDone && (
+              <span className={styles.doneStamp}>
+                <Icon name="check" size="xs" color="success" />
+              </span>
+            )}
+          </div>
         </div>
-        {task.description && <span className={styles.desc}>{task.description}</span>}
-        {metaItems.length > 0 && (
-          <div className={styles.footerMeta}>
-            <span className={`${styles.priorityDot} ${styles[`dot_${task.priority}`]}`} />
-            {metaItems.map((item, i) => (
-              <React.Fragment key={i}>
-                {i > 0 && <span className={styles.metaSep}>·</span>}
-                {item}
-              </React.Fragment>
-            ))}
+
+        {/* Expanded: description + manage */}
+        {expanded && (
+          <div className={styles.rowExpanded}>
+            {task.description && (
+              <p className={styles.rowDesc}>{task.description}</p>
+            )}
+            {task.completionNote && (
+              <p className={styles.rowDesc}><em>{task.completionNote}</em></p>
+            )}
+            {task.completionPhoto?.url && (
+              <a
+                href={task.completionPhoto.url}
+                target="_blank"
+                rel="noreferrer"
+                className={styles.photoThumbWrap}
+                title="Фото виконання"
+                onClick={e => e.stopPropagation()}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={task.completionPhoto.url} alt="Фото виконання" className={styles.photoThumb} />
+                <div className={styles.photoOverlay}><Icon name="plus" size="sm" /></div>
+              </a>
+            )}
+            {canManage && (
+              <div className={styles.rowManage}>
+                <button className={styles.iconBtn} onClick={e => { e.stopPropagation(); onEdit(task); }} aria-label="Редагувати">
+                  <Icon name="settings" size="sm" /> Редагувати
+                </button>
+                <button className={`${styles.iconBtn} ${styles.iconBtnDelete}`} onClick={e => { e.stopPropagation(); onDelete(task); }} aria-label="Видалити">
+                  <Icon name="close" size="sm" /> Видалити
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
-
-      {!isDone && (
-        <div className={styles.actionStrip}>
-          {isRunning ? (
-            <>
-              <div className={styles.timerSide}>
-                <TimerDisplay documentId={task.documentId} status={task.status} />
-              </div>
-              <button className={`${styles.stripBtn} ${styles.stripBtnDone}`} onClick={() => onComplete(task)}>
-                <Icon name="check" size="sm" /> Виконано
-              </button>
-            </>
-          ) : (
-            <button className={styles.stripBtn} onClick={() => onStart(task.documentId)}>
-              <Icon name="clock" size="sm" /> Почати
-            </button>
-          )}
-        </div>
-      )}
-
-      {isDone && (
-        <div className={styles.doneFooter}>
-          <div className={styles.doneStamp}>
-            <Icon name="check" size="xs" color="success" />
-            <span className={styles.doneStampText}>
-              {task.completedAt && new Date(task.completedAt).toLocaleString('uk-UA', {
-                day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
-              })}
-              {task.duration != null && ` · ${formatDurationHuman(task.duration)}`}
-              {task.completedBy && ` — ${task.completedBy}`}
-            </span>
-            {task.completionNote && <span className={styles.doneNote} title={task.completionNote}>📝</span>}
-          </div>
-          {task.completionPhoto?.url && (
-            <a href={task.completionPhoto.url} target="_blank" rel="noreferrer"
-              className={styles.photoThumbWrap} title="Фото виконання">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={task.completionPhoto.url} alt="Фото виконання" className={styles.photoThumb} />
-              <div className={styles.photoOverlay}><Icon name="plus" size="sm" /></div>
-            </a>
-          )}
-        </div>
-      )}
     </div>
   );
 }
@@ -196,6 +218,7 @@ export function TaskWidget({ collapsed = false, defaultOpen = false, onModalClos
   const [searchQuery,    setSearchQuery]    = useState('');
   const [searchOpen,     setSearchOpen]     = useState(false);
   const [isUploading,    setIsUploading]    = useState(false);
+  const [activeTab,      setActiveTab]      = useState<'active' | 'done'>('active');
 
   useOfflineSync();
 
@@ -213,23 +236,26 @@ export function TaskWidget({ collapsed = false, defaultOpen = false, onModalClos
   useUpdateTask(); // keep mutation available
   const deleteMutation   = useDeleteTask();
 
-  const tasksByStatus = useMemo(() => {
-    const g: Record<TaskStatus, Task[]> = { todo: [], in_progress: [], done: [] };
-    tasks?.forEach(t => g[t.status]?.push(t));
-    return g;
-  }, [tasks]);
-
-  // Preview: up to 3 active (todo + in_progress) tasks, sorted by priority
-  const previewTasks = useMemo(() => {
-    const active = [...(tasksByStatus.in_progress || []), ...(tasksByStatus.todo || [])];
-    const sorted = active.sort((a, b) => {
-      const order: Record<TaskPriority, number> = { high: 0, medium: 1, low: 2 };
+  // Separate active (todo + in_progress) and done tasks
+  const activeTasks = useMemo(() => {
+    const all = tasks || [];
+    const active = all.filter(t => t.status === 'todo' || t.status === 'in_progress');
+    const order: Record<TaskPriority, number> = { high: 0, medium: 1, low: 2 };
+    return active.sort((a, b) => {
+      // in_progress first, then by priority
+      if (a.status === 'in_progress' && b.status !== 'in_progress') return -1;
+      if (b.status === 'in_progress' && a.status !== 'in_progress') return 1;
       return order[a.priority] - order[b.priority];
     });
-    return sorted.slice(0, 3);
-  }, [tasksByStatus]);
+  }, [tasks]);
 
-  const activeCount = (tasksByStatus.todo?.length || 0) + (tasksByStatus.in_progress?.length || 0);
+  const doneTasks = useMemo(() =>
+    (tasks || []).filter(t => t.status === 'done'), [tasks]);
+
+  // Preview: up to 3 active tasks, highest priority first
+  const previewTasks = useMemo(() => activeTasks.slice(0, 3), [activeTasks]);
+
+  const activeCount = activeTasks.length;
 
   // ── handlers ──────────────────────────────────────────────────────────────
 
@@ -278,33 +304,188 @@ export function TaskWidget({ collapsed = false, defaultOpen = false, onModalClos
     [isAdmin, currentUserName],
   );
 
-  // ── widget render ─────────────────────────────────────────────────────────
+  const displayedTasks = activeTab === 'active' ? activeTasks : doneTasks;
+
+  // ── collapsed widget ───────────────────────────────────────────────────────
+
+  if (collapsed) {
+    return (
+      <>
+        <div className={styles.widgetCollapsed}>
+          <button
+            type="button"
+            className={styles.collapsedBtn}
+            onClick={() => setModalOpen(true)}
+            title="Завдання"
+          >
+            <Icon name="check" size="md" color={activeCount > 0 ? 'accent' : 'secondary'} />
+            {activeCount > 0 && <span className={styles.badgeDot} />}
+          </button>
+        </div>
+
+        {renderModals()}
+      </>
+    );
+  }
+
+  // ── expanded card widget ───────────────────────────────────────────────────
+
+  function renderModals() {
+    return (
+      <>
+        {/* Full task list modal */}
+        <Modal
+          open={modalOpen}
+          onClose={() => { setModalOpen(false); onModalClose?.(); }}
+          title="Завдання"
+          icon="check"
+          size="lg"
+        >
+          <div className={styles.modalBody}>
+            {/* Toolbar */}
+            <div className={styles.modalToolbar}>
+              {searchOpen ? (
+                <>
+                  <SearchInput
+                    value={searchQuery}
+                    onChange={setSearchQuery}
+                    placeholder="Пошук завдань..."
+                    variant="glass"
+                    autoFocus
+                  />
+                  <Button variant="ghost" size="sm" iconOnly
+                    onClick={() => { setSearchOpen(false); setSearchQuery(''); }}>
+                    <Icon name="close" size="md" />
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <div />
+                  <Button variant="ghost" size="sm" iconOnly onClick={() => setSearchOpen(true)} aria-label="Пошук">
+                    <Icon name="search" size="md" />
+                  </Button>
+                  {isAdmin && (
+                    <Button variant="primary" size="sm" onClick={openCreate}>
+                      <Icon name="plus" size="sm" /> Додати
+                    </Button>
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* Tab pills */}
+            <div className={styles.tabPills}>
+              <button
+                className={`${styles.tabPill} ${activeTab === 'active' ? styles.tabPillActive : ''}`}
+                onClick={() => setActiveTab('active')}
+              >
+                Активні
+                <span className={styles.tabCount}>{isLoading ? '…' : activeTasks.length}</span>
+              </button>
+              <button
+                className={`${styles.tabPill} ${activeTab === 'done' ? styles.tabPillActive : ''}`}
+                onClick={() => setActiveTab('done')}
+              >
+                Виконані
+                <span className={styles.tabCount}>{isLoading ? '…' : doneTasks.length}</span>
+              </button>
+            </div>
+
+            {/* Task list */}
+            <div className={styles.taskList}>
+              {isLoading ? (
+                <><SkeletonRow /><SkeletonRow /><SkeletonRow /></>
+              ) : displayedTasks.length === 0 ? (
+                <div className={styles.empty}>
+                  <span className={styles.emptyText}>
+                    {activeTab === 'active' ? 'Немає активних завдань' : 'Немає виконаних завдань'}
+                  </span>
+                  {activeTab === 'active' && isAdmin && (
+                    <button className={styles.emptyAdd} onClick={openCreate}>
+                      <Icon name="plus" size="sm" /> Додати завдання
+                    </button>
+                  )}
+                </div>
+              ) : (
+                displayedTasks.map(task => (
+                  <TaskRow
+                    key={task.documentId}
+                    task={task}
+                    canManage={canManage(task)}
+                    onStart={handleStart}
+                    onComplete={setCompletingTask}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                  />
+                ))
+              )}
+            </div>
+          </div>
+        </Modal>
+
+        {/* Task form (create/edit) */}
+        <TaskFormModal
+          isOpen={formOpen}
+          onClose={() => setFormOpen(false)}
+          task={editingTask}
+          onSuccess={() => {}}
+          currentUserName={currentUserName}
+          currentUserRole={currentUserRole}
+        />
+
+        {/* Complete modal */}
+        <TaskCompleteModal
+          task={completingTask}
+          isOpen={!!completingTask}
+          onClose={() => setCompletingTask(null)}
+          onConfirm={handleCompleteConfirm}
+          isSubmitting={completeMutation.isPending || isUploading}
+        />
+
+        {/* Delete confirm */}
+        <Modal open={!!deleteTask} onClose={() => setDeleteTask(null)}
+          title="Видалити завдання?" icon="close" size="sm">
+          <div className={styles.deleteBody}>
+            <Text variant="bodyMedium" color="secondary">
+              Ви впевнені, що хочете видалити «{deleteTask?.title}»?
+            </Text>
+            <div className={styles.deleteRow}>
+              <Button variant="ghost" onClick={() => setDeleteTask(null)}>Скасувати</Button>
+              <Button variant="primary" onClick={handleDeleteConfirm} loading={deleteMutation.isPending}>
+                Видалити
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      </>
+    );
+  }
 
   return (
     <>
-      <div className={`${styles.widget} ${collapsed ? styles.widgetCollapsed : ''}`}>
-        {/* Main trigger button */}
+      {/* ── Embedded sidebar card ─────────────────────────────────────────── */}
+      <div className={styles.card}>
+        {/* Card header */}
         <button
           type="button"
-          className={`${styles.triggerBtn} ${collapsed ? styles.triggerCollapsed : ''}`}
+          className={styles.cardHeader}
           onClick={() => setModalOpen(true)}
-          title={collapsed ? 'Завдання' : undefined}
         >
-          <Icon name="check" size="md" color={activeCount > 0 ? 'accent' : 'secondary'} />
-          {!collapsed && (
-            <>
-              <span className={styles.triggerLabel}>Завдання</span>
-              {activeCount > 0 && (
-                <span className={styles.triggerBadge}>{activeCount}</span>
-              )}
-            </>
+          <Icon name="check" size="sm" color={activeCount > 0 ? 'accent' : 'secondary'} />
+          <span className={styles.cardTitle}>Завдання</span>
+          {activeCount > 0 && (
+            <span className={styles.cardBadge}>{activeCount}</span>
           )}
-          {collapsed && activeCount > 0 && <span className={styles.badgeDot} />}
         </button>
 
-        {/* Preview rows (expanded only) */}
-        {!collapsed && previewTasks.length > 0 && (
-          <div className={styles.previews}>
+        {/* Divider */}
+        <div className={styles.cardDivider} />
+
+        {/* Preview tasks */}
+        {previewTasks.length === 0 ? (
+          <p className={styles.cardEmpty}>Немає активних завдань</p>
+        ) : (
+          <div className={styles.cardPreviews}>
             {previewTasks.map(task => (
               <button
                 key={task.documentId}
@@ -321,125 +502,32 @@ export function TaskWidget({ collapsed = false, defaultOpen = false, onModalClos
             ))}
           </div>
         )}
+
+        {/* Divider */}
+        <div className={styles.cardDivider} />
+
+        {/* Card footer */}
+        <div className={styles.cardFooter}>
+          {isAdmin && (
+            <button
+              type="button"
+              className={styles.footerNewBtn}
+              onClick={openCreate}
+            >
+              + Нове завдання
+            </button>
+          )}
+          <button
+            type="button"
+            className={styles.footerAllBtn}
+            onClick={() => setModalOpen(true)}
+          >
+            Всі завдання →
+          </button>
+        </div>
       </div>
 
-      {/* ── Full task board modal ────────────────────────────────────────── */}
-      <Modal
-        open={modalOpen}
-        onClose={() => { setModalOpen(false); onModalClose?.(); }}
-        title="Завдання"
-        icon="check"
-        size="xl"
-      >
-        <div className={styles.modalBody}>
-          {/* Toolbar */}
-          <div className={styles.modalToolbar}>
-            {searchOpen ? (
-              <>
-                <SearchInput
-                  value={searchQuery}
-                  onChange={setSearchQuery}
-                  placeholder="Пошук завдань..."
-                  variant="glass"
-                  autoFocus
-                />
-                <Button variant="ghost" size="sm" iconOnly
-                  onClick={() => { setSearchOpen(false); setSearchQuery(''); }}>
-                  <Icon name="close" size="md" />
-                </Button>
-              </>
-            ) : (
-              <>
-                <div />
-                <Button variant="ghost" size="sm" iconOnly onClick={() => setSearchOpen(true)} aria-label="Пошук">
-                  <Icon name="search" size="md" />
-                </Button>
-                {isAdmin && (
-                  <Button variant="primary" size="sm" onClick={openCreate}>
-                    <Icon name="plus" size="sm" /> Додати
-                  </Button>
-                )}
-              </>
-            )}
-          </div>
-
-          {/* Kanban board */}
-          <div className={styles.board}>
-            {COLUMNS.map(col => {
-              const colTasks = tasksByStatus[col.id] || [];
-              return (
-                <div key={col.id} className={styles.column}>
-                  <div className={styles.colHeader}>
-                    <span className={styles.colLabel}>{col.label}</span>
-                    <span className={styles.colCount}>{isLoading ? '…' : colTasks.length}</span>
-                  </div>
-                  <div className={styles.list}>
-                    {isLoading ? (
-                      <><SkeletonCard />{col.id === 'todo' && <SkeletonCard />}</>
-                    ) : colTasks.length === 0 ? (
-                      <div className={styles.empty}>
-                        <span className={styles.emptyText}>Немає завдань</span>
-                        {col.id === 'todo' && (
-                          <button className={styles.emptyAdd} onClick={openCreate}>
-                            <Icon name="plus" size="sm" /> Додати
-                          </button>
-                        )}
-                      </div>
-                    ) : (
-                      colTasks.map(task => (
-                        <TaskCard
-                          key={task.documentId}
-                          task={task}
-                          canManage={canManage(task)}
-                          onStart={handleStart}
-                          onComplete={setCompletingTask}
-                          onEdit={handleEdit}
-                          onDelete={handleDelete}
-                        />
-                      ))
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </Modal>
-
-      {/* Task form (create/edit) */}
-      <TaskFormModal
-        isOpen={formOpen}
-        onClose={() => setFormOpen(false)}
-        task={editingTask}
-        onSuccess={() => {}}
-        currentUserName={currentUserName}
-        currentUserRole={currentUserRole}
-      />
-
-      {/* Complete modal */}
-      <TaskCompleteModal
-        task={completingTask}
-        isOpen={!!completingTask}
-        onClose={() => setCompletingTask(null)}
-        onConfirm={handleCompleteConfirm}
-        isSubmitting={completeMutation.isPending || isUploading}
-      />
-
-      {/* Delete confirm */}
-      <Modal open={!!deleteTask} onClose={() => setDeleteTask(null)}
-        title="Видалити завдання?" icon="close" size="sm">
-        <div className={styles.deleteBody}>
-          <Text variant="bodyMedium" color="secondary">
-            Ви впевнені, що хочете видалити «{deleteTask?.title}»?
-          </Text>
-          <div className={styles.deleteRow}>
-            <Button variant="ghost" onClick={() => setDeleteTask(null)}>Скасувати</Button>
-            <Button variant="primary" onClick={handleDeleteConfirm} loading={deleteMutation.isPending}>
-              Видалити
-            </Button>
-          </div>
-        </div>
-      </Modal>
+      {renderModals()}
     </>
   );
 }
