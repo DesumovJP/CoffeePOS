@@ -9,7 +9,8 @@
 
 import { useState, useMemo } from 'react';
 import { Text, Button, Icon, Badge, Modal } from '@/components/atoms';
-import { DataTable, SupplierFormModal, type Column } from '@/components/organisms';
+import { DataTable, type Column } from '@/components/organisms';
+import { SupplierFormModal } from '@/components/organisms/SupplierFormModal';
 import type { Supply, SupplyStatus, Supplier } from '@/lib/api';
 import styles from './SupplierDetailModal.module.css';
 
