@@ -240,7 +240,7 @@ export function RecipeFormModal({
     <div style={{ display: 'flex', gap: 8, width: '100%' }}>
       {isEditing && onDelete && (
         <Button variant="ghost" size="md" onClick={onDelete} style={{ flex: 1 }}>
-          <Icon name="delete" size="sm" />
+          Видалити
         </Button>
       )}
       <Button
