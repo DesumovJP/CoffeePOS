@@ -308,6 +308,7 @@ export function SuppliesPanel() {
     {
       key: 'supplier',
       header: 'Постачальник',
+      type: 'primary' as const,
       render: (supply) => (
         <div className={styles.itemName}>
           <Text variant="bodyMedium" weight="medium">{supply.supplierName}</Text>
@@ -337,6 +338,7 @@ export function SuppliesPanel() {
     {
       key: 'totalCost',
       header: 'Сума',
+      type: 'numeric' as const,
       align: 'right',
       render: (supply) => (
         <Text variant="labelMedium" weight="semibold">₴{(supply.totalCost || 0).toFixed(2)}</Text>
@@ -345,6 +347,7 @@ export function SuppliesPanel() {
     {
       key: 'actions',
       header: '',
+      type: 'action' as const,
       align: 'right',
       render: (supply) => (
         <div className={styles.actions}>

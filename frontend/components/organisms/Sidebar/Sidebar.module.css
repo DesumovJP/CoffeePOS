@@ -9,7 +9,7 @@
   flex-direction: column;
   width: var(--sidebar-expanded);
   height: 100%;
-  padding: var(--space-3) 0;
+  padding: var(--space-2) 0;
   transition: width var(--duration-normal) var(--ease-default);
   overflow: hidden;
 }
@@ -26,7 +26,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-2-5);
-  padding: var(--space-2) var(--space-3) var(--space-4);
+  padding: var(--space-2) var(--space-3) var(--space-3);
 }
 
 .brandName {
@@ -44,7 +44,7 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: var(--space-2) 0 var(--space-2);
+  padding: var(--space-2) 0;
   gap: var(--space-1);
 }
 
@@ -53,14 +53,12 @@
 }
 
 .logo {
-  width: 2.25rem;
-  height: 2.25rem;
+  width: 2rem;
+  height: 2rem;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--color-brand-subtle);
-  border-radius: var(--radius-lg);
   color: var(--color-brand);
 }
 
@@ -232,8 +230,10 @@
 .footer {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-1);
   padding: var(--space-2);
+  border-top: 1px solid var(--glass-border);
+  margin-top: var(--space-2);
 }
 
 .collapsed .footer {
@@ -258,7 +258,8 @@
   gap: var(--space-2);
   flex: 1;
   min-width: 0;
-  padding: var(--space-2);
+  height: 2.75rem;
+  padding: 0 var(--space-2);
   background: transparent;
   border: none;
   border-radius: var(--radius-lg);
@@ -272,8 +273,9 @@
 }
 
 .collapsed .user {
+  width: 2.75rem;
   justify-content: center;
-  padding: var(--space-1);
+  padding: 0;
 }
 
 .userInfo {

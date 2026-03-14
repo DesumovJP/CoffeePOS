@@ -63,29 +63,128 @@
   gap: var(--space-5);
 }
 
-/* Month navigation */
+/* Phone link in table */
+.phoneLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1-5);
+  color: var(--color-brand);
+  text-decoration: none;
+  transition: opacity var(--duration-fast) var(--ease-default);
+}
+
+.phoneLink:hover {
+  opacity: 0.75;
+}
+
+/* Month navigation — full width */
 .monthNav {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
-  background: var(--glass-bg);
+  padding: var(--space-1) var(--space-1);
+  background: var(--glass-bg-elevated);
   border: 1px solid var(--glass-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-full);
+  width: 100%;
 }
 
 .monthTitle {
   flex: 1;
   text-align: center;
+  padding: 0 var(--space-2);
 }
 
-.chartsGrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+/* ============================================
+   KPI CHART CARD
+   ============================================ */
+
+.kpiChartCard {
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
   gap: var(--space-4);
 }
 
+.kpiChartHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.kpiChartMeta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.kpiSummary {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+/* Metric toggle pills */
+.metricToggle {
+  display: flex;
+  align-items: center;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-full);
+  padding: 2px;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.metricBtn {
+  padding: var(--space-1-5) var(--space-3);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-tertiary);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-default);
+  white-space: nowrap;
+}
+
+.metricBtn:hover {
+  color: var(--text-primary);
+}
+
+.metricBtnActive {
+  padding: var(--space-1-5) var(--space-3);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--color-brand);
+  background: var(--color-brand-subtle);
+  border: none;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-default);
+  white-space: nowrap;
+}
+
+.kpiChartContainer {
+  width: 100%;
+  height: 300px;
+}
+
+.hoursNote {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  height: 100%;
+  text-align: center;
+}
+
+/* Legacy chart classes kept for tooltip */
 .chartCard {
   padding: var(--space-5);
   display: flex;
@@ -97,11 +196,6 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-}
-
-.chartContainer {
-  width: 100%;
-  height: 260px;
 }
 
 .chartTooltip {
@@ -125,14 +219,88 @@
 }
 
 /* ============================================
-   RESPONSIVE
+   PERFORMANCE TABLE CELLS
    ============================================ */
 
-@media (max-width: 1024px) {
-  .chartsGrid {
-    grid-template-columns: 1fr;
-  }
+/* Rank */
+.rankCell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
+
+.rankNum {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  font-weight: var(--font-bold);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-tertiary);
+  background: var(--glass-bg);
+}
+
+/* Gold / Silver / Bronze */
+.rank1 {
+  color: #997000;
+  background: rgba(212, 175, 55, 0.14);
+}
+
+.rank2 {
+  color: var(--text-secondary);
+  background: rgba(140, 140, 140, 0.12);
+}
+
+.rank3 {
+  color: #8B5E3C;
+  background: rgba(196, 120, 80, 0.12);
+}
+
+/* Name + role badge inline */
+.perfNameCell {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+/* Shifts / hours stacked */
+.shiftsCell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+}
+
+/* Revenue + mini bar */
+.salesCell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-1);
+}
+
+.salesBar {
+  width: 80px;
+  height: 3px;
+  background: var(--glass-border);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.salesBarFill {
+  height: 100%;
+  background: var(--color-brand);
+  border-radius: var(--radius-full);
+  transition: width var(--duration-normal) var(--ease-out);
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
 
 @media (max-width: 768px) {
   .page {
@@ -140,13 +308,31 @@
     gap: var(--space-3);
   }
 
-  .chartCard,
+  .kpiChartCard,
   .tableCard {
     padding: var(--space-4);
   }
 
-  .chartContainer {
-    height: 200px;
+  .kpiChartContainer {
+    height: 220px;
+  }
+
+  .kpiChartHeader {
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .metricToggle {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .metricBtn,
+  .metricBtnActive {
+    flex: 1;
+    text-align: center;
+    padding: var(--space-1-5) var(--space-2);
+    font-size: var(--text-xs);
   }
 
   .deleteFooter {
@@ -163,7 +349,7 @@
     padding: var(--space-2);
   }
 
-  .chartContainer {
+  .kpiChartContainer {
     height: 180px;
   }
 }

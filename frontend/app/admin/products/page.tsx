@@ -481,6 +481,7 @@ export default function ProductsAdminPage() {
     {
       key: 'name',
       header: 'Назва',
+      type: 'primary' as const,
       width: '45%',
       render: (product) => (
         <div className={styles.nameCell}>
@@ -501,6 +502,7 @@ export default function ProductsAdminPage() {
     {
       key: 'price',
       header: 'Ціна',
+      type: 'numeric' as const,
       align: 'right',
       width: '80px',
       render: (product) => (
@@ -533,6 +535,7 @@ export default function ProductsAdminPage() {
     {
       key: 'actions',
       header: '',
+      type: 'action' as const,
       align: 'right',
       width: '80px',
       render: (product) => (
@@ -561,6 +564,7 @@ export default function ProductsAdminPage() {
     {
       key: 'name',
       header: 'Назва',
+      type: 'primary' as const,
       width: '45%',
       render: (ingredient) => {
         const isLowStock = ingredient.quantity <= ingredient.minQuantity;
@@ -616,6 +620,7 @@ export default function ProductsAdminPage() {
     {
       key: 'costPerUnit',
       header: 'Ціна/од.',
+      type: 'numeric' as const,
       width: '110px',
       hideOnMobile: true,
       render: (ingredient) => (
@@ -627,6 +632,7 @@ export default function ProductsAdminPage() {
     {
       key: 'actions',
       header: '',
+      type: 'action' as const,
       align: 'right',
       width: '80px',
       render: (ingredient) => (

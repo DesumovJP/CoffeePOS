@@ -4,8 +4,10 @@
  * CoffeePOS - Analytics Page (Аналітика)
  *
  * Merged Dashboard + Reports into a single page with two tabs:
- * - Огляд: Stats cards, 7-day revenue chart, payment pie, top products, recent orders
+ * - Огляд: Stats cards, revenue chart (7д/30д), payment pie, top products, monthly stats
  * - Календар: Calendar grid with day/shift detail modals and activity logs
+ *
+ * Shared month switcher controls both tabs.
  */
 
 import { useState, useMemo, useEffect } from 'react';
@@ -22,8 +24,8 @@ import {
   Cell,
   Legend,
 } from 'recharts';
-import { Text, Icon, GlassCard, Badge, Spinner, Button, Modal } from '@/components/atoms';
-import { SegmentedControl, OrderAccordion, SupplyAccordion, WriteoffAccordion, ActivityInline } from '@/components/molecules';
+import { Text, Icon, GlassCard, Spinner, Button, Modal } from '@/components/atoms';
+import { SegmentedControl, ActivityInline } from '@/components/molecules';
 import type { OrderData, SupplyAccordionData, WriteoffAccordionData } from '@/components/molecules';
 import { useDailyReport, useMonthlyReport, useCurrentShift, useShifts } from '@/lib/hooks';
 import type { MonthlyDayData, ShiftActivity } from '@/lib/api';
@@ -145,6 +147,13 @@ type DailyActivityItem =
 export default function AnalyticsPage() {
   const [activeTab, setActiveTab] = useState<string>('overview');
 
+  // Shared month state — controls both Overview and Calendar tabs
+  const [currentMonth, setCurrentMonth] = useState(() => new Date().getMonth());
+  const [currentYear, setCurrentYear] = useState(() => new Date().getFullYear());
+
+  // Revenue chart period toggle (7d / 30d)
+  const [chartPeriod, setChartPeriod] = useState<'7d' | '30d'>('7d');
+
   // ---- Chart colors (read from CSS vars) ----
   const [chartColors, setChartColors] = useState({
     brand: '#3D3D3D',
@@ -182,37 +191,70 @@ export default function AnalyticsPage() {
   const today = new Date();
   const todayKey = getTodayKey();
 
+  // Shared month navigation
+  const isCurrentMonthSelected = currentMonth === today.getMonth() && currentYear === today.getFullYear();
+
+  const goToPrevMonth = () => {
+    if (currentMonth === 0) { setCurrentMonth(11); setCurrentYear((y) => y - 1); }
+    else { setCurrentMonth((m) => m - 1); }
+  };
+
+  const goToNextMonth = () => {
+    if (currentMonth === 11) { setCurrentMonth(0); setCurrentYear((y) => y + 1); }
+    else { setCurrentMonth((m) => m + 1); }
+  };
+
   // ============================================
-  // OVERVIEW TAB DATA
+  // OVERVIEW + CALENDAR SHARED DATA
   // ============================================
 
   const { data: todayReport, isLoading: isTodayLoading } = useDailyReport(todayKey);
-  const { data: overviewMonthly, isLoading: isOverviewMonthlyLoading } = useMonthlyReport(
-    today.getFullYear(),
-    today.getMonth() + 1
+  // Single monthly report hook — used by both Overview and Calendar tabs
+  const { data: monthlyReport, isLoading: isMonthlyLoading } = useMonthlyReport(
+    currentYear,
+    currentMonth + 1
   );
   const { data: currentShift } = useCurrentShift();
 
-  const todayRevenue = todayReport?.summary?.totalRevenue || 0;
-  const todayOrders = todayReport?.summary?.ordersCount || 0;
-  const todayAvgOrder = todayReport?.summary?.avgOrder || 0;
   const activeShifts = currentShift && currentShift.status === 'open' ? 1 : 0;
 
-  const revenueChartData = useMemo(() => {
-    if (!overviewMonthly?.days) return [];
-    const todayDate = new Date();
-    const last7Days: { date: string; revenue: number }[] = [];
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date(todayDate);
-      d.setDate(d.getDate() - i);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-      const dayData = overviewMonthly.days.find((day) => day.date === key);
-      last7Days.push({ date: getShortDate(key), revenue: dayData?.revenue || 0 });
-    }
-    return last7Days;
-  }, [overviewMonthly]);
+  // Monthly KPIs
+  const monthRevenue = monthlyReport?.summary?.totalRevenue || 0;
+  const monthOrders = monthlyReport?.summary?.totalOrders || 0;
+  const monthAvgOrder = monthlyReport?.summary?.avgOrder || 0;
+  const monthRevenueChange = monthlyReport?.summary?.revenueChange || 0;
 
+  // Revenue chart — 7d: last 7 days ending today (or end of month), 30d: all days of month
+  const revenueChartData = useMemo(() => {
+    if (!monthlyReport?.days) return [];
+    if (chartPeriod === '30d') {
+      return [...monthlyReport.days]
+        .sort((a, b) => a.date.localeCompare(b.date))
+        .map((day) => ({ date: getShortDate(day.date), revenue: day.revenue || 0 }));
+    }
+    // 7d: last 7 calendar days
+    const endDate = isCurrentMonthSelected ? new Date() : new Date(currentYear, currentMonth + 1, 0);
+    const days: { date: string; revenue: number }[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(endDate);
+      d.setDate(d.getDate() - i);
+      const key = getDateKey(d);
+      const dayData = monthlyReport.days.find((day) => day.date === key);
+      days.push({ date: getShortDate(key), revenue: dayData?.revenue || 0 });
+    }
+    return days;
+  }, [monthlyReport, chartPeriod, currentMonth, currentYear, isCurrentMonthSelected]);
+
+  // Payment pie — aggregated from monthly days (cashSales + cardSales)
   const paymentPieData = useMemo(() => {
+    if (monthlyReport?.days && monthlyReport.days.length > 0) {
+      const cash = monthlyReport.days.reduce((s, d) => s + (d.cashSales || 0), 0);
+      const card = monthlyReport.days.reduce((s, d) => s + (d.cardSales || 0), 0);
+      const data = [];
+      if (cash > 0) data.push({ name: PAYMENT_LABELS.cash, value: Math.round(cash), key: 'cash' });
+      if (card > 0) data.push({ name: PAYMENT_LABELS.card, value: Math.round(card), key: 'card' });
+      if (data.length > 0) return data;
+    }
     if (!todayReport?.paymentBreakdown) {
       return [{ name: 'Немає даних', value: 1, key: 'none' }];
     }
@@ -222,49 +264,24 @@ export default function AnalyticsPage() {
     if (card > 0) data.push({ name: PAYMENT_LABELS.card, value: card, key: 'card' });
     if (qr > 0) data.push({ name: PAYMENT_LABELS.qr, value: qr, key: 'qr' });
     if (other > 0) data.push({ name: PAYMENT_LABELS.other, value: other, key: 'other' });
-    return data.length > 0
-      ? data
-      : [{ name: 'Немає даних', value: 1, key: 'none' }];
-  }, [todayReport]);
+    return data.length > 0 ? data : [{ name: 'Немає даних', value: 1, key: 'none' }];
+  }, [monthlyReport, todayReport]);
 
+  // Top products — today's report (monthly topProducts not available from API)
   const topProducts = useMemo(() => {
     return (todayReport?.topProducts || []).slice(0, 5);
   }, [todayReport]);
 
-  const recentOrders = useMemo(() => {
-    if (!todayReport?.orders) return [];
-    return todayReport.orders.slice(0, 5).map((order: any) => ({
-      id: String(order.documentId || order.id),
-      number: order.orderNumber || order.number || `#${order.id}`,
-      time: order.createdAt
-        ? new Date(order.createdAt).toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' })
-        : '--:--',
-      total: parseFloat(order.total) || 0,
-      status: order.status || 'completed',
-    }));
-  }, [todayReport]);
+  // Monthly stats for the "Місяць у цифрах" card
+  const monthlyBestDay = useMemo(() => {
+    if (!monthlyReport?.days || monthlyReport.days.length === 0) return null;
+    return monthlyReport.days.reduce(
+      (best, d) => (d.revenue > (best?.revenue || 0) ? d : best),
+      null as MonthlyDayData | null
+    );
+  }, [monthlyReport]);
 
-  const statusVariant = (status: string) => {
-    switch (status) {
-      case 'completed': return 'success' as const;
-      case 'preparing': return 'warning' as const;
-      case 'cancelled': return 'error' as const;
-      case 'pending': return 'default' as const;
-      default: return 'default' as const;
-    }
-  };
-
-  const statusLabel = (status: string) => {
-    switch (status) {
-      case 'completed': return 'Готово';
-      case 'preparing': return 'Готується';
-      case 'cancelled': return 'Скасовано';
-      case 'pending': return 'Очікує';
-      default: return status;
-    }
-  };
-
-  const overviewLoading = isTodayLoading || isOverviewMonthlyLoading;
+  const overviewLoading = isTodayLoading || isMonthlyLoading;
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -282,13 +299,10 @@ export default function AnalyticsPage() {
   // CALENDAR TAB DATA
   // ============================================
 
-  const [currentMonth, setCurrentMonth] = useState(today.getMonth());
-  const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [selectedDayKey, setSelectedDayKey] = useState<string | null>(null);
   const [selectedDayCell, setSelectedDayCell] = useState<DayCell | null>(null);
-  const [expandedAccordionId, setExpandedAccordionId] = useState<string | null>(null);
+  const [selectedDetail, setSelectedDetail] = useState<DailyActivityItem | null>(null);
 
-  const { data: calendarMonthly, isLoading: isCalendarMonthlyLoading } = useMonthlyReport(currentYear, currentMonth + 1);
   const { data: selectedDayReport, isLoading: isDayLoading } = useDailyReport(selectedDayKey || '');
 
   const startOfMonth = useMemo(() => new Date(currentYear, currentMonth, 1).toISOString(), [currentYear, currentMonth]);
@@ -297,21 +311,11 @@ export default function AnalyticsPage() {
 
   const dayDataMap = useMemo(() => {
     const map = new Map<string, MonthlyDayData>();
-    if (calendarMonthly?.days) {
-      calendarMonthly.days.forEach((day) => map.set(day.date, day));
+    if (monthlyReport?.days) {
+      monthlyReport.days.forEach((day) => map.set(day.date, day));
     }
     return map;
-  }, [calendarMonthly]);
-
-  const goToPrevMonth = () => {
-    if (currentMonth === 0) { setCurrentMonth(11); setCurrentYear(currentYear - 1); }
-    else { setCurrentMonth(currentMonth - 1); }
-  };
-
-  const goToNextMonth = () => {
-    if (currentMonth === 11) { setCurrentMonth(0); setCurrentYear(currentYear + 1); }
-    else { setCurrentMonth(currentMonth + 1); }
-  };
+  }, [monthlyReport]);
 
   const calendarDays = useMemo((): DayCell[] => {
     const days = getCalendarDays(currentYear, currentMonth);
@@ -348,11 +352,11 @@ export default function AnalyticsPage() {
   }, [currentMonth, currentYear, today, dayDataMap, monthShifts]);
 
   const monthSummary = useMemo(() => {
-    if (calendarMonthly?.summary) {
+    if (monthlyReport?.summary) {
       return {
-        totalRevenue: calendarMonthly.summary.totalRevenue,
-        totalOrders: calendarMonthly.summary.totalOrders,
-        avgOrder: calendarMonthly.summary.avgOrder,
+        totalRevenue: monthlyReport.summary.totalRevenue,
+        totalOrders: monthlyReport.summary.totalOrders,
+        avgOrder: monthlyReport.summary.avgOrder,
       };
     }
     const monthDays = calendarDays.filter(d => d.isCurrentMonth);
@@ -360,24 +364,19 @@ export default function AnalyticsPage() {
     const totalOrders = monthDays.reduce((sum, day) => sum + day.ordersCount, 0);
     const avgOrder = totalOrders > 0 ? totalRevenue / totalOrders : 0;
     return { totalRevenue, totalOrders, avgOrder };
-  }, [calendarMonthly, calendarDays]);
+  }, [monthlyReport, calendarDays]);
 
   const handleDayClick = (day: DayCell) => {
     if (day.ordersCount > 0 || day.shiftsCount > 0) {
       setSelectedDayKey(day.dateKey);
       setSelectedDayCell(day);
-      setExpandedAccordionId(null);
     }
   };
 
   const handleCloseModal = () => {
     setSelectedDayKey(null);
     setSelectedDayCell(null);
-    setExpandedAccordionId(null);
-  };
-
-  const toggleAccordion = (id: string) => {
-    setExpandedAccordionId(expandedAccordionId === id ? null : id);
+    setSelectedDetail(null);
   };
 
   // Transform daily report data for the selected day
@@ -531,27 +530,47 @@ export default function AnalyticsPage() {
 
   return (
     <div className={styles.page}>
-      {/* Tab Switcher */}
-      <SegmentedControl
-        options={TABS_SEGMENTED}
-        value={activeTab}
-        onChange={setActiveTab}
-      />
+      {/* Tab Switcher + Shared Month Nav */}
+      <div className={styles.tabBar}>
+        <SegmentedControl
+          options={TABS_SEGMENTED}
+          value={activeTab}
+          onChange={setActiveTab}
+        />
+        <div className={styles.monthNavBar}>
+          <Button variant="ghost" size="sm" iconOnly onClick={goToPrevMonth} aria-label="Попередній місяць">
+            <Icon name="chevron-left" size="md" />
+          </Button>
+          <Text variant="labelMedium" weight="semibold" className={styles.monthNavLabel}>
+            {MONTHS[currentMonth]} {currentYear}
+          </Text>
+          <Button
+            variant="ghost"
+            size="sm"
+            iconOnly
+            onClick={goToNextMonth}
+            disabled={isCurrentMonthSelected}
+            aria-label="Наступний місяць"
+          >
+            <Icon name="chevron-right" size="md" />
+          </Button>
+        </div>
+      </div>
 
       {/* =========== OVERVIEW TAB =========== */}
       {activeTab === 'overview' && (
         <>
-          {/* Stats Row */}
+          {/* Stats Row — monthly KPIs */}
           <div className={styles.statsRow}>
             <GlassCard className={styles.statCard} elevated>
               <div className={styles.statHeader}>
                 <div className={`${styles.statIconWrap} ${styles.statIconSuccess}`}>
                   <Icon name="cash" size="sm" color="success" />
                 </div>
-                <Text variant="labelSmall" color="tertiary">Виторг сьогодні</Text>
+                <Text variant="labelSmall" color="tertiary">Виторг за місяць</Text>
               </div>
-              {overviewLoading ? <Spinner size="sm" /> : (
-                <div className={styles.statValue}>{'\u20B4'}{formatCurrency(todayRevenue)}</div>
+              {isMonthlyLoading ? <Spinner size="sm" /> : (
+                <div className={styles.statValue}>{'\u20B4'}{formatCurrency(monthRevenue)}</div>
               )}
             </GlassCard>
 
@@ -560,10 +579,10 @@ export default function AnalyticsPage() {
                 <div className={`${styles.statIconWrap} ${styles.statIconAccent}`}>
                   <Icon name="receipt" size="sm" color="accent" />
                 </div>
-                <Text variant="labelSmall" color="tertiary">Замовлень сьогодні</Text>
+                <Text variant="labelSmall" color="tertiary">Замовлень за місяць</Text>
               </div>
-              {overviewLoading ? <Spinner size="sm" /> : (
-                <div className={styles.statValue}>{todayOrders}</div>
+              {isMonthlyLoading ? <Spinner size="sm" /> : (
+                <div className={styles.statValue}>{monthOrders}</div>
               )}
             </GlassCard>
 
@@ -574,8 +593,8 @@ export default function AnalyticsPage() {
                 </div>
                 <Text variant="labelSmall" color="tertiary">Середній чек</Text>
               </div>
-              {overviewLoading ? <Spinner size="sm" /> : (
-                <div className={styles.statValue}>{'\u20B4'}{formatCurrency(Math.round(todayAvgOrder))}</div>
+              {isMonthlyLoading ? <Spinner size="sm" /> : (
+                <div className={styles.statValue}>{'\u20B4'}{formatCurrency(Math.round(monthAvgOrder))}</div>
               )}
             </GlassCard>
 
@@ -592,13 +611,30 @@ export default function AnalyticsPage() {
 
           {/* Charts Row */}
           <div className={styles.chartsRow}>
+            {/* Revenue chart with 7д/30д toggle */}
             <GlassCard className={styles.chartSection} elevated>
-              <div className={styles.chartTitle}>
-                <Icon name="chart" size="sm" color="accent" />
-                <Text variant="h5" weight="semibold">Виторг за 7 днів</Text>
+              <div className={styles.chartTitleRow}>
+                <div className={styles.chartTitle}>
+                  <Icon name="chart" size="sm" color="accent" />
+                  <Text variant="h5" weight="semibold">Виторг</Text>
+                </div>
+                <div className={styles.periodToggle}>
+                  <button
+                    className={`${styles.periodBtn} ${chartPeriod === '7d' ? styles.periodBtnActive : ''}`}
+                    onClick={() => setChartPeriod('7d')}
+                  >
+                    7д
+                  </button>
+                  <button
+                    className={`${styles.periodBtn} ${chartPeriod === '30d' ? styles.periodBtnActive : ''}`}
+                    onClick={() => setChartPeriod('30d')}
+                  >
+                    30д
+                  </button>
+                </div>
               </div>
               <div className={styles.chartContainer}>
-                {isOverviewMonthlyLoading ? (
+                {isMonthlyLoading ? (
                   <div className={styles.loadingState}><Spinner size="md" /></div>
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
@@ -628,13 +664,14 @@ export default function AnalyticsPage() {
               </div>
             </GlassCard>
 
+            {/* Payment pie — monthly aggregated */}
             <GlassCard className={styles.chartSection} elevated>
               <div className={styles.chartTitle}>
                 <Icon name="card" size="sm" color="info" />
-                <Text variant="h5" weight="semibold">Оплата сьогодні</Text>
+                <Text variant="h5" weight="semibold">Оплата за місяць</Text>
               </div>
               <div className={styles.pieChartContainer}>
-                {isTodayLoading ? <Spinner size="md" /> : (
+                {isMonthlyLoading ? <Spinner size="md" /> : (
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie data={paymentPieData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={3} dataKey="value">
@@ -651,12 +688,13 @@ export default function AnalyticsPage() {
             </GlassCard>
           </div>
 
-          {/* Bottom Row: Top Products + Recent Orders */}
+          {/* Bottom Row: Top Products + Monthly Stats */}
           <div className={styles.bottomRow}>
+            {/* Top products — today's data (best available without products report API) */}
             <GlassCard className={styles.tableSection} elevated>
               <div className={styles.tableTitle}>
                 <Icon name="star" size="sm" color="warning" />
-                <Text variant="h5" weight="semibold">Топ продукти</Text>
+                <Text variant="h5" weight="semibold">Топ продукти сьогодні</Text>
               </div>
               {isTodayLoading ? (
                 <div className={styles.loadingState}><Spinner size="md" /></div>
@@ -683,32 +721,98 @@ export default function AnalyticsPage() {
               )}
             </GlassCard>
 
+            {/* Monthly stats */}
             <GlassCard className={styles.tableSection} elevated>
               <div className={styles.tableTitle}>
-                <Icon name="receipt" size="sm" color="accent" />
-                <Text variant="h5" weight="semibold">Останні замовлення</Text>
+                <Icon name="chart" size="sm" color="accent" />
+                <Text variant="h5" weight="semibold">Місяць у цифрах</Text>
               </div>
-              {isTodayLoading ? (
+              {isMonthlyLoading ? (
                 <div className={styles.loadingState}><Spinner size="md" /></div>
-              ) : recentOrders.length === 0 ? (
+              ) : !monthlyReport ? (
                 <div className={styles.emptyState}>
-                  <Icon name="receipt" size="xl" color="tertiary" />
-                  <Text variant="bodySmall" color="tertiary">Немає замовлень за сьогодні</Text>
+                  <Icon name="chart" size="xl" color="tertiary" />
+                  <Text variant="bodySmall" color="tertiary">Немає даних за обраний місяць</Text>
                 </div>
               ) : (
-                <div className={styles.ordersList}>
-                  {recentOrders.map((order) => (
-                    <div key={order.id} className={styles.orderItem}>
-                      <div className={styles.orderLeft}>
-                        <span className={styles.orderNumber}>{order.number}</span>
-                        <span className={styles.orderTime}>{order.time}</span>
+                <div className={styles.monthStatsList}>
+                  {/* Best day */}
+                  {monthlyBestDay && (
+                    <div className={styles.monthStatRow}>
+                      <div className={styles.monthStatLeft}>
+                        <span className={`${styles.monthStatDot} ${styles.dotSuccess}`} />
+                        <Text variant="bodySmall" color="secondary">Найкращий день</Text>
                       </div>
-                      <div className={styles.orderRight}>
-                        <span className={styles.orderTotal}>{'\u20B4'}{formatCurrency(order.total)}</span>
-                        <Badge variant={statusVariant(order.status)} size="sm">{statusLabel(order.status)}</Badge>
+                      <div className={styles.monthStatRight}>
+                        <Text variant="labelMedium" weight="semibold">
+                          {getShortDate(monthlyBestDay.date)}
+                        </Text>
+                        <Text variant="labelMedium" weight="bold" color="success">
+                          ₴{formatCurrency(monthlyBestDay.revenue)}
+                        </Text>
                       </div>
                     </div>
-                  ))}
+                  )}
+
+                  {/* Avg per day */}
+                  <div className={styles.monthStatRow}>
+                    <div className={styles.monthStatLeft}>
+                      <span className={`${styles.monthStatDot} ${styles.dotInfo}`} />
+                      <Text variant="bodySmall" color="secondary">Середній виторг / день</Text>
+                    </div>
+                    <div className={styles.monthStatRight}>
+                      <Text variant="labelMedium" weight="bold">
+                        ₴{formatCurrency(Math.round(monthRevenue / Math.max(1, (monthlyReport.days || []).filter(d => d.revenue > 0).length)))}
+                      </Text>
+                    </div>
+                  </div>
+
+                  {/* Revenue change vs prev month */}
+                  {monthlyReport.summary?.previousMonthRevenue > 0 && (
+                    <div className={styles.monthStatRow}>
+                      <div className={styles.monthStatLeft}>
+                        <span className={`${styles.monthStatDot} ${monthRevenueChange >= 0 ? styles.dotSuccess : styles.dotError}`} />
+                        <Text variant="bodySmall" color="secondary">До минулого місяця</Text>
+                      </div>
+                      <div className={styles.monthStatRight}>
+                        <Text
+                          variant="labelMedium"
+                          weight="bold"
+                          color={monthRevenueChange >= 0 ? 'success' : 'error'}
+                        >
+                          {monthRevenueChange >= 0 ? '+' : ''}{monthRevenueChange.toFixed(1)}%
+                        </Text>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Total write-offs */}
+                  {(monthlyReport.summary?.totalWriteOffs || 0) > 0 && (
+                    <div className={styles.monthStatRow}>
+                      <div className={styles.monthStatLeft}>
+                        <span className={`${styles.monthStatDot} ${styles.dotWarning}`} />
+                        <Text variant="bodySmall" color="secondary">Списань за місяць</Text>
+                      </div>
+                      <div className={styles.monthStatRight}>
+                        <Text variant="labelMedium" weight="bold" color="warning">
+                          ₴{formatCurrency(monthlyReport.summary.totalWriteOffs)}
+                        </Text>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Total shifts */}
+                  <div className={styles.monthStatRow}>
+                    <div className={styles.monthStatLeft}>
+                      <span className={`${styles.monthStatDot} ${styles.dotNeutral}`} />
+                      <Text variant="bodySmall" color="secondary">Змін відкрито</Text>
+                    </div>
+                    <div className={styles.monthStatRight}>
+                      <Text variant="labelMedium" weight="bold">
+                        {monthlyReport.summary?.totalShifts || 0}
+                      </Text>
+                    </div>
+                  </div>
                 </div>
               )}
             </GlassCard>
@@ -719,7 +823,7 @@ export default function AnalyticsPage() {
       {/* =========== CALENDAR TAB =========== */}
       {activeTab === 'calendar' && (
         <>
-          {/* Calendar Header */}
+          {/* Calendar Header — stats only (month nav is shared above) */}
           <div className={styles.calendarHeader}>
             <div className={styles.headerStats}>
               <div className={styles.statPill}>
@@ -729,27 +833,8 @@ export default function AnalyticsPage() {
               <div className={styles.statPill}>
                 <Icon name="receipt" size="sm" color="accent" />
                 <Text variant="labelMedium" weight="semibold">{monthSummary.totalOrders}</Text>
+                <Text variant="caption" color="tertiary">зам.</Text>
               </div>
-            </div>
-
-            <div className={styles.monthNav}>
-              <Button variant="ghost" size="sm" onClick={goToPrevMonth}>
-                <Icon name="chevron-left" size="md" />
-              </Button>
-              <div className={styles.monthTitle}>
-                <Text variant="h4" weight="semibold">{MONTHS[currentMonth]} {currentYear}</Text>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={goToNextMonth}
-                disabled={currentMonth === today.getMonth() && currentYear === today.getFullYear()}
-              >
-                <Icon name="chevron-right" size="md" />
-              </Button>
-            </div>
-
-            <div className={styles.headerStats}>
               <div className={styles.statPill}>
                 <Icon name="chart" size="sm" color="info" />
                 <Text variant="labelMedium" weight="semibold">₴{monthSummary.avgOrder.toFixed(0)}</Text>
@@ -826,7 +911,7 @@ export default function AnalyticsPage() {
             </div>
           </div>
 
-          {!isCalendarMonthlyLoading && !calendarMonthly && (
+          {!isMonthlyLoading && !monthlyReport && (
             <div className={styles.emptyShifts}>
               <Icon name="chart" size="xl" color="tertiary" />
               <Text variant="bodyMedium" color="secondary">Підключіть бекенд для перегляду звітів</Text>
@@ -843,7 +928,7 @@ export default function AnalyticsPage() {
         title={selectedDayCell ? `${selectedDayCell.dayNumber} ${MONTHS_SHORT[selectedDayCell.date.getMonth()]} ${selectedDayCell.date.getFullYear()}` : ''}
         subtitle={selectedDayCell?.date.toLocaleDateString('uk-UA', { weekday: 'long' })}
         icon="calendar"
-        size="lg"
+        size="xl"
       >
         {selectedDayCell && (
           <div className={styles.modalContent}>
@@ -853,6 +938,7 @@ export default function AnalyticsPage() {
               </div>
             ) : (
               <>
+              <div className={styles.modalLeft}>
                 <div className={styles.summaryCards}>
                   <div className={styles.summaryCard}>
                     <div className={styles.summaryCardHeader}>
@@ -953,8 +1039,9 @@ export default function AnalyticsPage() {
                     </div>
                   </div>
                 ))}
+              </div>{/* modalLeft */}
 
-                <div className={styles.activityList}>
+              <div className={styles.activityList}>
                   <div className={styles.activityListHeader}>
                     <Text variant="labelMedium" weight="semibold">Дії ({dailyActivities.length})</Text>
                   </div>
@@ -968,10 +1055,50 @@ export default function AnalyticsPage() {
                         if (item.kind === 'inline') {
                           return <ActivityInline key={item.activity.id} type={item.activity.type} timestamp={item.activity.timestamp} details={item.activity.details} />;
                         }
-                        const isExpanded = expandedAccordionId === item.id;
-                        if (item.type === 'order') return <OrderAccordion key={item.id} order={item.data as OrderData} isExpanded={isExpanded} onToggle={() => toggleAccordion(item.id)} />;
-                        if (item.type === 'supply') return <SupplyAccordion key={item.id} supply={item.data as SupplyAccordionData} isExpanded={isExpanded} onToggle={() => toggleAccordion(item.id)} />;
-                        return <WriteoffAccordion key={item.id} writeoff={item.data as WriteoffAccordionData} isExpanded={isExpanded} onToggle={() => toggleAccordion(item.id)} />;
+                        const time = new Date(item.createdAt).toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
+                        let iconName: 'receipt' | 'truck' | 'delete' = 'receipt';
+                        let desc = '';
+                        let amountStr = '';
+                        let amountColor: 'primary' | 'error' = 'primary';
+                        if (item.type === 'order') {
+                          const order = item.data as OrderData;
+                          const total = order.items.reduce((s, i) => {
+                            const mods = (i.modifiers || []).reduce((m: number, mod: {price: number}) => m + mod.price, 0);
+                            return s + (i.price + mods) * i.quantity;
+                          }, 0);
+                          desc = order.items.map((i) => i.quantity > 1 ? `${i.name} ×${i.quantity}` : i.name).join(', ');
+                          amountStr = `₴${total.toFixed(0)}`;
+                          iconName = 'receipt';
+                        } else if (item.type === 'supply') {
+                          const supply = item.data as SupplyAccordionData;
+                          desc = supply.supplierName;
+                          amountStr = `₴${supply.totalCost.toFixed(0)}`;
+                          iconName = 'truck';
+                        } else {
+                          const wo = item.data as WriteoffAccordionData;
+                          const typeLabel: Record<string, string> = { expired: 'Прострочено', damaged: 'Пошкоджено', other: 'Інше' };
+                          desc = typeLabel[wo.type] || wo.type;
+                          amountStr = `-₴${wo.totalCost.toFixed(0)}`;
+                          iconName = 'delete';
+                          amountColor = 'error';
+                        }
+                        return (
+                          <button
+                            key={item.id}
+                            className={styles.activityRow}
+                            onClick={() => setSelectedDetail(item)}
+                          >
+                            <span className={`${styles.activityRowIcon} ${styles[`activityIcon_${item.type}`]}`}>
+                              <Icon name={iconName} size="sm" />
+                            </span>
+                            <span className={styles.activityRowBody}>
+                              <Text variant="labelSmall" weight="semibold" className={styles.activityRowTime}>{time}</Text>
+                              <Text variant="caption" color="tertiary" className={styles.activityRowPreview}>{desc}</Text>
+                            </span>
+                            <Text variant="labelMedium" weight="bold" color={amountColor} className={styles.activityRowAmount}>{amountStr}</Text>
+                            <Icon name="chevron-right" size="sm" color="tertiary" />
+                          </button>
+                        );
                       })}
                     </div>
                   )}

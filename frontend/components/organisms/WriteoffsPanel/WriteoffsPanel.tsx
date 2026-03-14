@@ -230,6 +230,7 @@ export function WriteoffsPanel() {
     {
       key: 'date',
       header: 'Дата',
+      type: 'primary' as const,
       render: (writeoff) => (
         <div className={styles.itemName}>
           <Text variant="bodyMedium" weight="medium">
@@ -261,6 +262,7 @@ export function WriteoffsPanel() {
     {
       key: 'totalCost',
       header: 'Сума',
+      type: 'numeric' as const,
       align: 'right',
       render: (writeoff) => (
         <Text variant="labelMedium" weight="semibold" color="error">

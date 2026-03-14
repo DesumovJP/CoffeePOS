@@ -3,16 +3,38 @@
 /**
  * CoffeePOS - History Page (Історія)
  *
- * Current-shift order history. Shows shift context banner, sequential order
- * numbering (#1, #2, …), shift open/close events, and expandable item details.
+ * Clean shift order history:
+ *  - Stats strip (count, revenue, cash, card, avg)
+ *  - Single-column list of compact order cards
+ *  - Click card → detail modal (no accordion)
  */
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { Text, GlassCard, Icon, Button } from '@/components'; // GlassCard used for emptyState
-import { SearchInput, OrderAccordion, type OrderData } from '@/components/molecules';
+import { Text, Icon, Button, Modal, Spinner } from '@/components/atoms';
+import { SearchInput } from '@/components/molecules';
 import { useOrders } from '@/lib/hooks';
 import { useShiftStore, selectCurrentShift } from '@/lib/store';
 import styles from './page.module.css';
+
+// ============================================
+// TYPES
+// ============================================
+
+interface OrderItem {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+  modifiers?: Array<{ id: string; name: string; price: number }>;
+}
+
+interface OrderData {
+  id: string;
+  items: OrderItem[];
+  createdAt: number;
+  status?: string;
+  paymentMethod?: 'cash' | 'card' | 'other';
+}
 
 // ============================================
 // HELPERS
@@ -20,11 +42,12 @@ import styles from './page.module.css';
 
 function getTodayRange(): { dateFrom: string } {
   const now = new Date();
-  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  return { dateFrom: todayStart.toISOString() };
+  return {
+    dateFrom: new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString(),
+  };
 }
 
-function formatTime(ts: string): string {
+function formatTime(ts: number): string {
   return new Date(ts).toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
 }
 
@@ -38,34 +61,152 @@ function formatDateTime(ts: string): string {
 }
 
 function formatDuration(ms: number): string {
-  const totalMinutes = Math.floor(ms / 60000);
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-  if (hours === 0) return `${minutes} хв`;
-  return `${hours} год ${minutes} хв`;
+  const m = Math.floor(ms / 60000);
+  const h = Math.floor(m / 60);
+  return h > 0 ? `${h}г ${m % 60}хв` : `${m}хв`;
 }
 
-function formatCurrency(value: number): string {
+function formatCurrency(v: number): string {
   return new Intl.NumberFormat('uk-UA', {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  }).format(value);
+  }).format(v);
 }
 
+function calcTotal(order: OrderData): number {
+  return order.items.reduce((s, item) => {
+    const mods = item.modifiers?.reduce((m, mod) => m + mod.price, 0) || 0;
+    return s + (item.price + mods) * item.quantity;
+  }, 0);
+}
+
+function getPaymentIcon(method?: string): 'cash' | 'card' | 'receipt' {
+  if (method === 'cash') return 'cash';
+  if (method === 'card') return 'card';
+  return 'receipt';
+}
+
+function getPaymentLabel(method?: string): string {
+  if (method === 'cash') return 'Готівка';
+  if (method === 'card') return 'Карта';
+  return 'Інше';
+}
 
 // ============================================
-// COMPONENT
+// ORDER CARD
+// ============================================
+
+interface OrderCardProps {
+  order: OrderData;
+  index: number;
+  onClick: () => void;
+}
+
+function OrderCard({ order, index, onClick }: OrderCardProps) {
+  const total = calcTotal(order);
+  const preview = order.items
+    .map((i) => (i.quantity > 1 ? `${i.name} ×${i.quantity}` : i.name))
+    .join(', ');
+
+  return (
+    <button className={styles.orderCard} onClick={onClick}>
+      <span className={styles.orderNum}>#{index}</span>
+      <div className={styles.orderInfo}>
+        <div className={styles.orderMeta}>
+          <Text variant="labelSmall" weight="semibold">{formatTime(order.createdAt)}</Text>
+          {order.id.startsWith('ORD-') && (
+            <Text variant="caption" color="tertiary" className={styles.orderId}>
+              {order.id}
+            </Text>
+          )}
+        </div>
+        <Text variant="bodySmall" color="secondary" className={styles.orderPreview}>
+          {preview}
+        </Text>
+      </div>
+      <div className={styles.orderRight}>
+        <Text variant="labelMedium" weight="bold">₴{formatCurrency(total)}</Text>
+        {order.paymentMethod && (
+          <Icon name={getPaymentIcon(order.paymentMethod)} size="sm" color="tertiary" />
+        )}
+      </div>
+    </button>
+  );
+}
+
+// ============================================
+// ORDER DETAIL (modal body)
+// ============================================
+
+function OrderDetail({ order }: { order: OrderData }) {
+  const total = calcTotal(order);
+
+  return (
+    <div className={styles.detailContent}>
+      {/* Items table */}
+      <div className={styles.detailTable}>
+        <div className={styles.detailTableHeader}>
+          <Text variant="caption" color="tertiary">Позиція</Text>
+          <Text variant="caption" color="tertiary" className={styles.colRight}>К-сть</Text>
+          <Text variant="caption" color="tertiary" className={styles.colRight}>Сума</Text>
+        </div>
+        {order.items.map((item, idx) => {
+          const mods = item.modifiers?.reduce((m, mod) => m + mod.price, 0) || 0;
+          const itemTotal = (item.price + mods) * item.quantity;
+          return (
+            <div key={idx} className={styles.detailRow}>
+              <div className={styles.detailItemName}>
+                <Text variant="bodyMedium">{item.name}</Text>
+                {item.modifiers && item.modifiers.length > 0 && (
+                  <div className={styles.detailMods}>
+                    {item.modifiers.map((mod, midx) => (
+                      <Text key={midx} variant="caption" color="tertiary">
+                        + {mod.name}{mod.price > 0 && ` (₴${mod.price})`}
+                      </Text>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <Text variant="bodySmall" color="secondary" className={styles.colRight}>
+                {item.quantity}×
+              </Text>
+              <Text variant="bodyMedium" weight="medium" className={styles.colRight}>
+                ₴{itemTotal.toFixed(0)}
+              </Text>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Footer */}
+      <div className={styles.detailFooter}>
+        {order.paymentMethod && (
+          <div className={styles.detailPayment}>
+            <Icon name={getPaymentIcon(order.paymentMethod)} size="sm" color="tertiary" />
+            <Text variant="caption" color="tertiary">{getPaymentLabel(order.paymentMethod)}</Text>
+          </div>
+        )}
+        <div className={styles.detailTotal}>
+          <Text variant="labelMedium" color="secondary">Всього</Text>
+          <Text variant="h4" weight="bold">₴{formatCurrency(total)}</Text>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================
+// PAGE
 // ============================================
 
 export default function HistoryPage() {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [search, setSearch] = useState('');
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
-  const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
+  const [selected, setSelected] = useState<{ order: OrderData; index: number } | null>(null);
   const [now, setNow] = useState(() => Date.now());
 
   const currentShift = useShiftStore(selectCurrentShift);
 
-  // Tick every minute to keep duration display live
   useEffect(() => {
     if (!currentShift) return;
     const timer = setInterval(() => setNow(Date.now()), 60000);
@@ -80,10 +221,9 @@ export default function HistoryPage() {
 
   const closeMobileSearch = useCallback(() => {
     setMobileSearchOpen(false);
-    setSearchQuery('');
+    setSearch('');
   }, []);
 
-  // Use shift's openedAt as start of range; fall back to today midnight
   const dateRange = useMemo(() => {
     if (currentShift?.openedAt) return { dateFrom: currentShift.openedAt };
     return getTodayRange();
@@ -95,74 +235,76 @@ export default function HistoryPage() {
     sort: 'createdAt:asc',
   });
 
-  // Ensure ascending order for sequential numbering
-  const orders = useMemo(
+  // Normalize and sort ascending
+  const ordersData: OrderData[] = useMemo(
     () =>
-      [...ordersRaw].sort(
-        (a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-      ),
-    [ordersRaw]
+      [...ordersRaw]
+        .sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+        .map((order: any): OrderData => ({
+          id: order.orderNumber || String(order.id),
+          items: (order.items || []).map((item: any) => ({
+            id: String(item.id),
+            name: item.productName || item.name || '',
+            price: item.unitPrice || 0,
+            quantity: item.quantity || 1,
+            modifiers: (item.modifiers || []).map((m: any) => ({
+              id: String(m.id || m.name),
+              name: m.name || '',
+              price: m.price || 0,
+            })),
+          })),
+          createdAt: new Date(order.createdAt).getTime(),
+          status: order.status,
+          paymentMethod: (() => {
+            const m = order.payment?.method || order.paymentMethod;
+            if (m === 'cash' || m === 'card') return m;
+            if (m) return 'other';
+            return undefined;
+          })(),
+        })),
+    [ordersRaw],
   );
 
-  const filteredOrders = useMemo(() => {
-    if (!searchQuery.trim()) return orders;
-    const q = searchQuery.toLowerCase().trim();
-    return orders.filter(
-      (o: any) =>
-        (o.orderNumber || '').toLowerCase().includes(q) ||
-        String(o.total || '').includes(q)
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return ordersData;
+    return ordersData.filter(
+      (o) =>
+        o.id.toLowerCase().includes(q) ||
+        o.items.some((i) => i.name.toLowerCase().includes(q)),
     );
-  }, [orders, searchQuery]);
+  }, [ordersData, search]);
 
-  const filteredOrderData = useMemo((): OrderData[] =>
-    filteredOrders.map((order: any): OrderData => ({
-      id: order.orderNumber || String(order.id),
-      items: (order.items || []).map((item: any) => ({
-        id: String(item.id),
-        name: item.productName || item.name || '',
-        price: item.unitPrice || 0,
-        quantity: item.quantity || 1,
-        modifiers: (item.modifiers || []).map((m: any) => ({
-          id: String(m.id || m.name),
-          name: m.name || '',
-          price: m.price || 0,
-        })),
-      })),
-      createdAt: new Date(order.createdAt).getTime(),
-      status: order.status,
-      paymentMethod: (() => {
-        const m = order.payment?.method || order.paymentMethod;
-        if (m === 'cash' || m === 'card') return m;
-        if (m) return 'other';
-        return undefined;
-      })(),
-    })),
-  [filteredOrders]);
-
-  const summary = useMemo(() => {
-    const completedOrders = orders.filter((o: any) => o.status === 'completed');
-    const totalRevenue = completedOrders.reduce((s: number, o: any) => s + (parseFloat(o.total) || 0), 0);
-    return { ordersCount: completedOrders.length, totalRevenue };
-  }, [orders]);
+  // Aggregate stats from all orders this shift
+  const stats = useMemo(() => {
+    const completed = ordersData.filter((o) => o.status === 'completed' || !o.status);
+    const revenue = completed.reduce((s, o) => s + calcTotal(o), 0);
+    const cash = completed
+      .filter((o) => o.paymentMethod === 'cash')
+      .reduce((s, o) => s + calcTotal(o), 0);
+    const card = completed
+      .filter((o) => o.paymentMethod === 'card')
+      .reduce((s, o) => s + calcTotal(o), 0);
+    const avg = completed.length > 0 ? revenue / completed.length : 0;
+    return { count: completed.length, revenue, cash, card, avg };
+  }, [ordersData]);
 
   const shiftDuration = useMemo(() => {
     if (!currentShift?.openedAt) return 0;
     return now - new Date(currentShift.openedAt).getTime();
   }, [currentShift, now]);
 
-  const toggleOrder = useCallback((orderId: string) => {
-    setExpandedOrderId((prev) => (prev === orderId ? null : orderId));
-  }, []);
+  const isStaleShift = shiftDuration > 86400000;
 
   return (
     <div className={styles.page}>
-      {/* Mobile search bar */}
+      {/* Mobile search overlay */}
       {mobileSearchOpen && (
         <div className={styles.mobileSearchBar}>
           <SearchInput
-            value={searchQuery}
-            onChange={setSearchQuery}
-            placeholder="Пошук за номером замовлення..."
+            value={search}
+            onChange={setSearch}
+            placeholder="Пошук за номером або товаром..."
             variant="glass"
             autoFocus
           />
@@ -172,99 +314,111 @@ export default function HistoryPage() {
             iconOnly
             onClick={closeMobileSearch}
             aria-label="Закрити пошук"
-            className={styles.mobileSearchClose}
           >
             <Icon name="close" size="md" />
           </Button>
         </div>
       )}
 
-      {/* Shift context — single subtle line */}
-      {currentShift ? (
-        <div className={styles.shiftContext}>
-          <Text variant="bodySmall" color={shiftDuration > 86400000 ? 'warning' : 'tertiary'}>
-            {shiftDuration > 86400000 && '⚠ '}Зміна · {currentShift.openedBy} · {formatDateTime(currentShift.openedAt)} · {formatDuration(shiftDuration)}
-          </Text>
-        </div>
-      ) : (
-        <Text variant="bodySmall" color="tertiary" className={styles.shiftContext}>
-          Зміна не відкрита — замовлення за сьогодні
-        </Text>
-      )}
-
-      {/* Toolbar */}
-      <div className={styles.toolbar}>
-        <SearchInput
-          value={searchQuery}
-          onChange={setSearchQuery}
-          placeholder="Пошук за номером замовлення..."
-          variant="glass"
+      {/* Shift context banner */}
+      <div className={`${styles.shiftBanner} ${isStaleShift ? styles.shiftBannerWarn : ''}`}>
+        <Icon
+          name={isStaleShift ? 'warning' : currentShift ? 'check' : 'clock'}
+          size="sm"
         />
-        <div className={styles.headerStats}>
-          <div className={styles.statItem}>
-            <Text variant="caption" color="tertiary">Замовлень</Text>
-            <Text variant="labelMedium" weight="semibold">{summary.ordersCount}</Text>
-          </div>
-          <div className={styles.statDivider} />
-          <div className={styles.statItem}>
-            <Text variant="caption" color="tertiary">Виручка</Text>
-            <Text variant="labelMedium" weight="semibold" color="success">₴{formatCurrency(summary.totalRevenue)}</Text>
-          </div>
-        </div>
+        <Text variant="bodySmall" weight="medium">
+          {currentShift
+            ? `${isStaleShift ? '⚠ ' : ''}Зміна · ${currentShift.openedBy} · ${formatDateTime(currentShift.openedAt)} · ${formatDuration(shiftDuration)}`
+            : 'Зміна не відкрита — замовлення за сьогодні'}
+        </Text>
       </div>
 
-      {/* Orders List */}
-      <div className={styles.ordersList}>
-        {isLoading ? (
-          <GlassCard padding="xl" className={styles.emptyState}>
-            <Icon name="clock" size="2xl" color="tertiary" />
-            <Text variant="bodyLarge" color="secondary">Завантаження...</Text>
-          </GlassCard>
-        ) : (
+      {/* Stats strip */}
+      <div className={styles.statsStrip}>
+        <div className={styles.statItem}>
+          <Text variant="caption" color="tertiary">Замовлень</Text>
+          <Text variant="labelLarge" weight="bold">{stats.count}</Text>
+        </div>
+        <div className={styles.statDivider} />
+        <div className={styles.statItem}>
+          <Text variant="caption" color="tertiary">Виручка</Text>
+          <Text variant="labelLarge" weight="bold" color="success">
+            ₴{formatCurrency(stats.revenue)}
+          </Text>
+        </div>
+        <div className={styles.statDivider} />
+        <div className={styles.statItem}>
+          <Icon name="cash" size="sm" color="tertiary" />
+          <Text variant="labelMedium" weight="semibold">₴{formatCurrency(stats.cash)}</Text>
+        </div>
+        <div className={styles.statDivider} />
+        <div className={styles.statItem}>
+          <Icon name="card" size="sm" color="tertiary" />
+          <Text variant="labelMedium" weight="semibold">₴{formatCurrency(stats.card)}</Text>
+        </div>
+        {stats.count > 0 && (
           <>
-            {/* Shift open event */}
-            {currentShift && (
-              <div className={`${styles.shiftEvent} ${styles.shiftEventOpen}`}>
-                <div className={styles.shiftEventIcon}>
-                  <Icon name="check" size="sm" />
-                </div>
-                <div className={styles.shiftEventContent}>
-                  <Text variant="labelSmall" weight="semibold">Зміна відкрита</Text>
-                  <Text variant="caption" color="secondary">
-                    {currentShift.openedBy} · каса ₴{formatCurrency(currentShift.openingCash)}
-                  </Text>
-                </div>
-                <Text variant="caption" color="tertiary">{formatTime(currentShift.openedAt)}</Text>
-              </div>
-            )}
-
-            {filteredOrderData.length === 0 ? (
-              <GlassCard padding="xl" className={styles.emptyState}>
-                <Icon name="search" size="2xl" color="tertiary" />
-                <Text variant="bodyLarge" color="secondary">
-                  {searchQuery ? 'Нічого не знайдено' : 'Замовлень поки немає'}
-                </Text>
-                {!searchQuery && (
-                  <Text variant="caption" color="tertiary">
-                    Замовлення з'являться тут після оплати
-                  </Text>
-                )}
-              </GlassCard>
-            ) : (
-              filteredOrderData.map((orderData, idx) => (
-                <OrderAccordion
-                  key={orderData.id}
-                  order={orderData}
-                  index={idx + 1}
-                  isExpanded={expandedOrderId === orderData.id}
-                  onToggle={() => toggleOrder(orderData.id)}
-                  showPaymentMethod
-                />
-              ))
-            )}
+            <div className={styles.statDivider} />
+            <div className={styles.statItem}>
+              <Text variant="caption" color="tertiary">Сер. чек</Text>
+              <Text variant="labelMedium" weight="semibold">₴{formatCurrency(stats.avg)}</Text>
+            </div>
           </>
         )}
       </div>
+
+      {/* Search */}
+      <SearchInput
+        value={search}
+        onChange={setSearch}
+        placeholder="Пошук за номером або товаром..."
+        variant="glass"
+      />
+
+      {/* Orders */}
+      <div className={styles.ordersList}>
+        {isLoading ? (
+          <div className={styles.emptyState}>
+            <Spinner size="md" />
+            <Text variant="bodyMedium" color="secondary">Завантаження...</Text>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className={styles.emptyState}>
+            <Icon name={search ? 'search' : 'clock'} size="2xl" color="tertiary" />
+            <Text variant="bodyLarge" color="secondary">
+              {search ? 'Нічого не знайдено' : 'Замовлень поки немає'}
+            </Text>
+            {!search && (
+              <Text variant="caption" color="tertiary">
+                Замовлення з'являться тут після оплати
+              </Text>
+            )}
+          </div>
+        ) : (
+          filtered.map((order, idx) => (
+            <OrderCard
+              key={order.id}
+              order={order}
+              index={idx + 1}
+              onClick={() => setSelected({ order, index: idx + 1 })}
+            />
+          ))
+        )}
+      </div>
+
+      {/* Detail modal */}
+      {selected && (
+        <Modal
+          open
+          onClose={() => setSelected(null)}
+          title={`Замовлення #${selected.index}`}
+          subtitle={selected.order.id}
+          icon="receipt"
+          size="sm"
+        >
+          <OrderDetail order={selected.order} />
+        </Modal>
+      )}
     </div>
   );
 }

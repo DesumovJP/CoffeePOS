@@ -110,6 +110,7 @@ export default function RecipesAdminPage() {
     {
       key: 'name',
       header: 'Продукт',
+      type: 'primary' as const,
       width: '45%',
       render: (recipe) => {
         const imageUrl = productImageMap.get(recipe.product?.id ?? -1);
@@ -143,6 +144,7 @@ export default function RecipesAdminPage() {
     {
       key: 'price',
       header: 'Ціна',
+      type: 'numeric' as const,
       align: 'right',
       width: '80px',
       render: (recipe) => (
@@ -152,6 +154,7 @@ export default function RecipesAdminPage() {
     {
       key: 'margin',
       header: 'Маржа',
+      type: 'numeric' as const,
       align: 'right',
       width: '80px',
       hideOnMobile: true,
@@ -183,6 +186,7 @@ export default function RecipesAdminPage() {
     {
       key: 'actions',
       header: '',
+      type: 'action' as const,
       align: 'right',
       width: '80px',
       render: (recipe) => (

@@ -1,45 +1,56 @@
 /* ─── Sidebar Card (expanded) ─────────────────────────────────────────────── */
 
+/*
+ * The widget renders as a natural sidebar section — transparent background,
+ * no border-radius island. Separated from the nav group above it by a
+ * top border (same pattern as Sidebar .group + .group).
+ */
+
 .card {
-  margin: var(--space-2);
-  background: var(--color-brand-subtle, color-mix(in srgb, var(--color-accent) 8%, transparent));
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-xl);
-  overflow: hidden;
   display: flex;
   flex-direction: column;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  background: var(--glass-bg);
+  margin: var(--space-3) var(--space-2) 0;
+  overflow: hidden;
 }
 
+/* Header — title bar of the mini task board */
 .cardHeader {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-3);
+  gap: var(--space-2-5);
+  padding: var(--space-2-5) var(--space-3);
   width: 100%;
-  background: none;
+  background: var(--glass-bg-elevated);
   border: none;
+  border-bottom: 1px solid var(--glass-border);
   cursor: pointer;
-  color: var(--text-primary);
+  color: var(--text-secondary);
   text-align: left;
-  transition: background var(--duration-fast);
+  transition: background var(--duration-fast), color var(--duration-fast);
 }
 
 .cardHeader:hover {
-  background: color-mix(in srgb, var(--glass-border) 40%, transparent);
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
 }
 
 .cardTitle {
   flex: 1;
   font-size: var(--text-sm);
-  font-weight: var(--font-semibold);
+  font-weight: var(--font-medium);
+  color: inherit;
   white-space: nowrap;
 }
 
+/* Badge — same style as sidebar nav badge */
 .cardBadge {
   min-width: 1.25rem;
   height: 1.25rem;
   padding: 0 var(--space-1);
-  background: var(--color-accent);
+  background: var(--color-brand);
   color: var(--text-inverse);
   border-radius: var(--radius-full);
   font-size: 11px;
@@ -51,48 +62,54 @@
   flex-shrink: 0;
 }
 
-.cardDivider {
-  height: 1px;
-  background: var(--glass-border);
-  margin: 0;
-}
-
+/* Preview task rows — mini task cards with priority bar */
 .cardPreviews {
   display: flex;
   flex-direction: column;
-  gap: 1px;
-  padding: var(--space-1) 0;
+  gap: 0;
 }
 
 .cardEmpty {
   font-size: var(--text-xs);
-  color: var(--text-disabled);
-  padding: var(--space-2) var(--space-3);
-  margin: 0;
+  color: var(--text-tertiary);
+  padding: var(--space-4) var(--space-3);
   text-align: center;
+  margin: 0;
 }
 
 .previewRow {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  padding: 5px var(--space-3);
-  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  border-left: 3px solid transparent;
+  border-bottom: 1px solid var(--glass-border);
   cursor: pointer;
   background: none;
-  border: none;
+  border-top: none;
+  border-right: none;
   width: 100%;
   text-align: left;
-  transition: background var(--duration-fast);
+  color: var(--text-secondary);
+  transition: background var(--duration-fast), color var(--duration-fast);
+}
+
+.previewRow:last-child {
+  border-bottom: none;
 }
 
 .previewRow:hover {
-  background: color-mix(in srgb, var(--glass-border) 60%, transparent);
+  background: rgba(0, 0, 0, 0.03);
+  color: var(--text-primary);
 }
 
+.row_high   { border-left-color: var(--color-error); }
+.row_medium { border-left-color: var(--color-warning); }
+.row_low    { border-left-color: var(--color-info); }
+
 .previewDot {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   flex-shrink: 0;
 }
@@ -103,9 +120,9 @@
 
 .previewTitle {
   flex: 1;
-  font-size: 11px;
+  font-size: var(--text-sm);
   font-weight: var(--font-medium);
-  color: var(--text-secondary);
+  color: inherit;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -113,7 +130,7 @@
 }
 
 .previewRunning {
-  font-size: 10px;
+  font-size: 8px;
   color: var(--color-success);
   flex-shrink: 0;
   animation: pulse 2s ease-in-out infinite;
@@ -124,15 +141,17 @@
   50%       { opacity: 0.4; }
 }
 
+/* Footer — action row with top separator */
 .cardFooter {
   display: flex;
   align-items: center;
-  padding: var(--space-2) var(--space-2);
-  gap: var(--space-1);
+  justify-content: space-between;
+  padding: var(--space-2) var(--space-3);
+  border-top: 1px solid var(--glass-border);
+  background: var(--glass-bg-elevated);
 }
 
 .footerNewBtn {
-  flex: 1;
   font-size: var(--text-xs);
   font-weight: var(--font-medium);
   color: var(--text-tertiary);
@@ -141,33 +160,30 @@
   cursor: pointer;
   padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-md);
-  text-align: left;
   transition: color var(--duration-fast), background var(--duration-fast);
   white-space: nowrap;
 }
 
 .footerNewBtn:hover {
   color: var(--text-primary);
-  background: color-mix(in srgb, var(--glass-border) 60%, transparent);
+  background: var(--bg-tertiary);
 }
 
 .footerAllBtn {
   font-size: var(--text-xs);
-  font-weight: var(--font-medium);
-  color: var(--color-accent);
+  font-weight: var(--font-semibold);
+  color: var(--color-brand);
   background: none;
   border: none;
   cursor: pointer;
   padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-md);
-  transition: opacity var(--duration-fast), background var(--duration-fast);
+  transition: background var(--duration-fast);
   white-space: nowrap;
-  flex-shrink: 0;
 }
 
 .footerAllBtn:hover {
-  opacity: 0.8;
-  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+  background: color-mix(in srgb, var(--color-brand) 10%, transparent);
 }
 
 /* ─── Collapsed Widget ────────────────────────────────────────────────────── */
@@ -180,8 +196,8 @@
 
 .collapsedBtn {
   position: relative;
-  width: 2.5rem;
-  height: 2.5rem;
+  width: 2.75rem;
+  height: 2.75rem;
   border-radius: var(--radius-lg);
   background: none;
   border: none;
@@ -194,7 +210,7 @@
 }
 
 .collapsedBtn:hover {
-  background: var(--glass-bg-hover);
+  background: rgba(0, 0, 0, 0.04);
   color: var(--text-primary);
 }
 
@@ -202,10 +218,10 @@
   position: absolute;
   top: 4px;
   right: 4px;
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
-  background: var(--color-accent);
+  background: var(--color-brand);
   border: 1.5px solid var(--glass-bg-elevated);
 }
 
@@ -215,18 +231,23 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-  height: 100%;
-  min-height: 0;
+  min-height: 480px;
 }
 
 .modalToolbar {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: var(--space-2);
   flex-shrink: 0;
 }
 
-.modalToolbar > :first-child { flex: 1; }
+.toolbarActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex-shrink: 0;
+}
 
 /* ─── Tab pills ───────────────────────────────────────────────────────────── */
 
@@ -337,7 +358,6 @@
 .bar_medium { background: var(--color-warning); }
 .bar_low    { background: var(--color-info); }
 
-/* Ensure priority bar keeps styles even when combined with p_ classes */
 .p_high .priorityBar   { background: var(--color-error); }
 .p_medium .priorityBar { background: var(--color-warning); }
 .p_low .priorityBar    { background: var(--color-info); }

@@ -1,13 +1,13 @@
 /**
  * History Page Styles (Історія)
  *
- * Unified activity timeline — NO gradient orbs
+ * Clean shift order feed — stats strip + compact order cards + detail modal
  */
 
 .page {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-3);
   padding: var(--grid-margin);
   padding-top: var(--space-4);
   width: 100%;
@@ -18,129 +18,242 @@
 }
 
 /* ============================================
-   SHIFT CONTEXT — single subtle text line
+   SHIFT BANNER
    ============================================ */
 
-.shiftContext {
-  flex-shrink: 0;
-  padding: 0 var(--space-1);
-}
-
-/* ============================================
-   SHIFT EVENTS (open / close)
-   ============================================ */
-
-.shiftEvent {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-2-5) var(--space-4);
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-lg);
-}
-
-.shiftEventOpen .shiftEventIcon {
-  color: var(--color-success);
-  background: color-mix(in srgb, var(--color-success) 12%, transparent);
-}
-
-.shiftEventClose .shiftEventIcon {
-  color: var(--text-tertiary);
-  background: var(--glass-bg-elevated);
-}
-
-.shiftEventIcon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: var(--radius-sm);
-  flex-shrink: 0;
-}
-
-.shiftEventContent {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-
-/* ============================================
-   ORDER TITLE — sequential # + order number
-   ============================================ */
-
-.orderTitle {
+.shiftBanner {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-}
-
-.orderSeq {
-  font-variant-numeric: tabular-nums;
-  min-width: 20px;
-}
-
-/* ============================================
-   TOOLBAR
-   ============================================ */
-
-.toolbar {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-}
-
-.toolbar > :first-child {
-  flex: 1;
-  min-width: 0;
-}
-
-/* ============================================
-   STATS — glass pill
-   ============================================ */
-
-.headerStats {
+  padding: var(--space-2-5) var(--space-4);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  color: var(--text-secondary);
   flex-shrink: 0;
+}
+
+.shiftBannerWarn {
+  background: var(--color-warning-bg, rgba(255, 160, 0, 0.08));
+  border-color: var(--color-warning);
+  color: var(--color-warning);
+}
+
+/* ============================================
+   STATS STRIP
+   ============================================ */
+
+.statsStrip {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-2) var(--space-3);
-  padding: var(--space-2) var(--space-4);
+  gap: var(--space-1);
+  padding: var(--space-2-5) var(--space-4);
   background: var(--glass-bg-elevated);
-  backdrop-filter: blur(var(--blur-lg));
-  -webkit-backdrop-filter: blur(var(--blur-lg));
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-full);
-  box-shadow: var(--shadow-card);
+  flex-shrink: 0;
+  flex-wrap: wrap;
 }
 
 .statItem {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 1px;
+  gap: var(--space-1-5);
 }
 
 .statDivider {
   width: 1px;
   height: 16px;
   background: var(--glass-border);
+  flex-shrink: 0;
+  margin: 0 var(--space-1);
 }
 
 /* ============================================
-   ACTIVITIES LIST
+   ORDER LIST
    ============================================ */
 
 .ordersList {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-1-5);
   flex: 1;
-  min-height: 0;
 }
+
+/* ============================================
+   ORDER CARD
+   ============================================ */
+
+.orderCard {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-default),
+              border-color var(--duration-fast) var(--ease-default),
+              transform var(--duration-fast) var(--ease-default);
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.orderCard:hover {
+  background: var(--glass-bg-elevated);
+  border-color: var(--glass-border-hover, rgba(0, 0, 0, 0.12));
+}
+
+.orderCard:active {
+  transform: scale(0.995);
+}
+
+/* Order number badge */
+.orderNum {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.25rem;
+  height: 2.25rem;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: var(--font-bold);
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Info section */
+.orderInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.orderMeta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.orderId {
+  font-variant-numeric: tabular-nums;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.orderPreview {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Right section: total + payment icon */
+.orderRight {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+/* ============================================
+   ORDER DETAIL (modal body)
+   ============================================ */
+
+.detailContent {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* Items table */
+.detailTable {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.detailTableHeader {
+  display: grid;
+  grid-template-columns: 1fr 48px 72px;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.detailTableHeader span {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.detailRow {
+  display: grid;
+  grid-template-columns: 1fr 48px 72px;
+  gap: var(--space-2);
+  padding: var(--space-2-5) var(--space-3);
+  border-bottom: 1px solid var(--glass-border);
+  align-items: start;
+}
+
+.detailRow:last-child {
+  border-bottom: none;
+}
+
+.detailItemName {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.detailMods {
+  display: flex;
+  flex-direction: column;
+  padding-left: var(--space-3);
+}
+
+.colRight {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Footer row */
+.detailFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+}
+
+.detailPayment {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.detailTotal {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* ============================================
+   LOADING / EMPTY STATE
+   ============================================ */
 
 .emptyState {
   display: flex;
@@ -148,53 +261,9 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-4);
-  text-align: center;
   padding: var(--space-12) var(--space-4);
+  text-align: center;
   flex: 1;
-}
-
-/* ============================================
-   DATE GROUPS
-   ============================================ */
-
-.dateGroup {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.dateGroupHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 var(--space-1);
-}
-
-.dateGroupOrders {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-/* ============================================
-   ACTIVITY ITEM
-   ============================================ */
-
-.activityItem {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  background: var(--glass-bg);
-  backdrop-filter: blur(var(--blur-md));
-  -webkit-backdrop-filter: blur(var(--blur-md));
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-lg);
-  transition: background 0.15s ease;
-}
-
-.activityItem:hover {
-  background: var(--glass-bg-elevated);
 }
 
 /* ============================================
@@ -212,10 +281,6 @@
   min-width: 0;
 }
 
-.mobileSearchClose {
-  flex-shrink: 0;
-}
-
 /* ============================================
    RESPONSIVE
    ============================================ */
@@ -226,20 +291,19 @@
     gap: var(--space-3);
   }
 
-  .toolbar {
-    flex-direction: column;
-    align-items: stretch;
-    gap: var(--space-3);
+  .orderCard {
+    padding: var(--space-2-5) var(--space-3);
+    gap: var(--space-2-5);
   }
 }
 
 @media (max-width: 480px) {
   .page {
     padding: var(--space-3);
-    gap: var(--space-3);
+    gap: var(--space-2-5);
   }
 
-  .headerStats {
+  .statsStrip {
     border-radius: var(--radius-lg);
     padding: var(--space-2) var(--space-3);
   }
@@ -248,13 +312,13 @@
     display: none;
   }
 
-  .dateGroupHeader {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--space-1);
+  .orderNum {
+    min-width: 2rem;
+    height: 2rem;
+    font-size: var(--text-xs);
   }
 
-  .activityItem {
-    padding: var(--space-2) var(--space-3);
+  .orderId {
+    display: none;
   }
 }

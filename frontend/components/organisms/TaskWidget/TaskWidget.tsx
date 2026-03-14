@@ -339,57 +339,52 @@ export function TaskWidget({ collapsed = false, defaultOpen = false, onModalClos
           onClose={() => { setModalOpen(false); onModalClose?.(); }}
           title="Завдання"
           icon="check"
-          size="lg"
+          size="xl"
         >
           <div className={styles.modalBody}>
-            {/* Toolbar */}
+            {/* Tabs + actions in one row */}
             <div className={styles.modalToolbar}>
-              {searchOpen ? (
-                <>
-                  <SearchInput
-                    value={searchQuery}
-                    onChange={setSearchQuery}
-                    placeholder="Пошук завдань..."
-                    variant="glass"
-                    autoFocus
-                  />
-                  <Button variant="ghost" size="sm" iconOnly
-                    onClick={() => { setSearchOpen(false); setSearchQuery(''); }}>
-                    <Icon name="close" size="md" />
+              <div className={styles.tabPills}>
+                <button
+                  className={`${styles.tabPill} ${activeTab === 'active' ? styles.tabPillActive : ''}`}
+                  onClick={() => setActiveTab('active')}
+                >
+                  Активні
+                  <span className={styles.tabCount}>{isLoading ? '…' : activeTasks.length}</span>
+                </button>
+                <button
+                  className={`${styles.tabPill} ${activeTab === 'done' ? styles.tabPillActive : ''}`}
+                  onClick={() => setActiveTab('done')}
+                >
+                  Виконані
+                  <span className={styles.tabCount}>{isLoading ? '…' : doneTasks.length}</span>
+                </button>
+              </div>
+              <div className={styles.toolbarActions}>
+                <Button variant="ghost" size="sm" iconOnly
+                  onClick={() => { setSearchOpen(p => !p); if (searchOpen) setSearchQuery(''); }}
+                  aria-label="Пошук"
+                >
+                  <Icon name={searchOpen ? 'close' : 'search'} size="md" />
+                </Button>
+                {isAdmin && (
+                  <Button variant="primary" size="sm" onClick={openCreate}>
+                    <Icon name="plus" size="sm" /> Додати
                   </Button>
-                </>
-              ) : (
-                <>
-                  <div />
-                  <Button variant="ghost" size="sm" iconOnly onClick={() => setSearchOpen(true)} aria-label="Пошук">
-                    <Icon name="search" size="md" />
-                  </Button>
-                  {isAdmin && (
-                    <Button variant="primary" size="sm" onClick={openCreate}>
-                      <Icon name="plus" size="sm" /> Додати
-                    </Button>
-                  )}
-                </>
-              )}
+                )}
+              </div>
             </div>
 
-            {/* Tab pills */}
-            <div className={styles.tabPills}>
-              <button
-                className={`${styles.tabPill} ${activeTab === 'active' ? styles.tabPillActive : ''}`}
-                onClick={() => setActiveTab('active')}
-              >
-                Активні
-                <span className={styles.tabCount}>{isLoading ? '…' : activeTasks.length}</span>
-              </button>
-              <button
-                className={`${styles.tabPill} ${activeTab === 'done' ? styles.tabPillActive : ''}`}
-                onClick={() => setActiveTab('done')}
-              >
-                Виконані
-                <span className={styles.tabCount}>{isLoading ? '…' : doneTasks.length}</span>
-              </button>
-            </div>
+            {/* Search input — inline, only when open */}
+            {searchOpen && (
+              <SearchInput
+                value={searchQuery}
+                onChange={setSearchQuery}
+                placeholder="Пошук завдань..."
+                variant="glass"
+                autoFocus
+              />
+            )}
 
             {/* Task list */}
             <div className={styles.taskList}>
@@ -478,9 +473,6 @@ export function TaskWidget({ collapsed = false, defaultOpen = false, onModalClos
           )}
         </button>
 
-        {/* Divider */}
-        <div className={styles.cardDivider} />
-
         {/* Preview tasks */}
         {previewTasks.length === 0 ? (
           <p className={styles.cardEmpty}>Немає активних завдань</p>
@@ -490,7 +482,7 @@ export function TaskWidget({ collapsed = false, defaultOpen = false, onModalClos
               <button
                 key={task.documentId}
                 type="button"
-                className={styles.previewRow}
+                className={`${styles.previewRow} ${styles[`row_${task.priority}`]}`}
                 onClick={() => setModalOpen(true)}
               >
                 <span className={`${styles.previewDot} ${styles[`dot_${task.priority}`]}`} />
@@ -502,9 +494,6 @@ export function TaskWidget({ collapsed = false, defaultOpen = false, onModalClos
             ))}
           </div>
         )}
-
-        {/* Divider */}
-        <div className={styles.cardDivider} />
 
         {/* Card footer */}
         <div className={styles.cardFooter}>

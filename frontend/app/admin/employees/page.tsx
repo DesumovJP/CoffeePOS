@@ -3,13 +3,13 @@
 /**
  * CoffeePOS - Admin Employees Page
  *
- * Employee management: list with CRUD + analytics with charts
+ * Employee management: list with CRUD + KPI tab with line chart and performance table
  */
 
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import {
-  BarChart,
-  Bar,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -17,12 +17,13 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { Text, Button, Icon, Badge, GlassCard, Modal, Spinner } from '@/components/atoms';
-import { SegmentedControl, SearchInput, StatsGrid, EmployeeCard, type StatItem } from '@/components/molecules';
-import { DataTable, EmployeeFormModal, EmployeeDetailModal, type Column } from '@/components/organisms';
+import { SegmentedControl, SearchInput, EmployeeCard } from '@/components/molecules';
+import { DataTable, EmployeeFormModal, type Column } from '@/components/organisms';
 import {
   useEmployees,
   useEmployeePerformance,
   useDeleteEmployee,
+  useMonthlyReport,
 } from '@/lib/hooks';
 import type { Employee, EmployeePerformance } from '@/lib/api';
 import { useQueryClient } from '@tanstack/react-query';
@@ -35,7 +36,7 @@ import styles from './page.module.css';
 
 const TABS = [
   { id: 'list', label: 'Працівники' },
-  { id: 'analytics', label: 'Аналітика' },
+  { id: 'kpi', label: 'KPI' },
 ];
 
 const ROLE_LABELS: Record<string, string> = {
@@ -50,6 +51,20 @@ const ROLE_VARIANTS: Record<string, 'warning' | 'info' | 'default'> = {
   barista: 'default',
 };
 
+const MONTHS = [
+  'Січень', 'Лютий', 'Березень', 'Квітень', 'Травень', 'Червень',
+  'Липень', 'Серпень', 'Вересень', 'Жовтень', 'Листопад', 'Грудень',
+];
+
+// KPI metric toggle options
+const KPI_METRICS = [
+  { id: 'revenue',  label: 'Продажі',    icon: 'cash',    color: 'accent'  },
+  { id: 'orders',   label: 'Замовлення', icon: 'receipt', color: 'info'    },
+  { id: 'avgCheck', label: 'Сер. чек',   icon: 'chart',   color: 'success' },
+] as const;
+
+type KpiMetricId = typeof KPI_METRICS[number]['id'];
+
 // ============================================
 // HELPERS
 // ============================================
@@ -61,6 +76,11 @@ function formatCurrency(value: number): string {
   }).format(value);
 }
 
+function getShortDate(dateStr: string): string {
+  const parts = dateStr.split('-');
+  return `${parts[2]}.${parts[1]}`;
+}
+
 // ============================================
 // LIST TAB
 // ============================================
@@ -68,7 +88,6 @@ function formatCurrency(value: number): string {
 function EmployeesListTab() {
   const [search, setSearch] = useState('');
   const [employeeModal, setEmployeeModal] = useState<{ isOpen: boolean; employee: Employee | null }>({ isOpen: false, employee: null });
-  const [detailModal, setDetailModal] = useState<{ isOpen: boolean; employee: Employee | null }>({ isOpen: false, employee: null });
   const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; documentId: string; name: string } | null>(null);
 
   const queryClient = useQueryClient();
@@ -83,7 +102,6 @@ function EmployeesListTab() {
   }, []);
 
   const handleEditEmployee = useCallback((emp: Employee) => {
-    setDetailModal({ isOpen: false, employee: null });
     setEmployeeModal({ isOpen: true, employee: emp });
   }, []);
 
@@ -120,7 +138,22 @@ function EmployeesListTab() {
     {
       key: 'name',
       header: "Ім'я",
+      type: 'primary' as const,
       render: (emp) => <EmployeeCard employee={emp} showStatus />,
+    },
+    {
+      key: 'phone',
+      header: 'Телефон',
+      width: '140px',
+      hideOnMobile: true,
+      render: (emp) => emp.phone ? (
+        <a href={`tel:${emp.phone}`} className={styles.phoneLink} onClick={(e) => e.stopPropagation()}>
+          <Icon name="phone" size="sm" color="accent" />
+          <Text variant="bodySmall">{emp.phone}</Text>
+        </a>
+      ) : (
+        <Text variant="bodySmall" color="tertiary">—</Text>
+      ),
     },
     {
       key: 'status',
@@ -137,6 +170,7 @@ function EmployeesListTab() {
       key: 'hireDate',
       header: 'Дата найму',
       width: '120px',
+      type: 'meta' as const,
       hideOnMobile: true,
       hideOnTablet: true,
       render: (emp) => (
@@ -147,7 +181,8 @@ function EmployeesListTab() {
     },
     {
       key: 'actions',
-      header: 'Дії',
+      header: '',
+      type: 'action' as const,
       align: 'right',
       width: '90px',
       render: (emp) => (
@@ -204,7 +239,7 @@ function EmployeesListTab() {
           columns={columns}
           data={employees || []}
           getRowKey={(emp) => String(emp.id)}
-          onRowClick={(emp) => setDetailModal({ isOpen: true, employee: emp })}
+          onRowClick={(emp) => handleEditEmployee(emp)}
           emptyState={{ icon: 'user', title: 'Працівників не знайдено' }}
         />
       )}
@@ -214,13 +249,6 @@ function EmployeesListTab() {
         onClose={() => setEmployeeModal({ isOpen: false, employee: null })}
         employee={employeeModal.employee}
         onSuccess={handleEmployeeSuccess}
-      />
-
-      <EmployeeDetailModal
-        isOpen={detailModal.isOpen}
-        onClose={() => setDetailModal({ isOpen: false, employee: null })}
-        employee={detailModal.employee}
-        onEdit={handleEditEmployee}
       />
 
       {deleteConfirm && (
@@ -249,18 +277,14 @@ function EmployeesListTab() {
 }
 
 // ============================================
-// ANALYTICS TAB
+// KPI TAB
 // ============================================
 
-const MONTHS = [
-  'Січень', 'Лютий', 'Березень', 'Квітень', 'Травень', 'Червень',
-  'Липень', 'Серпень', 'Вересень', 'Жовтень', 'Листопад', 'Грудень',
-];
-
-function AnalyticsTab() {
+function KpiTab() {
   const today = new Date();
   const [selectedMonth, setSelectedMonth] = useState(today.getMonth() + 1);
-  const [selectedYear, setSelectedYear]   = useState(today.getFullYear());
+  const [selectedYear, setSelectedYear] = useState(today.getFullYear());
+  const [activeMetric, setActiveMetric] = useState<KpiMetricId>('revenue');
 
   const isCurrentMonth =
     selectedMonth === today.getMonth() + 1 && selectedYear === today.getFullYear();
@@ -275,15 +299,17 @@ function AnalyticsTab() {
     else { setSelectedMonth((m) => m + 1); }
   };
 
-  const { data: employees } = useEmployees();
-  const { data: performance, isLoading } = useEmployeePerformance({ month: selectedMonth, year: selectedYear });
+  const { data: performance, isLoading: isPerfLoading } = useEmployeePerformance({ month: selectedMonth, year: selectedYear });
+  const { data: monthlyReport, isLoading: isMonthlyLoading } = useMonthlyReport(selectedYear, selectedMonth);
 
   const [chartColors, setChartColors] = useState({
     accent: '#3D3D3D',
     info: '#007AFF',
     success: '#30B350',
+    warning: '#FF9500',
     textSecondary: '#787880',
     gridStroke: 'rgba(0,0,0,0.06)',
+    white: '#ffffff',
   });
 
   useEffect(() => {
@@ -293,108 +319,163 @@ function AnalyticsTab() {
       accent: get('--color-accent-600') || '#3D3D3D',
       info: get('--color-info') || '#007AFF',
       success: get('--color-success') || '#30B350',
+      warning: get('--color-warning') || '#FF9500',
       textSecondary: get('--text-secondary') || '#787880',
       gridStroke: get('--glass-border') || 'rgba(0,0,0,0.06)',
+      white: get('--color-neutral-0') || '#ffffff',
     });
   }, []);
 
-  const stats: StatItem[] = useMemo(() => {
-    const total = employees?.length || 0;
-    const active = employees?.filter((e) => e.isActive).length || 0;
-    const totalHours = performance?.reduce((sum, p) => sum + p.totalHours, 0) || 0;
-    const totalSales = performance?.reduce((sum, p) => sum + p.totalSales, 0) || 0;
+  // Build daily time-series for the selected metric from monthly report
+  const chartData = useMemo(() => {
+    if (!monthlyReport?.days) return [];
+    return [...monthlyReport.days]
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .map((day) => {
+        const avgCheck = day.ordersCount > 0 ? Math.round(day.revenue / day.ordersCount) : 0;
+        return {
+          date: getShortDate(day.date),
+          revenue: Math.round(day.revenue),
+          orders: day.ordersCount,
+          avgCheck,
+          // hours from daily data isn't available; show 0 (performance table has monthly totals)
+          hours: 0,
+        };
+      });
+  }, [monthlyReport]);
 
-    return [
-      { id: 'total', label: 'Всього', value: total, icon: 'user' as const, iconColor: 'accent' as const },
-      { id: 'active', label: 'Активних', value: active, icon: 'check' as const, iconColor: 'success' as const },
-      { id: 'hours', label: 'Годин', value: totalHours.toFixed(1), icon: 'clock' as const, iconColor: 'info' as const },
-      { id: 'sales', label: 'Продажі', value: `₴${formatCurrency(totalSales)}`, icon: 'cash' as const, iconColor: 'warning' as const },
-    ];
-  }, [employees, performance]);
+  const currentMetric = KPI_METRICS.find((m) => m.id === activeMetric)!;
 
-  const performanceColumns: Column<EmployeePerformance>[] = useMemo(() => [
-    {
-      key: 'name',
-      header: "Ім'я",
-      render: (p) => <Text variant="bodySmall" weight="semibold">{p.employeeName}</Text>,
-    },
-    {
-      key: 'role',
-      header: 'Роль',
-      width: '100px',
-      hideOnMobile: true,
-      render: (p) => (
-        <Badge variant={ROLE_VARIANTS[p.role] || 'default'} size="sm">
-          {ROLE_LABELS[p.role] || p.role}
-        </Badge>
-      ),
-    },
-    {
-      key: 'shifts',
-      header: 'Зміни',
-      width: '80px',
-      align: 'right',
-      hideOnMobile: true,
-      render: (p) => <Text variant="bodySmall">{p.shiftsCount}</Text>,
-    },
-    {
-      key: 'hours',
-      header: 'Годин',
-      width: '80px',
-      align: 'right',
-      hideOnMobile: true,
-      render: (p) => <Text variant="bodySmall">{p.totalHours}</Text>,
-    },
-    {
-      key: 'orders',
-      header: 'Замовлень',
-      width: '100px',
-      align: 'right',
-      render: (p) => <Text variant="bodySmall">{p.totalOrders}</Text>,
-    },
-    {
-      key: 'sales',
-      header: 'Продажі',
-      width: '110px',
-      align: 'right',
-      render: (p) => <Text variant="labelSmall" weight="semibold">₴{formatCurrency(p.totalSales)}</Text>,
-    },
-    {
-      key: 'avg',
-      header: 'Сер. чек',
-      width: '100px',
-      align: 'right',
-      hideOnMobile: true,
-      render: (p) => <Text variant="bodySmall" color="secondary">₴{formatCurrency(p.avgOrderValue)}</Text>,
-    },
-  ], []);
+  // Derive active metric's color
+  const metricColor = {
+    revenue: chartColors.accent,
+    orders: chartColors.info,
+    avgCheck: chartColors.success,
+  }[activeMetric];
+
+  // Summary value for the active metric
+  const metricSummary = useMemo(() => {
+    if (!monthlyReport?.days) return null;
+    const days = monthlyReport.days;
+    switch (activeMetric) {
+      case 'revenue':
+        return { value: `₴${formatCurrency(monthlyReport.summary?.totalRevenue || 0)}`, label: 'за місяць' };
+      case 'orders':
+        return { value: String(monthlyReport.summary?.totalOrders || 0), label: 'замовлень' };
+      case 'avgCheck':
+        return { value: `₴${formatCurrency(Math.round(monthlyReport.summary?.avgOrder || 0))}`, label: 'сер. чек' };
+      default:
+        return null;
+    }
+  }, [activeMetric, monthlyReport, performance]);
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
+      const val = payload[0].value;
+      const formatted =
+        activeMetric === 'revenue' || activeMetric === 'avgCheck'
+          ? `₴${formatCurrency(val)}`
+          : String(val);
       return (
         <div className={styles.chartTooltip}>
           <Text variant="labelSmall" color="tertiary">{label}</Text>
-          <Text variant="labelMedium" weight="bold">{payload[0].value}</Text>
+          <Text variant="labelMedium" weight="bold">{formatted}</Text>
         </div>
       );
     }
     return null;
   };
 
-  if (isLoading) {
-    return (
-      <div className={styles.loadingState}>
-        <Spinner size="md" />
-        <Text variant="bodyLarge" color="secondary">Завантаження...</Text>
-      </div>
-    );
-  }
+  // Sort by sales descending and compute rank + relative bar width
+  type RankedPerformance = EmployeePerformance & { rank: number; salesPct: number };
+
+  const rankedPerformance = useMemo((): RankedPerformance[] => {
+    if (!performance) return [];
+    const sorted = [...performance].sort((a, b) => b.totalSales - a.totalSales);
+    const maxSales = sorted[0]?.totalSales || 1;
+    return sorted.map((p, i) => ({
+      ...p,
+      rank: i + 1,
+      salesPct: maxSales > 0 ? (p.totalSales / maxSales) * 100 : 0,
+    }));
+  }, [performance]);
+
+  const performanceColumns: Column<RankedPerformance>[] = useMemo(() => [
+    {
+      key: 'rank',
+      header: '#',
+      width: '48px',
+      render: (p) => (
+        <div className={styles.rankCell}>
+          <span className={`${styles.rankNum} ${p.rank === 1 ? styles.rank1 : p.rank === 2 ? styles.rank2 : p.rank === 3 ? styles.rank3 : ''}`}>
+            {p.rank}
+          </span>
+        </div>
+      ),
+    },
+    {
+      key: 'name',
+      header: "Ім'я",
+      type: 'primary' as const,
+      render: (p) => (
+        <div className={styles.perfNameCell}>
+          <Text variant="labelMedium" weight="semibold">{p.employeeName}</Text>
+          <Badge variant={ROLE_VARIANTS[p.role] || 'default'} size="sm">
+            {ROLE_LABELS[p.role] || p.role}
+          </Badge>
+        </div>
+      ),
+    },
+    {
+      key: 'shifts',
+      header: 'Зміни / год',
+      width: '100px',
+      type: 'numeric' as const,
+      hideOnMobile: true,
+      render: (p) => (
+        <div className={styles.shiftsCell}>
+          <Text variant="bodySmall" weight="semibold">{p.shiftsCount} зм</Text>
+          <Text variant="caption" color="tertiary">{p.totalHours} год</Text>
+        </div>
+      ),
+    },
+    {
+      key: 'orders',
+      header: 'Замовл.',
+      width: '80px',
+      type: 'numeric' as const,
+      hideOnMobile: true,
+      render: (p) => <Text variant="bodySmall">{p.totalOrders}</Text>,
+    },
+    {
+      key: 'sales',
+      header: 'Продажі',
+      width: '140px',
+      type: 'numeric' as const,
+      render: (p) => (
+        <div className={styles.salesCell}>
+          <Text variant="labelSmall" weight="bold">₴{formatCurrency(p.totalSales)}</Text>
+          <div className={styles.salesBar}>
+            <div className={styles.salesBarFill} style={{ width: `${p.salesPct}%` }} />
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'avg',
+      header: 'Сер. чек',
+      width: '90px',
+      type: 'numeric' as const,
+      hideOnMobile: true,
+      render: (p) => <Text variant="bodySmall" color="secondary">₴{formatCurrency(p.avgOrderValue)}</Text>,
+    },
+  ], []);
 
   return (
     <div className={styles.analyticsContent}>
       {/* Month navigation */}
       <div className={styles.monthNav}>
-        <Button variant="ghost" size="sm" onClick={goToPrevMonth} aria-label="Попередній місяць">
+        <Button variant="ghost" size="sm" iconOnly onClick={goToPrevMonth} aria-label="Попередній місяць">
           <Icon name="chevron-left" size="md" />
         </Button>
         <div className={styles.monthTitle}>
@@ -405,6 +486,7 @@ function AnalyticsTab() {
         <Button
           variant="ghost"
           size="sm"
+          iconOnly
           onClick={goToNextMonth}
           disabled={isCurrentMonth}
           aria-label="Наступний місяць"
@@ -413,95 +495,106 @@ function AnalyticsTab() {
         </Button>
       </div>
 
-      <StatsGrid stats={stats} columns={4} variant="bar" />
-
-      {/* Charts */}
-      <div className={styles.chartsGrid}>
-        <GlassCard className={styles.chartCard} elevated>
-          <div className={styles.chartTitle}>
-            <Icon name="cash" size="sm" color="accent" />
-            <Text variant="h5" weight="semibold">Продажі за працівником</Text>
+      {/* Single line chart with metric toggles */}
+      <GlassCard className={styles.kpiChartCard} elevated>
+        {/* Chart header: title + summary + metric toggles */}
+        <div className={styles.kpiChartHeader}>
+          <div className={styles.kpiChartMeta}>
+            <div className={styles.chartTitle}>
+              <Icon name={currentMetric.icon as any} size="sm" color={currentMetric.color as any} />
+              <Text variant="h5" weight="semibold">{currentMetric.label}</Text>
+            </div>
+            {metricSummary && (
+              <div className={styles.kpiSummary}>
+                <Text variant="h3" weight="bold">{metricSummary.value}</Text>
+                <Text variant="caption" color="tertiary">{metricSummary.label}</Text>
+              </div>
+            )}
           </div>
-          <div className={styles.chartContainer}>
+          <div className={styles.metricToggle}>
+            {KPI_METRICS.map((m) => (
+              <button
+                key={m.id}
+                className={`${styles.metricBtn} ${activeMetric === m.id ? styles.metricBtnActive : ''}`}
+                onClick={() => setActiveMetric(m.id)}
+              >
+                {m.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Chart */}
+        <div className={styles.kpiChartContainer}>
+          {isMonthlyLoading ? (
+            <div className={styles.loadingState}><Spinner size="md" /></div>
+          ) : chartData.length === 0 ? (
+            <div className={styles.hoursNote}>
+              <Icon name="chart" size="xl" color="tertiary" />
+              <Text variant="bodySmall" color="tertiary">Немає даних за обраний місяць</Text>
+            </div>
+          ) : (
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={performance || []} layout="vertical" margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+              <AreaChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
                 <defs>
-                  <linearGradient id="horzSalesGrad" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor={chartColors.accent} stopOpacity={0.5} />
-                    <stop offset="100%" stopColor={chartColors.accent} stopOpacity={0.9} />
+                  <linearGradient id="kpiGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={metricColor} stopOpacity={0.25} />
+                    <stop offset="95%" stopColor={metricColor} stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke={chartColors.gridStroke} vertical={false} />
-                <XAxis type="number" tick={{ fontSize: 11, fill: chartColors.textSecondary }} tickLine={false} axisLine={false} />
-                <YAxis type="category" dataKey="employeeName" width={130} tick={{ fontSize: 12, fill: chartColors.textSecondary }} tickLine={false} axisLine={false} />
+                <XAxis
+                  dataKey="date"
+                  tick={{ fontSize: 12, fill: chartColors.textSecondary }}
+                  axisLine={{ stroke: chartColors.gridStroke }}
+                  tickLine={false}
+                  interval={chartData.length > 15 ? Math.floor(chartData.length / 10) : 0}
+                />
+                <YAxis
+                  width={50}
+                  tick={{ fontSize: 11, fill: chartColors.textSecondary }}
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={(v) =>
+                    activeMetric === 'revenue' || activeMetric === 'avgCheck'
+                      ? v >= 1000 ? `${(v / 1000).toFixed(0)}k` : String(v)
+                      : String(v)
+                  }
+                />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="totalSales" fill="url(#horzSalesGrad)" radius={[0, 6, 6, 0]} maxBarSize={32} />
-              </BarChart>
+                <Area
+                  type="monotone"
+                  dataKey={activeMetric === 'avgCheck' ? 'avgCheck' : activeMetric === 'orders' ? 'orders' : 'revenue'}
+                  stroke={metricColor}
+                  strokeWidth={2.5}
+                  fill="url(#kpiGrad)"
+                  dot={{ fill: metricColor, strokeWidth: 0, r: 3 }}
+                  activeDot={{ r: 5, fill: metricColor, strokeWidth: 2, stroke: chartColors.white }}
+                />
+              </AreaChart>
             </ResponsiveContainer>
-          </div>
-        </GlassCard>
-
-        <GlassCard className={styles.chartCard} elevated>
-          <div className={styles.chartTitle}>
-            <Icon name="clock" size="sm" color="info" />
-            <Text variant="h5" weight="semibold">Годин відпрацьовано</Text>
-          </div>
-          <div className={styles.chartContainer}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={performance || []} layout="vertical" margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
-                <defs>
-                  <linearGradient id="horzHoursGrad" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor={chartColors.info} stopOpacity={0.5} />
-                    <stop offset="100%" stopColor={chartColors.info} stopOpacity={0.9} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke={chartColors.gridStroke} vertical={false} />
-                <XAxis type="number" tick={{ fontSize: 11, fill: chartColors.textSecondary }} tickLine={false} axisLine={false} />
-                <YAxis type="category" dataKey="employeeName" width={130} tick={{ fontSize: 12, fill: chartColors.textSecondary }} tickLine={false} axisLine={false} />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="totalHours" fill="url(#horzHoursGrad)" radius={[0, 6, 6, 0]} maxBarSize={32} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </GlassCard>
-
-        <GlassCard className={styles.chartCard} elevated>
-          <div className={styles.chartTitle}>
-            <Icon name="receipt" size="sm" color="success" />
-            <Text variant="h5" weight="semibold">Замовлення за працівником</Text>
-          </div>
-          <div className={styles.chartContainer}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={performance || []} layout="vertical" margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
-                <defs>
-                  <linearGradient id="horzOrdersGrad" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor={chartColors.success} stopOpacity={0.5} />
-                    <stop offset="100%" stopColor={chartColors.success} stopOpacity={0.9} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke={chartColors.gridStroke} vertical={false} />
-                <XAxis type="number" tick={{ fontSize: 11, fill: chartColors.textSecondary }} tickLine={false} axisLine={false} />
-                <YAxis type="category" dataKey="employeeName" width={130} tick={{ fontSize: 12, fill: chartColors.textSecondary }} tickLine={false} axisLine={false} />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="totalOrders" fill="url(#horzOrdersGrad)" radius={[0, 6, 6, 0]} maxBarSize={32} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </GlassCard>
-      </div>
+          )}
+        </div>
+      </GlassCard>
 
       {/* Performance table */}
       <GlassCard className={styles.tableCard} elevated>
         <div className={styles.chartTitle}>
           <Icon name="chart" size="sm" color="accent" />
-          <Text variant="h5" weight="semibold">Порівняння ефективності</Text>
+          <Text variant="h5" weight="semibold">Ефективність за місяць</Text>
         </div>
-        <DataTable
-          columns={performanceColumns}
-          data={performance || []}
-          getRowKey={(p) => String(p.employeeId)}
-          emptyState={{ icon: 'user', title: 'Немає даних' }}
-        />
+        {isPerfLoading ? (
+          <div className={styles.loadingState}>
+            <Spinner size="md" />
+          </div>
+        ) : (
+          <DataTable
+            columns={performanceColumns}
+            data={rankedPerformance}
+            getRowKey={(p) => String(p.employeeId)}
+            emptyState={{ icon: 'user', title: 'Немає даних' }}
+          />
+        )}
       </GlassCard>
     </div>
   );
@@ -522,7 +615,7 @@ export default function AdminEmployeesPage() {
         onChange={setActiveTab}
       />
 
-      {activeTab === 'analytics' ? <AnalyticsTab /> : <EmployeesListTab />}
+      {activeTab === 'kpi' ? <KpiTab /> : <EmployeesListTab />}
     </div>
   );
 }

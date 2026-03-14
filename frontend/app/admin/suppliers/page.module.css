@@ -1,5 +1,5 @@
 /**
- * Suppliers Page Styles
+ * Поставки Page Styles
  */
 
 .page {
@@ -11,44 +11,292 @@
   max-width: var(--grid-max-width);
   margin-inline: auto;
   width: 100%;
-  overflow-y: auto;
   height: 100%;
+  overflow: hidden;
 }
 
 /* ============================================
-   SEARCH BAR
+   ORDER TAB
+   ============================================ */
+
+.orderTab {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.orderTabHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-shrink: 0;
+}
+
+.orderTabActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Split layout */
+.orderLayout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: var(--space-4);
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ============================================
+   INGREDIENT PICKER PANEL (left)
+   ============================================ */
+
+.pickerPanel {
+  display: flex;
+  flex-direction: column;
+  background: var(--glass-bg-elevated);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  min-height: 0;
+}
+
+.pickerSearch {
+  flex-shrink: 0;
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.pickerList {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-2);
+}
+
+.pickerLoading,
+.pickerEmpty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8);
+}
+
+.pickerGroup {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: var(--space-3);
+}
+
+.pickerGroup:last-child {
+  margin-bottom: 0;
+}
+
+.pickerGroupLabel {
+  padding: var(--space-1) var(--space-2);
+  margin-bottom: var(--space-1);
+}
+
+.pickerItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-2) var(--space-2-5);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-default);
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pickerItem:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.pickerItem:active {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.pickerItemInOrder {
+  background: var(--color-success-bg, rgba(48, 179, 80, 0.08));
+}
+
+.pickerItemInOrder:hover {
+  background: var(--color-success-bg, rgba(48, 179, 80, 0.12));
+}
+
+.pickerItemInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+/* ============================================
+   ORDER LINES PANEL (right)
+   ============================================ */
+
+.linesPanel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.linesEmpty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  height: 100%;
+  padding: var(--space-12) var(--space-4);
+  text-align: center;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+}
+
+.linesTable {
+  display: flex;
+  flex-direction: column;
+  background: var(--glass-bg-elevated);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  overflow-y: auto;
+}
+
+/* Header row */
+.lineHeader {
+  background: var(--glass-bg);
+  border-bottom: 1px solid var(--glass-border);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Table row (header + data share same grid layout) */
+.lineRow {
+  display: grid;
+  grid-template-columns: 1fr 130px 160px 1fr 36px;
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-2-5) var(--space-4);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.lineRow:last-child {
+  border-bottom: none;
+}
+
+.lineRow:not(.lineHeader):hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+/* Columns */
+.colName {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.colQty {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1-5);
+}
+
+.colSupplier {}
+
+.colNote {}
+
+.colRemove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--text-tertiary);
+  transition: color var(--duration-fast), background var(--duration-fast);
+  flex-shrink: 0;
+}
+
+.colRemove:hover {
+  color: var(--color-error);
+  background: rgba(255, 59, 48, 0.08);
+}
+
+/* Inputs */
+.qtyInput {
+  width: 70px;
+  padding: var(--space-1) var(--space-2);
+  background: var(--bg-primary);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.qtyInput:focus {
+  outline: none;
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 3px var(--color-brand-subtle);
+}
+
+.supplierSelect,
+.noteInput {
+  width: 100%;
+  padding: var(--space-1) var(--space-2);
+  background: var(--bg-primary);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  font-family: inherit;
+}
+
+.supplierSelect:focus,
+.noteInput:focus {
+  outline: none;
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 3px var(--color-brand-subtle);
+}
+
+.noteInput::placeholder {
+  color: var(--text-tertiary);
+}
+
+/* ============================================
+   SUPPLIERS TAB — search bar
    ============================================ */
 
 .searchBar {
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  flex-shrink: 0;
 }
 
 .searchBar > :first-child {
   flex: 1;
-}
-
-/* ============================================
-   HEADER ROW
-   ============================================ */
-
-.headerRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-}
-
-.statusBanner {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
-  background: var(--color-warning-bg, rgba(255, 160, 0, 0.08));
-  border: 1px solid var(--color-warning);
-  border-radius: var(--radius-xl);
-  color: var(--color-warning);
 }
 
 /* ============================================
@@ -62,15 +310,15 @@
   min-width: 0;
 }
 
-.supplierIcon {
+.supplierAvatar {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 64px;
-  height: 64px;
+  width: 2.25rem;
+  height: 2.25rem;
   background: var(--glass-bg-elevated);
   border: 1px solid var(--glass-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-full);
   flex-shrink: 0;
 }
 
@@ -82,7 +330,7 @@
 }
 
 /* ============================================
-   CONTACT LINK (in table cell)
+   CONTACT LINK
    ============================================ */
 
 .contactLink {
@@ -121,7 +369,6 @@
   transition: opacity var(--duration-fast) var(--ease-default);
 }
 
-/* Show on row hover via DataTable */
 :global(tr:hover) .rowActions {
   opacity: 1;
 }
@@ -147,9 +394,69 @@
    RESPONSIVE
    ============================================ */
 
+@media (max-width: 900px) {
+  .orderLayout {
+    grid-template-columns: 240px 1fr;
+  }
+
+  .lineRow {
+    grid-template-columns: 1fr 110px 140px 0.8fr 36px;
+  }
+}
+
 @media (max-width: 768px) {
-  .headerRow {
-    flex-direction: row;
-    flex-wrap: wrap;
+  .page {
+    padding: var(--space-3);
+    overflow-y: auto;
+  }
+
+  .orderTab {
+    overflow: visible;
+  }
+
+  .orderLayout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+    overflow: visible;
+  }
+
+  .pickerPanel {
+    max-height: 260px;
+  }
+
+  .linesPanel {
+    min-height: 200px;
+    overflow: visible;
+  }
+
+  .linesTable {
+    overflow: visible;
+  }
+
+  .lineRow {
+    grid-template-columns: 1fr 100px 1fr 28px;
+  }
+
+  /* Hide note column on mobile */
+  .colNote {
+    display: none;
+  }
+
+  .lineHeader .colNote {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .lineRow {
+    grid-template-columns: 1fr 90px 28px;
+  }
+
+  .colSupplier {
+    display: none;
+  }
+
+  .lineHeader .colSupplier {
+    display: none;
   }
 }

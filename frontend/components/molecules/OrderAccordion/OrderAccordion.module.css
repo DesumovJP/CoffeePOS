@@ -14,6 +14,7 @@
   border-radius: var(--radius-lg);
   overflow: hidden;
   transition: all var(--duration-normal) var(--ease-out);
+  align-self: start; /* prevent stretching in grid rows */
 }
 
 .accordion:hover {

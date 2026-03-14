@@ -22,10 +22,7 @@
   height: 100%;
   z-index: var(--z-docked);
   background: var(--glass-bg-elevated);
-  backdrop-filter: blur(var(--blur-2xl));
-  -webkit-backdrop-filter: blur(var(--blur-2xl));
   border-right: 1px solid var(--glass-border);
-  box-shadow: var(--shadow-glass);
 }
 
 .main {

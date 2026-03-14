@@ -27,6 +27,14 @@ export interface Column<T> {
   width?: string;
   /** Inline style applied to every td in this column */
   cellStyle?: CSSProperties;
+  /**
+   * Column semantic type — controls visual treatment:
+   * - 'primary'  : main identity column (name, title) — stronger visual weight
+   * - 'action'   : edit/delete buttons — hidden until row hover
+   * - 'meta'     : secondary info (dates, IDs) — muted color + smaller text
+   * - 'numeric'  : prices, counts — tabular-nums, semibold, right-aligned
+   */
+  type?: 'primary' | 'action' | 'meta' | 'numeric';
 }
 
 export interface DataTableProps<T> {
@@ -52,6 +60,18 @@ export interface DataTableProps<T> {
   className?: string;
 }
 
+function colClass(col: Column<unknown>): string {
+  return [
+    col.align ? styles[col.align] : '',
+    col.hideOnMobile ? styles.hideOnMobile : '',
+    col.hideOnTablet ? styles.hideOnTablet : '',
+    col.type === 'primary' ? styles.primaryCell : '',
+    col.type === 'action'  ? styles.actionCell  : '',
+    col.type === 'meta'    ? styles.metaCell    : '',
+    col.type === 'numeric' ? styles.numericCell : '',
+  ].filter(Boolean).join(' ');
+}
+
 export function DataTable<T>({
   columns,
   data,
@@ -64,7 +84,7 @@ export function DataTable<T>({
 }: DataTableProps<T>) {
   if (loading) {
     return (
-      <GlassCard padding="none" className={`${styles.fillCard} ${className || ''}`}>
+      <GlassCard padding="none" className={`${styles.fillCard} ${className || ''}`} elevated>
         <div className={styles.loading}>
           <div className={styles.spinner} />
           <Text variant="bodySmall" color="secondary">
@@ -77,7 +97,7 @@ export function DataTable<T>({
 
   if (data.length === 0 && emptyState) {
     return (
-      <GlassCard padding="none" className={`${styles.fillCard} ${className || ''}`}>
+      <GlassCard padding="none" className={`${styles.fillCard} ${className || ''}`} elevated>
         <div className={styles.empty}>
           <Icon name={emptyState.icon} size="xl" color="tertiary" />
           <Text variant="bodyMedium" color="secondary">
@@ -94,7 +114,7 @@ export function DataTable<T>({
   }
 
   return (
-    <GlassCard padding="none" className={className}>
+    <GlassCard padding="none" className={className} elevated>
       <div className={styles.tableWrapper}>
         <table className={styles.table}>
           <colgroup>
@@ -107,11 +127,7 @@ export function DataTable<T>({
               {columns.map((col) => (
                 <th
                   key={col.key}
-                  className={`
-                    ${col.align ? styles[col.align] : ''}
-                    ${col.hideOnMobile ? styles.hideOnMobile : ''}
-                    ${col.hideOnTablet ? styles.hideOnTablet : ''}
-                  `}
+                  className={colClass(col as Column<unknown>)}
                 >
                   {col.header}
                 </th>
@@ -122,20 +138,16 @@ export function DataTable<T>({
             {data.map((item, index) => (
               <tr
                 key={getRowKey(item, index)}
-                className={`
-                  ${onRowClick ? styles.clickable : ''}
-                  ${getRowClassName ? getRowClassName(item) : ''}
-                `}
+                className={[
+                  onRowClick ? styles.clickable : '',
+                  getRowClassName ? getRowClassName(item) : '',
+                ].filter(Boolean).join(' ')}
                 onClick={onRowClick ? () => onRowClick(item) : undefined}
               >
                 {columns.map((col) => (
                   <td
                     key={col.key}
-                    className={`
-                      ${col.align ? styles[col.align] : ''}
-                      ${col.hideOnMobile ? styles.hideOnMobile : ''}
-                      ${col.hideOnTablet ? styles.hideOnTablet : ''}
-                    `}
+                    className={colClass(col as Column<unknown>)}
                     style={col.cellStyle}
                   >
                     {col.render

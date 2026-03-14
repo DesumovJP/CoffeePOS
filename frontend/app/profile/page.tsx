@@ -123,6 +123,7 @@ export default function ProfilePage() {
     {
       key: 'date',
       header: 'Дата',
+      type: 'primary' as const,
       width: '110px',
       render: (s) => (
         <Text variant="bodyMedium" weight="medium">
@@ -133,6 +134,7 @@ export default function ProfilePage() {
     {
       key: 'time',
       header: 'Час',
+      type: 'meta' as const,
       width: '160px',
       render: (s) => (
         <Text variant="bodySmall" color="secondary">
@@ -167,6 +169,7 @@ export default function ProfilePage() {
     {
       key: 'orders',
       header: 'Замовлень',
+      type: 'numeric' as const,
       width: '100px',
       align: 'right',
       hideOnMobile: true,
@@ -177,6 +180,7 @@ export default function ProfilePage() {
     {
       key: 'sales',
       header: 'Продажі',
+      type: 'numeric' as const,
       width: '110px',
       align: 'right',
       render: (s) => (

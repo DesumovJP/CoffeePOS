@@ -7,7 +7,7 @@
  */
 
 import { forwardRef, type ReactNode, type HTMLAttributes } from 'react';
-import { Text, Icon, Avatar, Button, Divider, type IconName } from '@/components/atoms';
+import { Text, Icon, Avatar, Button, type IconName } from '@/components/atoms';
 import styles from './Sidebar.module.css';
 
 // ============================================
@@ -189,8 +189,6 @@ export const Sidebar = forwardRef<HTMLElement, SidebarProps>(
 
         {/* Footer */}
         <div className={styles.footer}>
-          <Divider spacing="sm" />
-
           {/* User */}
           {user && (
             <div className={styles.userSection}>
