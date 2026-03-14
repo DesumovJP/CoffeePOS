@@ -477,14 +477,20 @@ function SuppliersTab() {
     pageSize: 200,
     sort: 'createdAt:desc',
   });
+  const { data: ingredients = [] } = useIngredients({ pageSize: 200 });
   const deleteSupplier = useDeleteSupplier();
 
   const isLoading = loadingSuppliers || loadingSupplies;
 
-  const allProfiles = useMemo(
-    () => buildProfiles(suppliers, supplies),
-    [suppliers, supplies],
-  );
+  const allProfiles = useMemo(() => {
+    const profiles = buildProfiles(suppliers, supplies);
+    return profiles.map((p) => ({
+      ...p,
+      ingredientCount: ingredients.filter(
+        (i) => i.supplier?.toLowerCase().includes(p.name.toLowerCase()),
+      ).length,
+    }));
+  }, [suppliers, supplies, ingredients]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -612,6 +618,18 @@ function SuppliersTab() {
             </div>
           );
         },
+      },
+      {
+        key: 'ingredientCount',
+        header: 'Товарів',
+        width: '80px',
+        align: 'right',
+        hideOnMobile: true,
+        render: (p) => (
+          <Text variant="bodySmall" color="secondary">
+            {p.ingredientCount ?? 0}
+          </Text>
+        ),
       },
       {
         key: 'totalSpent',

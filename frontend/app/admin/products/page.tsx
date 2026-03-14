@@ -25,6 +25,7 @@ import {
   useRecipesByProduct,
   useDeleteProduct,
   useDeleteIngredient,
+  useSuppliers,
 } from '@/lib/hooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { productKeys, ingredientKeys } from '@/lib/hooks';
@@ -352,11 +353,15 @@ export default function ProductsAdminPage() {
   // React Query
   const queryClient = useQueryClient();
 
+  // Supplier filter for ingredients tab
+  const [selectedSupplierFilter, setSelectedSupplierFilter] = useState<string | null>(null);
+
   // API data
   const { data: apiProducts, isLoading: productsLoading } = useProducts();
   const { data: apiCategories } = useCategories();
   const { data: apiIngredients, isLoading: ingredientsLoading } = useIngredients({ pageSize: 200 });
   const { data: apiIngredientCategories } = useIngredientCategories();
+  const { data: apiSuppliers = [] } = useSuppliers();
 
   // Delete mutations
   const deleteProductMutation = useDeleteProduct();
@@ -390,13 +395,19 @@ export default function ProductsAdminPage() {
   }, [products, search]);
 
   const filteredIngredients = useMemo(() => {
-    if (!search.trim()) return ingredientsList;
+    let list = ingredientsList;
+    if (selectedSupplierFilter) {
+      list = list.filter((ing) =>
+        ing.supplier?.toLowerCase().includes(selectedSupplierFilter.toLowerCase())
+      );
+    }
+    if (!search.trim()) return list;
     const q = search.toLowerCase();
-    return ingredientsList.filter((ing) =>
+    return list.filter((ing) =>
       ing.name.toLowerCase().includes(q) ||
       ing.supplier?.toLowerCase().includes(q)
     );
-  }, [ingredientsList, search]);
+  }, [ingredientsList, search, selectedSupplierFilter]);
 
   // ============================================
   // CRUD HANDLERS
@@ -680,6 +691,7 @@ export default function ProductsAdminPage() {
   const handleViewModeChangeWrapped = useCallback((mode: ViewMode) => {
     handleViewModeChange(mode);
     setMobileSearchOpen(false);
+    setSelectedSupplierFilter(null);
   }, []);
 
   return (
@@ -714,6 +726,27 @@ export default function ProductsAdminPage() {
           >
             <Icon name="close" size="md" />
           </Button>
+        </div>
+      )}
+
+      {/* Supplier filter chips — ingredients tab only */}
+      {viewMode === 'ingredients' && apiSuppliers.length > 0 && (
+        <div className={styles.supplierFilter}>
+          <button
+            className={`${styles.supplierChip} ${!selectedSupplierFilter ? styles.supplierChipActive : ''}`}
+            onClick={() => setSelectedSupplierFilter(null)}
+          >
+            Всі
+          </button>
+          {apiSuppliers.map((s) => (
+            <button
+              key={s.documentId}
+              className={`${styles.supplierChip} ${selectedSupplierFilter === s.name ? styles.supplierChipActive : ''}`}
+              onClick={() => setSelectedSupplierFilter(selectedSupplierFilter === s.name ? null : s.name)}
+            >
+              {s.name}
+            </button>
+          ))}
         </div>
       )}
 

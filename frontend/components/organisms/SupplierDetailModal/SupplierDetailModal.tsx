@@ -27,6 +27,7 @@ export interface SupplierProfile {
   totalSpent: number;
   lastDeliveryDate: string | null;
   supplies: Supply[];
+  ingredientCount?: number;
 }
 
 export interface SupplierDetailModalProps {
@@ -399,106 +400,120 @@ export function SupplierDetailModal({
         onClose={onClose}
         title={supplier.name}
         icon="truck"
-        size="xl"
+        size="full"
         footer={footer}
       >
-        <div className={styles.content}>
+        <div className={styles.modalBody}>
 
-          {/* Contact strip — or CTA to create profile for legacy suppliers */}
-          {entity ? (
-            <>
-              <ContactStrip entity={entity} />
-              {entity.category && (
-                <div className={styles.metaRow}>
-                  <Badge variant="default" size="sm">{entity.category}</Badge>
-                  {entity.notes && (
-                    <Text variant="bodySmall" color="tertiary">{entity.notes}</Text>
-                  )}
+          {/* Left: main content column */}
+          <div className={styles.mainColumn}>
+
+            {/* Contact strip — or CTA to create profile for legacy suppliers */}
+            {entity ? (
+              <>
+                <ContactStrip entity={entity} />
+                {entity.category && (
+                  <div className={styles.metaRow}>
+                    <Badge variant="default" size="sm">{entity.category}</Badge>
+                    {entity.notes && (
+                      <Text variant="bodySmall" color="tertiary">{entity.notes}</Text>
+                    )}
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className={styles.noProfileCta}>
+                <div className={styles.noProfileText}>
+                  <Text variant="labelMedium" weight="semibold">Немає контактної інформації</Text>
+                  <Text variant="bodySmall" color="tertiary">
+                    Додайте телефон, Telegram, контактну особу та умови роботи
+                  </Text>
                 </div>
-              )}
-            </>
-          ) : (
-            <div className={styles.noProfileCta}>
-              <div className={styles.noProfileText}>
-                <Text variant="labelMedium" weight="semibold">Немає контактної інформації</Text>
-                <Text variant="bodySmall" color="tertiary">
-                  Додайте телефон, Telegram, контактну особу та умови роботи
-                </Text>
+                <Button variant="secondary" size="sm" onClick={() => setCreateOpen(true)}>
+                  <Icon name="plus" size="sm" />
+                  Додати контакти
+                </Button>
               </div>
-              <Button variant="secondary" size="sm" onClick={() => setCreateOpen(true)}>
-                <Icon name="plus" size="sm" />
-                Додати контакти
-              </Button>
-            </div>
-          )}
+            )}
 
-          {/* Next delivery status */}
-          <NextDeliveryCard supplier={supplier} />
+            {/* Next delivery status */}
+            <NextDeliveryCard supplier={supplier} />
 
-          {/* Active deliveries */}
-          {activeSupplies.length > 0 && (
-            <div className={styles.section}>
-              <div className={styles.sectionHeader}>
-                <Text variant="labelMedium" weight="semibold">Активні поставки</Text>
-                <Badge variant="warning" size="sm">{activeSupplies.length}</Badge>
+            {/* Active deliveries */}
+            {activeSupplies.length > 0 && (
+              <div className={styles.section}>
+                <div className={styles.sectionHeader}>
+                  <Text variant="labelMedium" weight="semibold">Активні поставки</Text>
+                  <Badge variant="warning" size="sm">{activeSupplies.length}</Badge>
+                </div>
+                <DataTable
+                  columns={columns}
+                  data={activeSupplies}
+                  getRowKey={(s) => s.documentId}
+                  emptyState={{ icon: 'truck', title: 'Немає активних поставок' }}
+                  onRowClick={(s) => setExpandedId((prev) => (prev === s.documentId ? null : s.documentId))}
+                />
+                {renderExpandedDetail(activeSupplies)}
               </div>
-              <DataTable
-                columns={columns}
-                data={activeSupplies}
-                getRowKey={(s) => s.documentId}
-                emptyState={{ icon: 'truck', title: 'Немає активних поставок' }}
-                onRowClick={(s) => setExpandedId((prev) => (prev === s.documentId ? null : s.documentId))}
-              />
-              {renderExpandedDetail(activeSupplies)}
-            </div>
-          )}
+            )}
 
-          {/* Stats row */}
-          <div className={styles.stats}>
-            <div className={styles.stat}>
-              <span className={styles.statValue}>{supplier.totalDeliveries}</span>
-              <span className={styles.statLabel}>Всього поставок</span>
-            </div>
-            <div className={styles.stat}>
-              <span className={`${styles.statValue} ${styles.statSuccess}`}>{supplier.receivedDeliveries}</span>
-              <span className={styles.statLabel}>Отримано</span>
-            </div>
-            <div className={styles.stat}>
-              <span className={styles.statValue}>₴{formatCurrency(supplier.totalSpent)}</span>
-              <span className={styles.statLabel}>Витрачено</span>
-            </div>
-            <div className={styles.stat}>
-              <span className={styles.statValue}>{formatDate(supplier.lastDeliveryDate)}</span>
-              <span className={styles.statLabel}>Остання поставка</span>
-            </div>
+            {/* History (collapsed by default) */}
+            {historySupplies.length > 0 && (
+              <div className={styles.section}>
+                <button
+                  className={styles.historyToggle}
+                  onClick={() => { setShowHistory((v) => !v); setExpandedId(null); }}
+                >
+                  <Text variant="labelMedium" weight="semibold">
+                    Історія поставок ({historySupplies.length})
+                  </Text>
+                  <Icon name={showHistory ? 'chevron-up' : 'chevron-down'} size="sm" />
+                </button>
+                {showHistory && (
+                  <>
+                    <DataTable
+                      columns={columns}
+                      data={historySupplies}
+                      getRowKey={(s) => s.documentId}
+                      emptyState={{ icon: 'truck', title: 'Немає записів' }}
+                      onRowClick={(s) => setExpandedId((prev) => (prev === s.documentId ? null : s.documentId))}
+                    />
+                    {renderExpandedDetail(historySupplies)}
+                  </>
+                )}
+              </div>
+            )}
+
           </div>
 
-          {/* History (collapsed by default) */}
-          {historySupplies.length > 0 && (
-            <div className={styles.section}>
-              <button
-                className={styles.historyToggle}
-                onClick={() => { setShowHistory((v) => !v); setExpandedId(null); }}
-              >
-                <Text variant="labelMedium" weight="semibold">
-                  Історія поставок ({historySupplies.length})
-                </Text>
-                <Icon name={showHistory ? 'chevron-up' : 'chevron-down'} size="sm" />
-              </button>
-              {showHistory && (
-                <>
-                  <DataTable
-                    columns={columns}
-                    data={historySupplies}
-                    getRowKey={(s) => s.documentId}
-                    emptyState={{ icon: 'truck', title: 'Немає записів' }}
-                    onRowClick={(s) => setExpandedId((prev) => (prev === s.documentId ? null : s.documentId))}
-                  />
-                  {renderExpandedDetail(historySupplies)}
-                </>
+          {/* Right: stats sidebar */}
+          <div className={styles.sidebar}>
+            <div className={styles.sidebarSection}>
+              <Text variant="labelSmall" weight="semibold" color="secondary">Статистика</Text>
+              <div className={styles.sidebarRow}>
+                <Text variant="caption" color="tertiary">Всього поставок</Text>
+                <Text variant="labelSmall" weight="semibold">{supplier.totalDeliveries}</Text>
+              </div>
+              <div className={styles.sidebarRow}>
+                <Text variant="caption" color="tertiary">Отримано</Text>
+                <Text variant="labelSmall" weight="semibold" color="success">{supplier.receivedDeliveries}</Text>
+              </div>
+              <div className={styles.sidebarRow}>
+                <Text variant="caption" color="tertiary">Витрачено</Text>
+                <Text variant="labelSmall" weight="semibold">₴{formatCurrency(supplier.totalSpent)}</Text>
+              </div>
+              <div className={styles.sidebarRow}>
+                <Text variant="caption" color="tertiary">Остання поставка</Text>
+                <Text variant="labelSmall" weight="semibold">{formatDate(supplier.lastDeliveryDate)}</Text>
+              </div>
+              {supplier.ingredientCount !== undefined && (
+                <div className={styles.sidebarRow}>
+                  <Text variant="caption" color="tertiary">Товарів</Text>
+                  <Text variant="labelSmall" weight="semibold">{supplier.ingredientCount}</Text>
+                </div>
               )}
             </div>
-          )}
+          </div>
 
         </div>
       </Modal>
