@@ -238,7 +238,7 @@ export function ProductFormModal({
   const footer = (
     <div style={{ display: 'flex', gap: 8, width: '100%' }}>
       {isEditMode && onDelete && (
-        <Button variant="ghost" size="md" onClick={onDelete} style={{ flexShrink: 0 }}>
+        <Button variant="ghost" size="md" onClick={onDelete} style={{ flex: 1 }}>
           <Icon name="delete" size="sm" />
         </Button>
       )}
@@ -246,7 +246,7 @@ export function ProductFormModal({
         variant="primary"
         onClick={handleSubmit as any}
         loading={isSubmitting}
-        fullWidth
+        style={{ flex: 1 }}
       >
         {isEditMode ? 'Зберегти' : 'Створити'}
       </Button>

@@ -239,7 +239,7 @@ export function RecipeFormModal({
   const footer = (
     <div style={{ display: 'flex', gap: 8, width: '100%' }}>
       {isEditing && onDelete && (
-        <Button variant="ghost" size="md" onClick={onDelete} style={{ flexShrink: 0 }}>
+        <Button variant="ghost" size="md" onClick={onDelete} style={{ flex: 1 }}>
           <Icon name="delete" size="sm" />
         </Button>
       )}
@@ -248,7 +248,7 @@ export function RecipeFormModal({
         size="lg"
         onClick={handleSubmit}
         loading={submitting}
-        fullWidth
+        style={{ flex: 1 }}
       >
         <Icon name="check" size="md" />
         {isEditing ? 'Зберегти' : 'Створити'}
