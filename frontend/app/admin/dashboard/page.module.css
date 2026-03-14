@@ -564,62 +564,48 @@
    ============================================ */
 
 .modalContent {
-  display: grid;
-  grid-template-columns: 260px 1fr;
-  gap: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
   min-height: 0;
   height: 100%;
 }
 
-.modalLeft {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  overflow-y: auto;
-  min-height: 0;
-}
-
-.summaryCards {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--space-2-5);
-  flex-shrink: 0;
-}
-
-.summaryCard {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  padding: var(--space-3);
-  background: var(--bg-secondary);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-lg);
-}
-
-.summaryCardHeader {
+/* ── Compact stats strip ── */
+.statsStrip {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--space-1);
+  gap: 0;
+  background: var(--glass-bg-elevated);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-2) var(--space-4);
+  flex-wrap: wrap;
+  flex-shrink: 0;
+  row-gap: var(--space-1-5);
 }
 
-.currencySmall {
-  font-size: var(--text-xs);
-  font-weight: var(--font-medium);
-  opacity: 0.5;
-  margin-left: 2px;
-}
-
-.summaryCardRow {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.summaryCardDetail {
+.statChip {
   display: flex;
   align-items: center;
   gap: var(--space-1-5);
+  padding: var(--space-1) var(--space-2-5);
+}
+
+.statChipDivider {
+  width: 1px;
+  height: 20px;
+  background: var(--glass-border-strong);
+  flex-shrink: 0;
+}
+
+/* ── Modal body: activity list + shift sidebar ── */
+.modalBody {
+  display: grid;
+  grid-template-columns: 1fr 240px;
+  gap: var(--space-3);
+  min-height: 0;
+  flex: 1;
 }
 
 /* Activity List */
@@ -643,8 +629,8 @@
 .activityItems {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
-  padding: var(--space-3);
+  gap: var(--space-1);
+  padding: var(--space-2);
   overflow-y: auto;
   flex: 1;
 }
@@ -654,6 +640,83 @@
   align-items: center;
   justify-content: center;
   padding: var(--space-6);
+}
+
+/* ── Shift sidebar ── */
+.shiftSidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.shiftSidebarTitle {
+  padding: 0 var(--space-1);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Detail modal content */
+.detailContent {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.detailMeta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-0-5, 2px);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.detailTable {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.detailTableHead {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: var(--space-2);
+  padding: var(--space-1-5) var(--space-2);
+  border-bottom: 1px solid var(--glass-border-strong);
+}
+
+.detailRow {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-2);
+  border-bottom: 1px solid var(--glass-border);
+  align-items: start;
+}
+
+.detailRow:last-child {
+  border-bottom: none;
+}
+
+.detailMods {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 2px;
+}
+
+.detailFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--glass-border-strong);
+}
+
+.colRight {
+  text-align: right;
+  min-width: 48px;
 }
 
 /* ============================================
@@ -686,17 +749,11 @@
   gap: var(--space-1-5);
 }
 
-.shiftCardBottom {
+.shiftCardMeta {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-1-5);
   flex-wrap: wrap;
-}
-
-.shiftCardStat {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
 }
 
 
@@ -779,13 +836,17 @@
 }
 
 @media (max-width: 768px) {
-  .modalContent {
+  .modalBody {
     grid-template-columns: 1fr;
     height: auto;
   }
 
-  .modalLeft {
+  .shiftSidebar {
     overflow: visible;
+  }
+
+  .statsStrip {
+    gap: 0;
   }
 
   .activityList {

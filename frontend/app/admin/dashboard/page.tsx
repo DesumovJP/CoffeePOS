@@ -928,178 +928,171 @@ export default function AnalyticsPage() {
         title={selectedDayCell ? `${selectedDayCell.dayNumber} ${MONTHS_SHORT[selectedDayCell.date.getMonth()]} ${selectedDayCell.date.getFullYear()}` : ''}
         subtitle={selectedDayCell?.date.toLocaleDateString('uk-UA', { weekday: 'long' })}
         icon="calendar"
-        size="xl"
+        size="full"
       >
         {selectedDayCell && (
           <div className={styles.modalContent}>
             {isDayLoading ? (
               <div className={styles.emptyShifts}>
+                <Spinner size="md" />
                 <Text variant="bodyMedium" color="secondary">Завантаження...</Text>
               </div>
             ) : (
               <>
-              <div className={styles.modalLeft}>
-                <div className={styles.summaryCards}>
-                  <div className={styles.summaryCard}>
-                    <div className={styles.summaryCardHeader}>
-                      <Text variant="caption" weight="semibold" color="tertiary">ВИРУЧКА</Text>
-                      <Text variant="caption" weight="semibold" color="success">{dailyOrders.length} зам.</Text>
-                    </div>
-                    <Text variant="h3" weight="bold">
-                      {Math.round(selectedDayCell.revenue).toLocaleString()}
-                      <span className={styles.currencySmall}>₴</span>
-                    </Text>
-                    <Text variant="caption" color="tertiary">
-                      сер. чек {dailyOrders.length > 0 ? Math.round(selectedDayCell.revenue / dailyOrders.length) : 0} ₴
+                {/* ── Compact stats strip ── */}
+                <div className={styles.statsStrip}>
+                  <div className={styles.statChip}>
+                    <Text variant="caption" color="tertiary">Виручка</Text>
+                    <Text variant="labelMedium" weight="bold">₴{formatCurrency(Math.round(selectedDayCell.revenue))}</Text>
+                  </div>
+                  <div className={styles.statChipDivider} />
+                  <div className={styles.statChip}>
+                    <Text variant="caption" color="tertiary">Замовлень</Text>
+                    <Text variant="labelMedium" weight="bold">{dailyOrders.length}</Text>
+                  </div>
+                  <div className={styles.statChipDivider} />
+                  <div className={styles.statChip}>
+                    <Text variant="caption" color="tertiary">Сер. чек</Text>
+                    <Text variant="labelMedium" weight="bold">
+                      ₴{dailyOrders.length > 0 ? formatCurrency(Math.round(selectedDayCell.revenue / dailyOrders.length)) : 0}
                     </Text>
                   </div>
+                  <div className={styles.statChipDivider} />
+                  <div className={styles.statChip}>
+                    <Icon name="cash" size="sm" color="success" />
+                    <Text variant="caption" color="tertiary">Готівка</Text>
+                    <Text variant="labelMedium" weight="semibold">₴{formatCurrency(Math.round(selectedDayCell.cashSales))}</Text>
+                  </div>
+                  <div className={styles.statChipDivider} />
+                  <div className={styles.statChip}>
+                    <Icon name="card" size="sm" color="info" />
+                    <Text variant="caption" color="tertiary">Картка</Text>
+                    <Text variant="labelMedium" weight="semibold">₴{formatCurrency(Math.round(selectedDayCell.cardSales))}</Text>
+                  </div>
+                  {selectedDayCell.writeOffsTotal > 0 && (
+                    <>
+                      <div className={styles.statChipDivider} />
+                      <div className={styles.statChip}>
+                        <Text variant="caption" color="tertiary">Списання</Text>
+                        <Text variant="labelMedium" weight="semibold" color="error">
+                          -₴{formatCurrency(Math.round(selectedDayCell.writeOffsTotal))}
+                        </Text>
+                      </div>
+                    </>
+                  )}
+                  {selectedDayCell.suppliesTotal > 0 && (
+                    <>
+                      <div className={styles.statChipDivider} />
+                      <div className={styles.statChip}>
+                        <Text variant="caption" color="tertiary">Поставки</Text>
+                        <Text variant="labelMedium" weight="semibold">₴{formatCurrency(Math.round(selectedDayCell.suppliesTotal))}</Text>
+                      </div>
+                    </>
+                  )}
+                </div>
 
-                  <div className={styles.summaryCard}>
-                    <div className={styles.summaryCardHeader}>
-                      <Text variant="caption" weight="semibold" color="tertiary">КАСА</Text>
+                {/* ── Main body: activity list + shift sidebar ── */}
+                <div className={styles.modalBody}>
+                  {/* Activity list — left/main column */}
+                  <div className={styles.activityList}>
+                    <div className={styles.activityListHeader}>
+                      <Text variant="labelMedium" weight="semibold">Дії ({dailyActivities.length})</Text>
                     </div>
-                    <div className={styles.summaryCardRow}>
-                      <div className={styles.summaryCardDetail}>
-                        <Icon name="cash" size="sm" color="success" />
-                        <Text variant="bodySmall" color="secondary">Готівка</Text>
-                        <Text variant="labelMedium" weight="bold">₴{Math.round(selectedDayCell.cashSales)}</Text>
+                    {dailyActivities.length === 0 ? (
+                      <div className={styles.emptyActivity}>
+                        <Text variant="bodySmall" color="tertiary">Немає записів</Text>
                       </div>
-                      <div className={styles.summaryCardDetail}>
-                        <Icon name="card" size="sm" color="info" />
-                        <Text variant="bodySmall" color="secondary">Картка</Text>
-                        <Text variant="labelMedium" weight="bold">₴{Math.round(selectedDayCell.cardSales)}</Text>
+                    ) : (
+                      <div className={styles.activityItems}>
+                        {dailyActivities.map((item) => {
+                          if (item.kind === 'inline') {
+                            return <ActivityInline key={item.activity.id} type={item.activity.type} timestamp={item.activity.timestamp} details={item.activity.details} />;
+                          }
+                          const time = new Date(item.createdAt).toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
+                          let iconName: 'receipt' | 'truck' | 'delete' = 'receipt';
+                          let desc = '';
+                          let amountStr = '';
+                          let amountColor: 'primary' | 'error' = 'primary';
+                          if (item.type === 'order') {
+                            const order = item.data as OrderData;
+                            const total = order.items.reduce((s, i) => {
+                              const mods = (i.modifiers || []).reduce((m: number, mod: {price: number}) => m + mod.price, 0);
+                              return s + (i.price + mods) * i.quantity;
+                            }, 0);
+                            desc = order.items.map((i) => i.quantity > 1 ? `${i.name} ×${i.quantity}` : i.name).join(', ');
+                            amountStr = `₴${total.toFixed(0)}`;
+                            iconName = 'receipt';
+                          } else if (item.type === 'supply') {
+                            const supply = item.data as SupplyAccordionData;
+                            desc = supply.supplierName;
+                            amountStr = `₴${supply.totalCost.toFixed(0)}`;
+                            iconName = 'truck';
+                          } else {
+                            const wo = item.data as WriteoffAccordionData;
+                            const typeLabel: Record<string, string> = { expired: 'Прострочено', damaged: 'Пошкоджено', other: 'Інше' };
+                            desc = typeLabel[wo.type] || wo.type;
+                            amountStr = `-₴${wo.totalCost.toFixed(0)}`;
+                            iconName = 'delete';
+                            amountColor = 'error';
+                          }
+                          return (
+                            <button
+                              key={item.id}
+                              className={styles.activityRow}
+                              onClick={() => setSelectedDetail(item)}
+                            >
+                              <span className={`${styles.activityRowIcon} ${styles[`activityIcon_${item.type}`]}`}>
+                                <Icon name={iconName} size="sm" />
+                              </span>
+                              <span className={styles.activityRowBody}>
+                                <Text variant="labelSmall" weight="semibold" className={styles.activityRowTime}>{time}</Text>
+                                <Text variant="caption" color="tertiary" className={styles.activityRowPreview}>{desc}</Text>
+                              </span>
+                              <Text variant="labelMedium" weight="bold" color={amountColor} className={styles.activityRowAmount}>{amountStr}</Text>
+                              <Icon name="chevron-right" size="sm" color="tertiary" />
+                            </button>
+                          );
+                        })}
                       </div>
-                    </div>
-                    {dailyShifts.some(s => s.status !== 'open' && s.difference !== 0) && (
-                      <Text variant="caption" weight="semibold" color={dailyShifts.reduce((s, sh) => s + sh.difference, 0) >= 0 ? 'success' : 'error'}>
-                        Різниця {dailyShifts.reduce((s, sh) => s + sh.difference, 0) > 0 ? '+' : ''}₴{Math.round(dailyShifts.reduce((s, sh) => s + sh.difference, 0))}
-                      </Text>
                     )}
                   </div>
 
-                  <div className={styles.summaryCard}>
-                    <div className={styles.summaryCardHeader}>
-                      <Text variant="caption" weight="semibold" color="tertiary">СПИСАННЯ</Text>
-                      <Text variant="caption" weight="semibold" color="warning">{dailyWriteoffs.length} оп.</Text>
-                    </div>
-                    <Text variant="h3" weight="bold">
-                      {Math.round(dailyWriteoffs.reduce((s, w) => s + w.totalCost, 0)).toLocaleString()}
-                      <span className={styles.currencySmall}>₴</span>
-                    </Text>
-                    <Text variant="caption" color="tertiary">{dailyWriteoffs.reduce((s, w) => s + w.items.length, 0)} позицій</Text>
-                  </div>
-
-                  <div className={styles.summaryCard}>
-                    <div className={styles.summaryCardHeader}>
-                      <Text variant="caption" weight="semibold" color="tertiary">ПОСТАВКИ</Text>
-                      <Text variant="caption" weight="semibold" color="info">{dailySupplies.length} оп.</Text>
-                    </div>
-                    <Text variant="h3" weight="bold">
-                      {Math.round(dailySupplies.reduce((s, sp) => s + sp.totalCost, 0)).toLocaleString()}
-                      <span className={styles.currencySmall}>₴</span>
-                    </Text>
-                    <Text variant="caption" color="tertiary">{dailySupplies.reduce((s, sp) => s + sp.items.length, 0)} позицій</Text>
-                  </div>
-                </div>
-
-                {dailyShifts.length > 0 && dailyShifts.map((shift) => (
-                  <div
-                    key={shift.id}
-                    className={`${styles.shiftCard} ${shift.status === 'open' ? styles.shiftCardOpen : ''}`}
-                  >
-                    <div className={styles.shiftCardTop}>
-                      <div className={styles.shiftCardTime}>
-                        <Icon name="clock" size="sm" color="tertiary" />
-                        <Text variant="labelMedium" weight="semibold">
-                          Зміна {shift.startTime} — {shift.status === 'open' ? 'зараз' : shift.endTime}
-                        </Text>
-                      </div>
-                      <span className={`${styles.shiftStatusBadge} ${shift.status === 'open' ? styles.shiftStatusOpen : styles.shiftStatusClosed}`}>
-                        {shift.status === 'open' ? 'Відкрита' : 'Закрита'}
-                      </span>
-                    </div>
-                    <div className={styles.shiftCardBottom}>
-                      <span className={styles.shiftCardStat}>
-                        <Text variant="bodySmall" color="secondary">Продажі</Text>
-                        <Text variant="labelSmall" weight="semibold">₴{Math.round(shift.totalSales).toLocaleString()}</Text>
-                      </span>
-                      <span className={styles.shiftCardStat}>
-                        <Text variant="bodySmall" color="secondary">{shift.ordersCount} зам.</Text>
-                      </span>
-                      <span className={styles.shiftCardStat}>
-                        <Text variant="bodySmall" color="secondary">{shift.employee}</Text>
-                      </span>
-                      {shift.status !== 'open' && shift.difference !== 0 && (
-                        <span className={styles.shiftCardStat}>
-                          <Text variant="labelSmall" weight="semibold" color={shift.difference >= 0 ? 'success' : 'error'}>
-                            {shift.difference > 0 ? '+' : ''}₴{Math.round(shift.difference)}
-                          </Text>
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>{/* modalLeft */}
-
-              <div className={styles.activityList}>
-                  <div className={styles.activityListHeader}>
-                    <Text variant="labelMedium" weight="semibold">Дії ({dailyActivities.length})</Text>
-                  </div>
-                  {dailyActivities.length === 0 ? (
-                    <div className={styles.emptyActivity}>
-                      <Text variant="bodySmall" color="tertiary">Немає записів</Text>
-                    </div>
-                  ) : (
-                    <div className={styles.activityItems}>
-                      {dailyActivities.map((item) => {
-                        if (item.kind === 'inline') {
-                          return <ActivityInline key={item.activity.id} type={item.activity.type} timestamp={item.activity.timestamp} details={item.activity.details} />;
-                        }
-                        const time = new Date(item.createdAt).toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
-                        let iconName: 'receipt' | 'truck' | 'delete' = 'receipt';
-                        let desc = '';
-                        let amountStr = '';
-                        let amountColor: 'primary' | 'error' = 'primary';
-                        if (item.type === 'order') {
-                          const order = item.data as OrderData;
-                          const total = order.items.reduce((s, i) => {
-                            const mods = (i.modifiers || []).reduce((m: number, mod: {price: number}) => m + mod.price, 0);
-                            return s + (i.price + mods) * i.quantity;
-                          }, 0);
-                          desc = order.items.map((i) => i.quantity > 1 ? `${i.name} ×${i.quantity}` : i.name).join(', ');
-                          amountStr = `₴${total.toFixed(0)}`;
-                          iconName = 'receipt';
-                        } else if (item.type === 'supply') {
-                          const supply = item.data as SupplyAccordionData;
-                          desc = supply.supplierName;
-                          amountStr = `₴${supply.totalCost.toFixed(0)}`;
-                          iconName = 'truck';
-                        } else {
-                          const wo = item.data as WriteoffAccordionData;
-                          const typeLabel: Record<string, string> = { expired: 'Прострочено', damaged: 'Пошкоджено', other: 'Інше' };
-                          desc = typeLabel[wo.type] || wo.type;
-                          amountStr = `-₴${wo.totalCost.toFixed(0)}`;
-                          iconName = 'delete';
-                          amountColor = 'error';
-                        }
-                        return (
-                          <button
-                            key={item.id}
-                            className={styles.activityRow}
-                            onClick={() => setSelectedDetail(item)}
-                          >
-                            <span className={`${styles.activityRowIcon} ${styles[`activityIcon_${item.type}`]}`}>
-                              <Icon name={iconName} size="sm" />
+                  {/* Shift sidebar — right column */}
+                  {dailyShifts.length > 0 && (
+                    <div className={styles.shiftSidebar}>
+                      <Text variant="labelSmall" weight="semibold" color="tertiary" className={styles.shiftSidebarTitle}>
+                        Зміни
+                      </Text>
+                      {dailyShifts.map((shift) => (
+                        <div
+                          key={shift.id}
+                          className={`${styles.shiftCard} ${shift.status === 'open' ? styles.shiftCardOpen : ''}`}
+                        >
+                          <div className={styles.shiftCardTop}>
+                            <div className={styles.shiftCardTime}>
+                              <Icon name="clock" size="sm" color="tertiary" />
+                              <Text variant="labelSmall" weight="semibold">
+                                {shift.startTime} — {shift.status === 'open' ? 'зараз' : shift.endTime}
+                              </Text>
+                            </div>
+                            <span className={`${styles.shiftStatusBadge} ${shift.status === 'open' ? styles.shiftStatusOpen : styles.shiftStatusClosed}`}>
+                              {shift.status === 'open' ? 'Відкрита' : 'Закрита'}
                             </span>
-                            <span className={styles.activityRowBody}>
-                              <Text variant="labelSmall" weight="semibold" className={styles.activityRowTime}>{time}</Text>
-                              <Text variant="caption" color="tertiary" className={styles.activityRowPreview}>{desc}</Text>
-                            </span>
-                            <Text variant="labelMedium" weight="bold" color={amountColor} className={styles.activityRowAmount}>{amountStr}</Text>
-                            <Icon name="chevron-right" size="sm" color="tertiary" />
-                          </button>
-                        );
-                      })}
+                          </div>
+                          <div className={styles.shiftCardMeta}>
+                            <Text variant="caption" color="tertiary">{shift.employee}</Text>
+                            <Text variant="caption" color="secondary">·</Text>
+                            <Text variant="caption" color="secondary">{shift.ordersCount} зам.</Text>
+                            <Text variant="caption" color="secondary">·</Text>
+                            <Text variant="caption" weight="semibold">₴{formatCurrency(Math.round(shift.totalSales))}</Text>
+                          </div>
+                          {shift.status !== 'open' && shift.difference !== 0 && (
+                            <Text variant="caption" weight="semibold" color={shift.difference >= 0 ? 'success' : 'error'}>
+                              Різниця {shift.difference > 0 ? '+' : ''}₴{Math.round(shift.difference)}
+                            </Text>
+                          )}
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>
@@ -1108,6 +1101,143 @@ export default function AnalyticsPage() {
           </div>
         )}
       </Modal>
+
+      {/* =========== ACTIVITY DETAIL MODAL =========== */}
+      {selectedDetail && selectedDetail.kind === 'accordion' && (() => {
+        const item = selectedDetail;
+        const time = new Date(item.createdAt).toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
+
+        if (item.type === 'order') {
+          const order = item.data as OrderData;
+          const total = order.items.reduce((s, i) => {
+            const mods = (i.modifiers || []).reduce((m: number, mod: {price: number}) => m + mod.price, 0);
+            return s + (i.price + mods) * i.quantity;
+          }, 0);
+          return (
+            <Modal
+              isOpen
+              onClose={() => setSelectedDetail(null)}
+              title={`Замовлення · ${time}`}
+              icon="receipt"
+              size="sm"
+            >
+              <div className={styles.detailContent}>
+                <div className={styles.detailTable}>
+                  <div className={styles.detailTableHead}>
+                    <Text variant="caption" color="tertiary">Позиція</Text>
+                    <Text variant="caption" color="tertiary" className={styles.colRight}>К-сть</Text>
+                    <Text variant="caption" color="tertiary" className={styles.colRight}>Сума</Text>
+                  </div>
+                  {order.items.map((itm, idx) => {
+                    const mods = (itm.modifiers || []).reduce((m: number, mod: {price: number}) => m + mod.price, 0);
+                    const rowTotal = (itm.price + mods) * itm.quantity;
+                    return (
+                      <div key={idx} className={styles.detailRow}>
+                        <div>
+                          <Text variant="bodySmall">{itm.name}</Text>
+                          {(itm.modifiers || []).length > 0 && (
+                            <div className={styles.detailMods}>
+                              {(itm.modifiers || []).map((mod: {name: string; price: number}, midx: number) => (
+                                <Text key={midx} variant="caption" color="tertiary">
+                                  + {mod.name}{mod.price > 0 && ` (₴${mod.price})`}
+                                </Text>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <Text variant="bodySmall" color="secondary" className={styles.colRight}>{itm.quantity}×</Text>
+                        <Text variant="bodySmall" weight="semibold" className={styles.colRight}>₴{rowTotal.toFixed(0)}</Text>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className={styles.detailFooter}>
+                  <Text variant="labelMedium" color="secondary">Всього</Text>
+                  <Text variant="h4" weight="bold">₴{formatCurrency(Math.round(total))}</Text>
+                </div>
+              </div>
+            </Modal>
+          );
+        }
+
+        if (item.type === 'supply') {
+          const supply = item.data as SupplyAccordionData;
+          return (
+            <Modal
+              isOpen
+              onClose={() => setSelectedDetail(null)}
+              title={`Поставка · ${time}`}
+              icon="truck"
+              size="sm"
+            >
+              <div className={styles.detailContent}>
+                <div className={styles.detailMeta}>
+                  <Text variant="bodySmall" color="secondary">{supply.supplierName}</Text>
+                </div>
+                <div className={styles.detailTable}>
+                  <div className={styles.detailTableHead}>
+                    <Text variant="caption" color="tertiary">Інгредієнт</Text>
+                    <Text variant="caption" color="tertiary" className={styles.colRight}>К-сть</Text>
+                    <Text variant="caption" color="tertiary" className={styles.colRight}>Сума</Text>
+                  </div>
+                  {supply.items.map((itm, idx) => (
+                    <div key={idx} className={styles.detailRow}>
+                      <Text variant="bodySmall">{itm.name}</Text>
+                      <Text variant="bodySmall" color="secondary" className={styles.colRight}>{itm.quantity}</Text>
+                      <Text variant="bodySmall" weight="semibold" className={styles.colRight}>₴{itm.totalCost.toFixed(0)}</Text>
+                    </div>
+                  ))}
+                </div>
+                <div className={styles.detailFooter}>
+                  <Text variant="labelMedium" color="secondary">Всього</Text>
+                  <Text variant="h4" weight="bold">₴{formatCurrency(Math.round(supply.totalCost))}</Text>
+                </div>
+              </div>
+            </Modal>
+          );
+        }
+
+        if (item.type === 'writeoff') {
+          const wo = item.data as WriteoffAccordionData;
+          const typeLabel: Record<string, string> = { expired: 'Прострочено', damaged: 'Пошкоджено', other: 'Інше' };
+          return (
+            <Modal
+              isOpen
+              onClose={() => setSelectedDetail(null)}
+              title={`Списання · ${time}`}
+              icon="delete"
+              size="sm"
+            >
+              <div className={styles.detailContent}>
+                <div className={styles.detailMeta}>
+                  <Text variant="bodySmall" color="secondary">{typeLabel[wo.type] || wo.type}</Text>
+                  {wo.reason && <Text variant="caption" color="tertiary">{wo.reason}</Text>}
+                  {wo.performedBy && <Text variant="caption" color="tertiary">{wo.performedBy}</Text>}
+                </div>
+                <div className={styles.detailTable}>
+                  <div className={styles.detailTableHead}>
+                    <Text variant="caption" color="tertiary">Інгредієнт</Text>
+                    <Text variant="caption" color="tertiary" className={styles.colRight}>К-сть</Text>
+                    <Text variant="caption" color="tertiary" className={styles.colRight}>Сума</Text>
+                  </div>
+                  {wo.items.map((itm, idx) => (
+                    <div key={idx} className={styles.detailRow}>
+                      <Text variant="bodySmall">{itm.name}</Text>
+                      <Text variant="bodySmall" color="secondary" className={styles.colRight}>{itm.quantity}</Text>
+                      <Text variant="bodySmall" weight="semibold" color="error" className={styles.colRight}>-₴{itm.totalCost.toFixed(0)}</Text>
+                    </div>
+                  ))}
+                </div>
+                <div className={styles.detailFooter}>
+                  <Text variant="labelMedium" color="secondary">Всього</Text>
+                  <Text variant="h4" weight="bold" color="error">-₴{formatCurrency(Math.round(wo.totalCost))}</Text>
+                </div>
+              </div>
+            </Modal>
+          );
+        }
+        return null;
+      })()}
 
     </div>
   );
