@@ -189,20 +189,27 @@ interface OrderLine {
 
 function OrderTab() {
   const [lines, setLines] = useState<OrderLine[]>([]);
+  const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
   const [search, setSearch] = useState('');
 
   const { data: ingredients = [], isLoading: loadingIng } = useIngredients({ pageSize: 200 });
-  const { data: suppliers = [] } = useSuppliers();
+  const { data: suppliers = [], isLoading: loadingSuppliers } = useSuppliers();
+
+  // Ingredients belonging to the selected supplier
+  const supplierIngredients = useMemo(() => {
+    if (!selectedSupplier) return [];
+    const name = selectedSupplier.name.toLowerCase();
+    return ingredients.filter((i) => i.supplier?.toLowerCase().includes(name));
+  }, [ingredients, selectedSupplier]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return ingredients;
-    return ingredients.filter(
+    if (!q) return supplierIngredients;
+    return supplierIngredients.filter(
       (i) => i.name.toLowerCase().includes(q) || i.category?.name?.toLowerCase().includes(q),
     );
-  }, [ingredients, search]);
+  }, [supplierIngredients, search]);
 
-  // Grouped by category, sorted by category name
   const grouped = useMemo(() => {
     const map = new Map<string, Ingredient[]>();
     for (const ing of filtered) {
@@ -230,12 +237,12 @@ function OrderTab() {
           unit: ing.unit,
           category: ing.category?.name || '',
           quantity: 1,
-          supplier: ing.supplier || '',
+          supplier: selectedSupplier?.name || ing.supplier || '',
           note: '',
         },
       ];
     });
-  }, []);
+  }, [selectedSupplier]);
 
   const removeLine = useCallback((key: string) => {
     setLines((prev) => prev.filter((l) => l.key !== key));
@@ -295,55 +302,99 @@ function OrderTab() {
 
       {/* Split layout */}
       <div className={styles.orderLayout}>
-        {/* Left: ingredient picker */}
+        {/* Left: supplier picker → ingredient picker */}
         <div className={styles.pickerPanel}>
-          <div className={styles.pickerSearch}>
-            <SearchInput
-              value={search}
-              onChange={setSearch}
-              placeholder="Пошук інгредієнту..."
-            />
-          </div>
-          <div className={styles.pickerList}>
-            {loadingIng ? (
-              <div className={styles.pickerLoading}>
-                <Spinner size="sm" />
+          {!selectedSupplier ? (
+            /* ── Step 1: choose supplier ── */
+            <>
+              <div className={styles.pickerHeader}>
+                <Text variant="labelSmall" color="tertiary">Оберіть постачальника</Text>
               </div>
-            ) : grouped.length === 0 ? (
-              <div className={styles.pickerEmpty}>
-                <Text variant="bodySmall" color="tertiary">Нічого не знайдено</Text>
-              </div>
-            ) : (
-              grouped.map(([catName, ings]) => (
-                <div key={catName} className={styles.pickerGroup}>
-                  <Text variant="overline" color="tertiary" className={styles.pickerGroupLabel}>
-                    {catName}
-                  </Text>
-                  {ings.map((ing) => {
-                    const inOrder = lines.some((l) => l.ingredientDocumentId === ing.documentId);
+              <div className={styles.pickerList}>
+                {loadingSuppliers || loadingIng ? (
+                  <div className={styles.pickerLoading}><Spinner size="sm" /></div>
+                ) : suppliers.length === 0 ? (
+                  <div className={styles.pickerEmpty}>
+                    <Text variant="bodySmall" color="tertiary">Немає постачальників</Text>
+                  </div>
+                ) : (
+                  suppliers.map((s) => {
+                    const count = ingredients.filter(
+                      (i) => i.supplier?.toLowerCase().includes(s.name.toLowerCase()),
+                    ).length;
                     return (
                       <button
-                        key={ing.documentId}
-                        className={`${styles.pickerItem} ${inOrder ? styles.pickerItemInOrder : ''}`}
-                        onClick={() => addLine(ing)}
-                        title={`Додати ${ing.name}`}
+                        key={s.documentId}
+                        className={styles.supplierPickerItem}
+                        onClick={() => setSelectedSupplier(s)}
                       >
                         <div className={styles.pickerItemInfo}>
-                          <Text variant="labelSmall" weight="semibold">{ing.name}</Text>
-                          <Text variant="caption" color="tertiary">{UNIT_LABELS[ing.unit]}</Text>
+                          <Text variant="labelSmall" weight="semibold">{s.name}</Text>
+                          <Text variant="caption" color="tertiary">{count} товарів</Text>
                         </div>
-                        <Icon
-                          name={inOrder ? 'check' : 'plus'}
-                          size="sm"
-                          color={inOrder ? 'success' : 'tertiary'}
-                        />
+                        <Icon name="chevron-right" size="sm" color="tertiary" />
                       </button>
                     );
-                  })}
-                </div>
-              ))
-            )}
-          </div>
+                  })
+                )}
+              </div>
+            </>
+          ) : (
+            /* ── Step 2: pick ingredients from supplier ── */
+            <>
+              <div className={styles.pickerSearch}>
+                <button
+                  className={styles.pickerBackBtn}
+                  onClick={() => { setSelectedSupplier(null); setSearch(''); }}
+                >
+                  <Icon name="chevron-left" size="sm" color="accent" />
+                  <Text variant="labelSmall" weight="semibold" color="accent">{selectedSupplier.name}</Text>
+                </button>
+                <SearchInput
+                  value={search}
+                  onChange={setSearch}
+                  placeholder="Пошук товару..."
+                />
+              </div>
+              <div className={styles.pickerList}>
+                {grouped.length === 0 ? (
+                  <div className={styles.pickerEmpty}>
+                    <Text variant="bodySmall" color="tertiary">
+                      {search ? 'Нічого не знайдено' : 'Немає товарів цього постачальника'}
+                    </Text>
+                  </div>
+                ) : (
+                  grouped.map(([catName, ings]) => (
+                    <div key={catName} className={styles.pickerGroup}>
+                      <Text variant="overline" color="tertiary" className={styles.pickerGroupLabel}>
+                        {catName}
+                      </Text>
+                      {ings.map((ing) => {
+                        const inOrder = lines.some((l) => l.ingredientDocumentId === ing.documentId);
+                        return (
+                          <button
+                            key={ing.documentId}
+                            className={`${styles.pickerItem} ${inOrder ? styles.pickerItemInOrder : ''}`}
+                            onClick={() => addLine(ing)}
+                          >
+                            <div className={styles.pickerItemInfo}>
+                              <Text variant="labelSmall" weight="semibold">{ing.name}</Text>
+                              <Text variant="caption" color="tertiary">{UNIT_LABELS[ing.unit]}</Text>
+                            </div>
+                            <Icon
+                              name={inOrder ? 'check' : 'plus'}
+                              size="sm"
+                              color={inOrder ? 'success' : 'tertiary'}
+                            />
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ))
+                )}
+              </div>
+            </>
+          )}
         </div>
 
         {/* Right: order lines */}
@@ -352,20 +403,19 @@ function OrderTab() {
             <div className={styles.linesEmpty}>
               <Icon name="package" size="2xl" color="tertiary" />
               <Text variant="bodyMedium" color="tertiary">
-                Натисніть «+» біля інгредієнта щоб додати до замовлення
+                {selectedSupplier
+                  ? 'Натисніть «+» біля товару щоб додати до замовлення'
+                  : 'Спочатку оберіть постачальника'}
               </Text>
             </div>
           ) : (
             <div className={styles.linesTable}>
-              {/* Header */}
               <div className={styles.lineRow + ' ' + styles.lineHeader}>
                 <span className={styles.colName}>Назва</span>
                 <span className={styles.colQty}>Кількість</span>
-                <span className={styles.colSupplier}>Постачальник</span>
                 <span className={styles.colNote}>Примітка</span>
                 <span className={styles.colRemove} />
               </div>
-              {/* Lines */}
               {lines.map((line) => (
                 <div key={line.key} className={styles.lineRow}>
                   <div className={styles.colName}>
@@ -384,20 +434,6 @@ function OrderTab() {
                       className={styles.qtyInput}
                     />
                     <Text variant="caption" color="tertiary">{UNIT_LABELS[line.unit]}</Text>
-                  </div>
-                  <div className={styles.colSupplier}>
-                    <select
-                      value={line.supplier}
-                      onChange={(e) => updateLine(line.key, { supplier: e.target.value })}
-                      className={styles.supplierSelect}
-                    >
-                      <option value="">— Не вказано —</option>
-                      {suppliers.map((s) => (
-                        <option key={s.documentId} value={s.name}>
-                          {s.name}
-                        </option>
-                      ))}
-                    </select>
                   </div>
                   <div className={styles.colNote}>
                     <input

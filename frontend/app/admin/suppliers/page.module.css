@@ -66,10 +66,59 @@
   min-height: 0;
 }
 
+.pickerHeader {
+  flex-shrink: 0;
+  padding: var(--space-2-5) var(--space-3);
+  background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--glass-border);
+}
+
 .pickerSearch {
   flex-shrink: 0;
   padding: var(--space-3);
   border-bottom: 1px solid var(--glass-border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.pickerBackBtn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.supplierPickerItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-2-5) var(--space-3);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--glass-border);
+  cursor: pointer;
+  transition: background var(--duration-fast);
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.supplierPickerItem:last-child {
+  border-bottom: none;
+}
+
+.supplierPickerItem:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.supplierPickerItem:active {
+  background: rgba(0, 0, 0, 0.06);
 }
 
 .pickerList {
@@ -189,7 +238,7 @@
 /* Table row (header + data share same grid layout) */
 .lineRow {
   display: grid;
-  grid-template-columns: 1fr 130px 160px 1fr 36px;
+  grid-template-columns: 1fr 130px 1fr 36px;
   gap: var(--space-3);
   align-items: center;
   padding: var(--space-2-5) var(--space-4);
@@ -400,7 +449,7 @@
   }
 
   .lineRow {
-    grid-template-columns: 1fr 110px 140px 0.8fr 36px;
+    grid-template-columns: 1fr 110px 0.8fr 36px;
   }
 }
 
@@ -450,13 +499,5 @@
 @media (max-width: 480px) {
   .lineRow {
     grid-template-columns: 1fr 90px 28px;
-  }
-
-  .colSupplier {
-    display: none;
-  }
-
-  .lineHeader .colSupplier {
-    display: none;
   }
 }

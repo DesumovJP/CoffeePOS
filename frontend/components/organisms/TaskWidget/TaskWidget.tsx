@@ -367,11 +367,9 @@ export function TaskWidget({ collapsed = false, defaultOpen = false, onModalClos
                 >
                   <Icon name={searchOpen ? 'close' : 'search'} size="md" />
                 </Button>
-                {isAdmin && (
-                  <Button variant="primary" size="sm" onClick={openCreate}>
-                    <Icon name="plus" size="sm" /> Додати
-                  </Button>
-                )}
+                <Button variant="primary" size="sm" onClick={openCreate}>
+                  <Icon name="plus" size="sm" /> Додати
+                </Button>
               </div>
             </div>
 
