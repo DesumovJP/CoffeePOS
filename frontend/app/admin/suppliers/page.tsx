@@ -189,18 +189,40 @@ interface OrderLine {
 
 function OrderTab() {
   const [lines, setLines] = useState<OrderLine[]>([]);
-  const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
+  const [selectedSupplierName, setSelectedSupplierName] = useState<string | null>(null);
   const [search, setSearch] = useState('');
 
   const { data: ingredients = [], isLoading: loadingIng } = useIngredients({ pageSize: 200 });
   const { data: suppliers = [], isLoading: loadingSuppliers } = useSuppliers();
 
+  // Build unique supplier list from both Supplier entities and ingredient supplier strings
+  const availableSuppliers = useMemo(() => {
+    const map = new Map<string, number>(); // name (lower) → ingredient count
+    for (const ing of ingredients) {
+      if (!ing.supplier) continue;
+      ing.supplier.split(',').forEach((part) => {
+        const name = part.trim();
+        if (!name) return;
+        const key = name.toLowerCase();
+        map.set(key, (map.get(key) ?? 0) + 1);
+      });
+    }
+    // Build result: prefer display name from Supplier entities, fallback to ingredient string
+    const entityByLower = new Map(suppliers.map((s) => [s.name.toLowerCase(), s.name]));
+    return [...map.entries()]
+      .map(([lower, count]) => ({
+        name: entityByLower.get(lower) ?? lower.replace(/^\w/, (c) => c.toUpperCase()),
+        count,
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name, 'uk'));
+  }, [ingredients, suppliers]);
+
   // Ingredients belonging to the selected supplier
   const supplierIngredients = useMemo(() => {
-    if (!selectedSupplier) return [];
-    const name = selectedSupplier.name.toLowerCase();
+    if (!selectedSupplierName) return [];
+    const name = selectedSupplierName.toLowerCase();
     return ingredients.filter((i) => i.supplier?.toLowerCase().includes(name));
-  }, [ingredients, selectedSupplier]);
+  }, [ingredients, selectedSupplierName]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -237,12 +259,12 @@ function OrderTab() {
           unit: ing.unit,
           category: ing.category?.name || '',
           quantity: 1,
-          supplier: selectedSupplier?.name || ing.supplier || '',
+          supplier: selectedSupplierName || ing.supplier || '',
           note: '',
         },
       ];
     });
-  }, [selectedSupplier]);
+  }, [selectedSupplierName]);
 
   const removeLine = useCallback((key: string) => {
     setLines((prev) => prev.filter((l) => l.key !== key));
@@ -304,7 +326,7 @@ function OrderTab() {
       <div className={styles.orderLayout}>
         {/* Left: supplier picker → ingredient picker */}
         <div className={styles.pickerPanel}>
-          {!selectedSupplier ? (
+          {!selectedSupplierName ? (
             /* ── Step 1: choose supplier ── */
             <>
               <div className={styles.pickerHeader}>
@@ -313,29 +335,24 @@ function OrderTab() {
               <div className={styles.pickerList}>
                 {loadingSuppliers || loadingIng ? (
                   <div className={styles.pickerLoading}><Spinner size="sm" /></div>
-                ) : suppliers.length === 0 ? (
+                ) : availableSuppliers.length === 0 ? (
                   <div className={styles.pickerEmpty}>
                     <Text variant="bodySmall" color="tertiary">Немає постачальників</Text>
                   </div>
                 ) : (
-                  suppliers.map((s) => {
-                    const count = ingredients.filter(
-                      (i) => i.supplier?.toLowerCase().includes(s.name.toLowerCase()),
-                    ).length;
-                    return (
-                      <button
-                        key={s.documentId}
-                        className={styles.supplierPickerItem}
-                        onClick={() => setSelectedSupplier(s)}
-                      >
-                        <div className={styles.pickerItemInfo}>
-                          <Text variant="labelSmall" weight="semibold">{s.name}</Text>
-                          <Text variant="caption" color="tertiary">{count} товарів</Text>
-                        </div>
-                        <Icon name="chevron-right" size="sm" color="tertiary" />
-                      </button>
-                    );
-                  })
+                  availableSuppliers.map((s) => (
+                    <button
+                      key={s.name}
+                      className={styles.supplierPickerItem}
+                      onClick={() => setSelectedSupplierName(s.name)}
+                    >
+                      <div className={styles.pickerItemInfo}>
+                        <Text variant="labelSmall" weight="semibold">{s.name}</Text>
+                        <Text variant="caption" color="tertiary">{s.count} товарів</Text>
+                      </div>
+                      <Icon name="chevron-right" size="sm" color="tertiary" />
+                    </button>
+                  ))
                 )}
               </div>
             </>
@@ -345,10 +362,10 @@ function OrderTab() {
               <div className={styles.pickerSearch}>
                 <button
                   className={styles.pickerBackBtn}
-                  onClick={() => { setSelectedSupplier(null); setSearch(''); }}
+                  onClick={() => { setSelectedSupplierName(null); setSearch(''); }}
                 >
                   <Icon name="chevron-left" size="sm" color="accent" />
-                  <Text variant="labelSmall" weight="semibold" color="accent">{selectedSupplier.name}</Text>
+                  <Text variant="labelSmall" weight="semibold" color="accent">{selectedSupplierName}</Text>
                 </button>
                 <SearchInput
                   value={search}
@@ -403,7 +420,7 @@ function OrderTab() {
             <div className={styles.linesEmpty}>
               <Icon name="package" size="2xl" color="tertiary" />
               <Text variant="bodyMedium" color="tertiary">
-                {selectedSupplier
+                {selectedSupplierName
                   ? 'Натисніть «+» біля товару щоб додати до замовлення'
                   : 'Спочатку оберіть постачальника'}
               </Text>
