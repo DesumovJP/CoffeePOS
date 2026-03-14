@@ -20,3 +20,4 @@ export * from './WriteoffAccordion';
 export * from './ActivityInline';
 export * from './EmployeeCard';
 export * from './SegmentedControl';
+export * from './OrderCard';

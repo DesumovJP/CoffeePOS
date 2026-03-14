@@ -25,7 +25,7 @@ import {
   Legend,
 } from 'recharts';
 import { Text, Icon, GlassCard, Spinner, Button, Modal } from '@/components/atoms';
-import { SegmentedControl, ActivityInline } from '@/components/molecules';
+import { SegmentedControl, ActivityInline, OrderCard } from '@/components/molecules';
 import type { OrderData, SupplyAccordionData, WriteoffAccordionData } from '@/components/molecules';
 import { useDailyReport, useMonthlyReport, useCurrentShift, useShifts } from '@/lib/hooks';
 import type { MonthlyDayData, ShiftActivity } from '@/lib/api';
@@ -395,30 +395,6 @@ export default function AnalyticsPage() {
       createdAt: new Date(order.createdAt).getTime(),
       completedAt: order.completedAt ? new Date(order.completedAt).getTime() : undefined,
       status: order.status || 'completed',
-    }));
-  }, [selectedDayReport]);
-
-  const dailyShifts = useMemo(() => {
-    if (!selectedDayReport?.shifts) return [];
-    return selectedDayReport.shifts.map((shift: any) => ({
-      id: String(shift.id || shift.documentId),
-      documentId: shift.documentId || String(shift.id),
-      employee: shift.openedBy || '—',
-      closedBy: shift.closedBy,
-      openingCash: shift.openingCash || 0,
-      closingCash: shift.closingCash || 0,
-      cashSales: shift.cashSales || 0,
-      cardSales: shift.cardSales || 0,
-      totalSales: (shift.cashSales || 0) + (shift.cardSales || 0),
-      ordersCount: shift.ordersCount || 0,
-      suppliesTotal: shift.suppliesTotal || 0,
-      writeOffs: shift.writeOffsTotal || 0,
-      startTime: shift.openedAt ? new Date(shift.openedAt).toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' }) : '—',
-      endTime: shift.closedAt ? new Date(shift.closedAt).toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' }) : '—',
-      openedAtRaw: shift.openedAt ? new Date(shift.openedAt).getTime() : 0,
-      closedAtRaw: shift.closedAt ? new Date(shift.closedAt).getTime() : 0,
-      status: shift.status,
-      difference: (shift.closingCash || 0) - ((shift.openingCash || 0) + (shift.cashSales || 0)),
     }));
   }, [selectedDayReport]);
 
@@ -1008,21 +984,30 @@ export default function AnalyticsPage() {
                           if (item.kind === 'inline') {
                             return <ActivityInline key={item.activity.id} type={item.activity.type} timestamp={item.activity.timestamp} details={item.activity.details} />;
                           }
-                          const time = new Date(item.createdAt).toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
-                          let iconName: 'receipt' | 'truck' | 'delete' = 'receipt';
-                          let desc = '';
-                          let amountStr = '';
-                          let amountColor: 'primary' | 'error' = 'primary';
                           if (item.type === 'order') {
                             const order = item.data as OrderData;
                             const total = order.items.reduce((s, i) => {
                               const mods = (i.modifiers || []).reduce((m: number, mod: {price: number}) => m + mod.price, 0);
                               return s + (i.price + mods) * i.quantity;
                             }, 0);
-                            desc = order.items.map((i) => i.quantity > 1 ? `${i.name} ×${i.quantity}` : i.name).join(', ');
-                            amountStr = `₴${total.toFixed(0)}`;
-                            iconName = 'receipt';
-                          } else if (item.type === 'supply') {
+                            return (
+                              <OrderCard
+                                key={item.id}
+                                createdAt={order.createdAt}
+                                orderId={order.id}
+                                items={order.items}
+                                total={total}
+                                paymentMethod={order.paymentMethod}
+                                onClick={() => setSelectedDetail(item)}
+                              />
+                            );
+                          }
+                          const time = new Date(item.createdAt).toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
+                          let iconName: 'truck' | 'delete' = 'truck';
+                          let desc = '';
+                          let amountStr = '';
+                          let amountColor: 'primary' | 'error' = 'primary';
+                          if (item.type === 'supply') {
                             const supply = item.data as SupplyAccordionData;
                             desc = supply.supplierName;
                             amountStr = `₴${supply.totalCost.toFixed(0)}`;
@@ -1056,45 +1041,6 @@ export default function AnalyticsPage() {
                       </div>
                     )}
                   </div>
-
-                  {/* Shift sidebar — right column */}
-                  {dailyShifts.length > 0 && (
-                    <div className={styles.shiftSidebar}>
-                      <Text variant="labelSmall" weight="semibold" color="tertiary" className={styles.shiftSidebarTitle}>
-                        Зміни
-                      </Text>
-                      {dailyShifts.map((shift) => (
-                        <div
-                          key={shift.id}
-                          className={`${styles.shiftCard} ${shift.status === 'open' ? styles.shiftCardOpen : ''}`}
-                        >
-                          <div className={styles.shiftCardTop}>
-                            <div className={styles.shiftCardTime}>
-                              <Icon name="clock" size="sm" color="tertiary" />
-                              <Text variant="labelSmall" weight="semibold">
-                                {shift.startTime} — {shift.status === 'open' ? 'зараз' : shift.endTime}
-                              </Text>
-                            </div>
-                            <span className={`${styles.shiftStatusBadge} ${shift.status === 'open' ? styles.shiftStatusOpen : styles.shiftStatusClosed}`}>
-                              {shift.status === 'open' ? 'Відкрита' : 'Закрита'}
-                            </span>
-                          </div>
-                          <div className={styles.shiftCardMeta}>
-                            <Text variant="caption" color="tertiary">{shift.employee}</Text>
-                            <Text variant="caption" color="secondary">·</Text>
-                            <Text variant="caption" color="secondary">{shift.ordersCount} зам.</Text>
-                            <Text variant="caption" color="secondary">·</Text>
-                            <Text variant="caption" weight="semibold">₴{formatCurrency(Math.round(shift.totalSales))}</Text>
-                          </div>
-                          {shift.status !== 'open' && shift.difference !== 0 && (
-                            <Text variant="caption" weight="semibold" color={shift.difference >= 0 ? 'success' : 'error'}>
-                              Різниця {shift.difference > 0 ? '+' : ''}₴{Math.round(shift.difference)}
-                            </Text>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
               </>
             )}

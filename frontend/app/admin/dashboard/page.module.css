@@ -601,9 +601,8 @@
 
 /* ── Modal body: activity list + shift sidebar ── */
 .modalBody {
-  display: grid;
-  grid-template-columns: 1fr 240px;
-  gap: var(--space-3);
+  display: flex;
+  flex-direction: column;
   min-height: 0;
   flex: 1;
 }
@@ -836,15 +835,6 @@
 }
 
 @media (max-width: 768px) {
-  .modalBody {
-    grid-template-columns: 1fr;
-    height: auto;
-  }
-
-  .shiftSidebar {
-    overflow: visible;
-  }
-
   .statsStrip {
     gap: 0;
   }

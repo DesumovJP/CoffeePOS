@@ -11,7 +11,7 @@
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Text, Icon, Button, Modal, Spinner } from '@/components/atoms';
-import { SearchInput } from '@/components/molecules';
+import { SearchInput, OrderCard } from '@/components/molecules';
 import { useOrders } from '@/lib/hooks';
 import { useShiftStore, selectCurrentShift } from '@/lib/store';
 import styles from './page.module.css';
@@ -90,48 +90,6 @@ function getPaymentLabel(method?: string): string {
   if (method === 'cash') return 'Готівка';
   if (method === 'card') return 'Карта';
   return 'Інше';
-}
-
-// ============================================
-// ORDER CARD
-// ============================================
-
-interface OrderCardProps {
-  order: OrderData;
-  index: number;
-  onClick: () => void;
-}
-
-function OrderCard({ order, index, onClick }: OrderCardProps) {
-  const total = calcTotal(order);
-  const preview = order.items
-    .map((i) => (i.quantity > 1 ? `${i.name} ×${i.quantity}` : i.name))
-    .join(', ');
-
-  return (
-    <button className={styles.orderCard} onClick={onClick}>
-      <span className={styles.orderNum}>#{index}</span>
-      <div className={styles.orderInfo}>
-        <div className={styles.orderMeta}>
-          <Text variant="labelSmall" weight="semibold">{formatTime(order.createdAt)}</Text>
-          {order.id.startsWith('ORD-') && (
-            <Text variant="caption" color="tertiary" className={styles.orderId}>
-              {order.id}
-            </Text>
-          )}
-        </div>
-        <Text variant="bodySmall" color="secondary" className={styles.orderPreview}>
-          {preview}
-        </Text>
-      </div>
-      <div className={styles.orderRight}>
-        <Text variant="labelMedium" weight="bold">₴{formatCurrency(total)}</Text>
-        {order.paymentMethod && (
-          <Icon name={getPaymentIcon(order.paymentMethod)} size="sm" color="tertiary" />
-        )}
-      </div>
-    </button>
-  );
 }
 
 // ============================================
@@ -398,8 +356,12 @@ export default function HistoryPage() {
           filtered.map((order, idx) => (
             <OrderCard
               key={order.id}
-              order={order}
               index={idx + 1}
+              createdAt={order.createdAt}
+              orderId={order.id}
+              items={order.items}
+              total={calcTotal(order)}
+              paymentMethod={order.paymentMethod}
               onClick={() => setSelected({ order, index: idx + 1 })}
             />
           ))
