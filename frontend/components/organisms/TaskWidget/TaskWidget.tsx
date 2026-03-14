@@ -496,8 +496,8 @@ export function TaskWidget({ collapsed = false, defaultOpen = false, onModalClos
         )}
 
         {/* Card footer */}
-        <div className={styles.cardFooter}>
-          {isAdmin && (
+        {isAdmin && (
+          <div className={styles.cardFooter}>
             <button
               type="button"
               className={styles.footerNewBtn}
@@ -505,15 +505,8 @@ export function TaskWidget({ collapsed = false, defaultOpen = false, onModalClos
             >
               + Нове завдання
             </button>
-          )}
-          <button
-            type="button"
-            className={styles.footerAllBtn}
-            onClick={() => setModalOpen(true)}
-          >
-            Всі завдання →
-          </button>
-        </div>
+          </div>
+        )}
       </div>
 
       {renderModals()}

@@ -21,6 +21,7 @@ export interface EmployeeFormModalProps {
   onClose: () => void;
   employee?: Employee | null;
   onSuccess: () => void;
+  onDelete?: () => void;
 }
 
 interface EmployeeFormState {
@@ -68,6 +69,7 @@ export function EmployeeFormModal({
   onClose,
   employee,
   onSuccess,
+  onDelete,
 }: EmployeeFormModalProps) {
   const isEditMode = !!employee;
   const [form, setForm] = useState<EmployeeFormState>(INITIAL_STATE);
@@ -219,14 +221,21 @@ export function EmployeeFormModal({
   );
 
   const footer = (
-    <Button
-      variant="primary"
-      onClick={handleSubmit as any}
-      loading={isSubmitting}
-      fullWidth
-    >
-      {isEditMode ? 'Зберегти' : 'Створити'}
-    </Button>
+    <div style={{ display: 'flex', gap: 8, width: '100%' }}>
+      {isEditMode && onDelete && (
+        <Button variant="ghost" size="md" onClick={onDelete} style={{ flexShrink: 0 }}>
+          <Icon name="delete" size="sm" />
+        </Button>
+      )}
+      <Button
+        variant="primary"
+        onClick={handleSubmit as any}
+        loading={isSubmitting}
+        fullWidth
+      >
+        {isEditMode ? 'Зберегти' : 'Створити'}
+      </Button>
+    </div>
   );
 
   return (

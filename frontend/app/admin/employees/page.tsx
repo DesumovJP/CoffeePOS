@@ -113,6 +113,7 @@ function EmployeesListTab() {
     if (!deleteConfirm) return;
     await deleteEmployeeMutation.mutateAsync(deleteConfirm.documentId);
     setDeleteConfirm(null);
+    setEmployeeModal({ isOpen: false, employee: null });
   }, [deleteConfirm, deleteEmployeeMutation]);
 
   const handleEmployeeSuccess = useCallback(() => {
@@ -179,32 +180,7 @@ function EmployeesListTab() {
         </Text>
       ),
     },
-    {
-      key: 'actions',
-      header: '',
-      type: 'action' as const,
-      align: 'right',
-      width: '90px',
-      render: (emp) => (
-        <div className={styles.actions}>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={(e) => { e.stopPropagation(); handleEditEmployee(emp); }}
-          >
-            <Icon name="edit" size="sm" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={(e) => { e.stopPropagation(); handleDeleteEmployee(emp.documentId, emp.name); }}
-          >
-            <Icon name="delete" size="sm" />
-          </Button>
-        </div>
-      ),
-    },
-  ], [handleEditEmployee, handleDeleteEmployee]);
+  ], []);
 
   return (
     <>
@@ -249,6 +225,9 @@ function EmployeesListTab() {
         onClose={() => setEmployeeModal({ isOpen: false, employee: null })}
         employee={employeeModal.employee}
         onSuccess={handleEmployeeSuccess}
+        onDelete={employeeModal.employee
+          ? () => handleDeleteEmployee(employeeModal.employee!.documentId, employeeModal.employee!.name)
+          : undefined}
       />
 
       {deleteConfirm && (
