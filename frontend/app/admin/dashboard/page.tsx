@@ -915,61 +915,9 @@ export default function AnalyticsPage() {
               </div>
             ) : (
               <>
-                {/* ── Compact stats strip ── */}
-                <div className={styles.statsStrip}>
-                  <div className={styles.statChip}>
-                    <Text variant="caption" color="tertiary">Виручка</Text>
-                    <Text variant="labelMedium" weight="bold">₴{formatCurrency(Math.round(selectedDayCell.revenue))}</Text>
-                  </div>
-                  <div className={styles.statChipDivider} />
-                  <div className={styles.statChip}>
-                    <Text variant="caption" color="tertiary">Замовлень</Text>
-                    <Text variant="labelMedium" weight="bold">{dailyOrders.length}</Text>
-                  </div>
-                  <div className={styles.statChipDivider} />
-                  <div className={styles.statChip}>
-                    <Text variant="caption" color="tertiary">Сер. чек</Text>
-                    <Text variant="labelMedium" weight="bold">
-                      ₴{dailyOrders.length > 0 ? formatCurrency(Math.round(selectedDayCell.revenue / dailyOrders.length)) : 0}
-                    </Text>
-                  </div>
-                  <div className={styles.statChipDivider} />
-                  <div className={styles.statChip}>
-                    <Icon name="cash" size="sm" color="success" />
-                    <Text variant="caption" color="tertiary">Готівка</Text>
-                    <Text variant="labelMedium" weight="semibold">₴{formatCurrency(Math.round(selectedDayCell.cashSales))}</Text>
-                  </div>
-                  <div className={styles.statChipDivider} />
-                  <div className={styles.statChip}>
-                    <Icon name="card" size="sm" color="info" />
-                    <Text variant="caption" color="tertiary">Картка</Text>
-                    <Text variant="labelMedium" weight="semibold">₴{formatCurrency(Math.round(selectedDayCell.cardSales))}</Text>
-                  </div>
-                  {selectedDayCell.writeOffsTotal > 0 && (
-                    <>
-                      <div className={styles.statChipDivider} />
-                      <div className={styles.statChip}>
-                        <Text variant="caption" color="tertiary">Списання</Text>
-                        <Text variant="labelMedium" weight="semibold" color="error">
-                          -₴{formatCurrency(Math.round(selectedDayCell.writeOffsTotal))}
-                        </Text>
-                      </div>
-                    </>
-                  )}
-                  {selectedDayCell.suppliesTotal > 0 && (
-                    <>
-                      <div className={styles.statChipDivider} />
-                      <div className={styles.statChip}>
-                        <Text variant="caption" color="tertiary">Поставки</Text>
-                        <Text variant="labelMedium" weight="semibold">₴{formatCurrency(Math.round(selectedDayCell.suppliesTotal))}</Text>
-                      </div>
-                    </>
-                  )}
-                </div>
-
-                {/* ── Main body: activity list + shift sidebar ── */}
+                {/* ── Two-column body: activities (left) + stats sidebar (right) ── */}
                 <div className={styles.modalBody}>
-                  {/* Activity list — left/main column */}
+                  {/* Activity list — left column */}
                   <div className={styles.activityList}>
                     <div className={styles.activityListHeader}>
                       <Text variant="labelMedium" weight="semibold">Дії ({dailyActivities.length})</Text>
@@ -1038,6 +986,75 @@ export default function AnalyticsPage() {
                             </button>
                           );
                         })}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Stats sidebar — right column */}
+                  <div className={styles.statsSidebar}>
+                    {/* Shift info */}
+                    {(selectedDayReport?.shifts?.length ?? 0) > 0 && (
+                      <div className={styles.statsSidebarShift}>
+                        <Text variant="caption" color="tertiary" style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>Зміна</Text>
+                        {selectedDayReport!.shifts.map((shift: any) => {
+                          const startTime = shift.openedAt
+                            ? new Date(shift.openedAt).toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' })
+                            : '—';
+                          const endTime = shift.closedAt
+                            ? new Date(shift.closedAt).toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' })
+                            : 'зараз';
+                          return (
+                            <div key={shift.id || shift.documentId} className={styles.statsSidebarShiftRow}>
+                              <Icon name="user" size="sm" color="tertiary" />
+                              <div>
+                                <Text variant="bodySmall" weight="semibold">{shift.openedBy || '—'}</Text>
+                                <Text variant="caption" color="tertiary">{startTime}–{endTime}</Text>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* Stats rows */}
+                    <div className={styles.statsSidebarRow}>
+                      <Text variant="caption" color="tertiary">Виручка</Text>
+                      <Text variant="labelLarge" weight="bold">₴{formatCurrency(Math.round(selectedDayCell.revenue))}</Text>
+                    </div>
+                    <div className={styles.statsSidebarRow}>
+                      <Text variant="caption" color="tertiary">Замовлень</Text>
+                      <Text variant="labelLarge" weight="bold">{dailyOrders.length}</Text>
+                    </div>
+                    <div className={styles.statsSidebarRow}>
+                      <Text variant="caption" color="tertiary">Сер. чек</Text>
+                      <Text variant="labelMedium" weight="semibold">
+                        ₴{dailyOrders.length > 0 ? formatCurrency(Math.round(selectedDayCell.revenue / dailyOrders.length)) : 0}
+                      </Text>
+                    </div>
+                    <div className={styles.statsSidebarRow}>
+                      <div className={styles.statsSidebarRowIcon}>
+                        <Icon name="cash" size="sm" color="tertiary" />
+                        <Text variant="caption" color="tertiary">Готівка</Text>
+                      </div>
+                      <Text variant="labelMedium" weight="semibold">₴{formatCurrency(Math.round(selectedDayCell.cashSales))}</Text>
+                    </div>
+                    <div className={styles.statsSidebarRow}>
+                      <div className={styles.statsSidebarRowIcon}>
+                        <Icon name="card" size="sm" color="tertiary" />
+                        <Text variant="caption" color="tertiary">Картка</Text>
+                      </div>
+                      <Text variant="labelMedium" weight="semibold">₴{formatCurrency(Math.round(selectedDayCell.cardSales))}</Text>
+                    </div>
+                    {selectedDayCell.writeOffsTotal > 0 && (
+                      <div className={styles.statsSidebarRow}>
+                        <Text variant="caption" color="tertiary">Списання</Text>
+                        <Text variant="labelMedium" weight="semibold" color="error">-₴{formatCurrency(Math.round(selectedDayCell.writeOffsTotal))}</Text>
+                      </div>
+                    )}
+                    {selectedDayCell.suppliesTotal > 0 && (
+                      <div className={styles.statsSidebarRow}>
+                        <Text variant="caption" color="tertiary">Поставки</Text>
+                        <Text variant="labelMedium" weight="semibold">₴{formatCurrency(Math.round(selectedDayCell.suppliesTotal))}</Text>
                       </div>
                     )}
                   </div>

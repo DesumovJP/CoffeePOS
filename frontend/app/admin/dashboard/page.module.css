@@ -571,40 +571,58 @@
   height: 100%;
 }
 
-/* ── Compact stats strip ── */
-.statsStrip {
-  display: flex;
-  align-items: center;
-  gap: 0;
-  background: var(--glass-bg-elevated);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-xl);
-  padding: var(--space-2) var(--space-4);
-  flex-wrap: wrap;
-  flex-shrink: 0;
-  row-gap: var(--space-1-5);
+/* ── Modal body: activity list (left) + stats sidebar (right) ── */
+.modalBody {
+  display: grid;
+  grid-template-columns: 1fr 200px;
+  gap: var(--space-3);
+  min-height: 0;
+  flex: 1;
+  align-items: start;
 }
 
-.statChip {
+/* ── Stats sidebar (right column) ── */
+.statsSidebar {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-secondary);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.statsSidebarShift {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-2-5) var(--space-3);
+  background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.statsSidebarShiftRow {
   display: flex;
   align-items: center;
   gap: var(--space-1-5);
-  padding: var(--space-1) var(--space-2-5);
 }
 
-.statChipDivider {
-  width: 1px;
-  height: 20px;
-  background: var(--glass-border-strong);
-  flex-shrink: 0;
-}
-
-/* ── Modal body: activity list + shift sidebar ── */
-.modalBody {
+.statsSidebarRow {
   display: flex;
   flex-direction: column;
-  min-height: 0;
-  flex: 1;
+  gap: 2px;
+  padding: var(--space-2-5) var(--space-3);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.statsSidebarRow:last-child {
+  border-bottom: none;
+}
+
+.statsSidebarRowIcon {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1-5);
 }
 
 /* Activity List */
@@ -835,8 +853,13 @@
 }
 
 @media (max-width: 768px) {
-  .statsStrip {
-    gap: 0;
+  .modalBody {
+    grid-template-columns: 1fr;
+  }
+
+  .statsSidebar {
+    /* show sidebar below activity list on mobile */
+    order: 2;
   }
 
   .activityList {
