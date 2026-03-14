@@ -16,7 +16,6 @@ import {
   type Column,
   ProductFormModal,
   IngredientFormModal,
-  IngredientDetailModal,
 } from '@/components/organisms';
 import {
   useProducts,
@@ -337,8 +336,6 @@ function DeleteConfirmModal({ isOpen, onClose, onConfirm, title, description, is
 export default function ProductsAdminPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('products');
   const [search, setSearch] = useState('');
-  const [selectedProduct, setSelectedProduct] = useState<UnifiedProduct | null>(null);
-  const [selectedIngredient, setSelectedIngredient] = useState<Ingredient | null>(null);
 
   // CRUD modal states
   const [productModal, setProductModal] = useState<{ isOpen: boolean; product: Product | null }>({ isOpen: false, product: null });
@@ -421,9 +418,7 @@ export default function ProductsAdminPage() {
   const handleEditProduct = useCallback(
     (documentId: string) => {
       const original = findOriginalProduct(documentId);
-      if (original) {
-        setProductModal({ isOpen: true, product: original });
-      }
+      if (original) setProductModal({ isOpen: true, product: original });
     },
     [findOriginalProduct]
   );
@@ -441,12 +436,9 @@ export default function ProductsAdminPage() {
     setIngredientModal({ isOpen: true, ingredient: null });
   }, []);
 
-  const handleEditIngredient = useCallback(
-    (ingredient: Ingredient) => {
-      setIngredientModal({ isOpen: true, ingredient });
-    },
-    []
-  );
+  const handleEditIngredient = useCallback((ingredient: Ingredient) => {
+    setIngredientModal({ isOpen: true, ingredient });
+  }, []);
 
   const handleDeleteIngredient = useCallback((documentId: string, name: string) => {
     setDeleteConfirm({ isOpen: true, type: 'ingredient', documentId, name });
@@ -463,8 +455,10 @@ export default function ProductsAdminPage() {
     try {
       if (deleteConfirm.type === 'product') {
         await deleteProductMutation.mutateAsync(deleteConfirm.documentId);
+        setProductModal({ isOpen: false, product: null });
       } else if (deleteConfirm.type === 'ingredient') {
         await deleteIngredientMutation.mutateAsync(deleteConfirm.documentId);
+        setIngredientModal({ isOpen: false, ingredient: null });
       }
       setDeleteConfirm(null);
     } catch {
@@ -482,7 +476,6 @@ export default function ProductsAdminPage() {
       key: 'name',
       header: 'Назва',
       type: 'primary' as const,
-      width: '45%',
       render: (product) => (
         <div className={styles.nameCell}>
           {product.image ? (
@@ -501,63 +494,49 @@ export default function ProductsAdminPage() {
     },
     {
       key: 'price',
-      header: 'Ціна',
+      header: 'Ціна / Собів.',
       type: 'numeric' as const,
       align: 'right',
-      width: '80px',
+      width: '120px',
       render: (product) => (
-        <Text variant="labelMedium" weight="semibold" className={styles.price}>
-          ₴{product.price.toFixed(0)}
-        </Text>
+        <div className={styles.priceCell}>
+          <Text variant="labelMedium" weight="semibold">₴{product.price.toFixed(0)}</Text>
+          {product.costPrice > 0 && (
+            <Text variant="caption" color="tertiary">₴{product.costPrice.toFixed(0)}</Text>
+          )}
+        </div>
       ),
+    },
+    {
+      key: 'margin',
+      header: 'Маржа',
+      type: 'numeric' as const,
+      align: 'right',
+      width: '70px',
+      hideOnMobile: true,
+      render: (product) => {
+        if (!product.costPrice || product.price <= 0) return <Text variant="caption" color="tertiary">—</Text>;
+        const margin = ((product.price - product.costPrice) / product.price) * 100;
+        const color = margin >= 50 ? styles.marginGood : margin >= 30 ? styles.marginWarn : styles.marginBad;
+        return <Text variant="labelSmall" weight="semibold" className={color}>{margin.toFixed(0)}%</Text>;
+      },
     },
     {
       key: 'stock',
       header: 'Залишок',
       align: 'right',
-      width: '110px',
+      width: '100px',
       hideOnMobile: true,
       render: (product) => {
-        if (!product.trackInventory) {
-          return <Text variant="bodySmall" color="tertiary">—</Text>;
-        }
+        if (!product.trackInventory) return <Text variant="caption" color="tertiary">—</Text>;
         const qty = product.quantity ?? 0;
         const min = product.minQuantity ?? 0;
-        if (qty <= 0) {
-          return <Badge variant="error" size="sm">Немає</Badge>;
-        }
-        if (qty <= min) {
-          return <Badge variant="warning" size="sm">{qty} шт</Badge>;
-        }
+        if (qty <= 0) return <Badge variant="error" size="sm">Немає</Badge>;
+        if (qty <= min) return <Badge variant="warning" size="sm">{qty} шт</Badge>;
         return <Text variant="bodySmall" color="secondary">{qty} шт</Text>;
       },
     },
-    {
-      key: 'actions',
-      header: '',
-      type: 'action' as const,
-      align: 'right',
-      width: '80px',
-      render: (product) => (
-        <div className={styles.actions}>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={(e) => { e.stopPropagation(); handleEditProduct(product.documentId); }}
-          >
-            <Icon name="edit" size="sm" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={(e) => { e.stopPropagation(); handleDeleteProduct(product.documentId, product.name); }}
-          >
-            <Icon name="delete" size="sm" />
-          </Button>
-        </div>
-      ),
-    },
-  ], [handleEditProduct, handleDeleteProduct]);
+  ], []);
 
   // Ingredient columns
   const ingredientColumns: Column<Ingredient>[] = useMemo(() => [
@@ -565,7 +544,6 @@ export default function ProductsAdminPage() {
       key: 'name',
       header: 'Назва',
       type: 'primary' as const,
-      width: '45%',
       render: (ingredient) => {
         const isLowStock = ingredient.quantity <= ingredient.minQuantity;
         const isOutOfStock = ingredient.quantity <= 0;
@@ -579,12 +557,18 @@ export default function ProductsAdminPage() {
               </div>
             )}
             <div className={styles.itemName}>
-              <Text variant="bodyMedium" weight="medium">{ingredient.name}</Text>
-              {isOutOfStock
-                ? <Badge variant="error" size="sm">Немає</Badge>
-                : isLowStock
-                ? <Badge variant="warning" size="sm">Мало</Badge>
-                : null}
+              <div className={styles.itemNameRow}>
+                <Text variant="bodyMedium" weight="medium">{ingredient.name}</Text>
+                {isOutOfStock
+                  ? <Badge variant="error" size="sm">Немає</Badge>
+                  : isLowStock
+                  ? <Badge variant="warning" size="sm">Мало</Badge>
+                  : null}
+              </div>
+              <Text variant="caption" color="tertiary">
+                {ingredient.category?.name || ''}
+                {ingredient.supplier ? ` · ${ingredient.supplier.split(',')[0].trim()}` : ''}
+              </Text>
             </div>
           </div>
         );
@@ -597,7 +581,6 @@ export default function ProductsAdminPage() {
       render: (ingredient) => {
         const isLowStock = ingredient.quantity <= ingredient.minQuantity;
         const isOutOfStock = ingredient.quantity <= 0;
-        // Progress: current vs 2× minimum (so "full" = 2× min)
         const max = (ingredient.minQuantity || 1) * 2;
         const pct = Math.min(100, (ingredient.quantity / max) * 100);
         const fillClass = isOutOfStock
@@ -607,9 +590,14 @@ export default function ProductsAdminPage() {
           : styles.stockBarFill;
         return (
           <div className={styles.stockCell}>
-            <Text variant="bodySmall" weight="semibold" color={isOutOfStock ? 'error' : isLowStock ? 'warning' : 'primary'}>
-              {formatQuantity(ingredient.quantity, ingredient.unit)}
-            </Text>
+            <div className={styles.stockQtyRow}>
+              <Text variant="bodySmall" weight="semibold" color={isOutOfStock ? 'error' : isLowStock ? 'warning' : 'primary'}>
+                {formatQuantity(ingredient.quantity, ingredient.unit)}
+              </Text>
+              <Text variant="caption" color="tertiary">
+                мін {formatQuantity(ingredient.minQuantity, ingredient.unit)}
+              </Text>
+            </div>
             <div className={styles.stockBar}>
               <div className={`${styles.stockBarFillBase} ${fillClass}`} style={{ width: `${pct}%` }} />
             </div>
@@ -619,54 +607,35 @@ export default function ProductsAdminPage() {
     },
     {
       key: 'costPerUnit',
-      header: 'Ціна/од.',
+      header: 'Ціна/од. · Вартість',
       type: 'numeric' as const,
-      width: '110px',
+      align: 'right',
+      width: '140px',
       hideOnMobile: true,
       render: (ingredient) => (
-        <Text variant="bodySmall" color="secondary">
-          {formatSmartCost(ingredient.costPerUnit, ingredient.unit)}
-        </Text>
-      ),
-    },
-    {
-      key: 'actions',
-      header: '',
-      type: 'action' as const,
-      align: 'right',
-      width: '80px',
-      render: (ingredient) => (
-        <div className={styles.actions}>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={(e) => { e.stopPropagation(); handleEditIngredient(ingredient); }}
-          >
-            <Icon name="edit" size="sm" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={(e) => { e.stopPropagation(); handleDeleteIngredient(ingredient.documentId, ingredient.name); }}
-          >
-            <Icon name="delete" size="sm" />
-          </Button>
+        <div className={styles.priceCell}>
+          <Text variant="labelSmall" weight="semibold">
+            {formatSmartCost(ingredient.costPerUnit, ingredient.unit)}
+          </Text>
+          <Text variant="caption" color="tertiary">
+            ₴{(ingredient.quantity * ingredient.costPerUnit).toFixed(0)}
+          </Text>
         </div>
       ),
     },
-  ], [handleEditIngredient, handleDeleteIngredient]);
+  ], []);
 
   const getIngredientRowClassName = useCallback((ingredient: Ingredient) => {
     return ingredient.quantity <= ingredient.minQuantity ? styles.lowStockRow : '';
   }, []);
 
   const handleProductClick = useCallback((product: UnifiedProduct) => {
-    setSelectedProduct(product);
-  }, []);
+    handleEditProduct(product.documentId);
+  }, [handleEditProduct]);
 
   const handleIngredientClick = useCallback((ingredient: Ingredient) => {
-    setSelectedIngredient(ingredient);
-  }, []);
+    handleEditIngredient(ingredient);
+  }, [handleEditIngredient]);
 
   const isLoading = viewMode === 'ingredients' ? ingredientsLoading : productsLoading;
 
@@ -776,25 +745,6 @@ export default function ProductsAdminPage() {
         />
       )}
 
-      {/* Product Detail Modal */}
-      {selectedProduct && (
-        <ProductModal
-          product={selectedProduct}
-          ingredients={ingredientsList}
-          onClose={() => setSelectedProduct(null)}
-        />
-      )}
-
-      {/* Ingredient Detail Modal */}
-      <IngredientDetailModal
-        ingredient={selectedIngredient}
-        onClose={() => setSelectedIngredient(null)}
-        onEdit={(ing) => {
-          setSelectedIngredient(null);
-          setIngredientModal({ isOpen: true, ingredient: ing });
-        }}
-      />
-
       {/* CRUD Modals */}
       <ProductFormModal
         isOpen={productModal.isOpen}
@@ -802,6 +752,10 @@ export default function ProductsAdminPage() {
         product={productModal.product}
         categories={apiCategories || []}
         onSuccess={handleProductSuccess}
+        onDelete={productModal.product
+          ? () => handleDeleteProduct(productModal.product!.documentId, productModal.product!.name)
+          : undefined
+        }
       />
 
       <IngredientFormModal
@@ -810,6 +764,10 @@ export default function ProductsAdminPage() {
         ingredient={ingredientModal.ingredient}
         categories={apiIngredientCategories || []}
         onSuccess={handleIngredientSuccess}
+        onDelete={ingredientModal.ingredient
+          ? () => handleDeleteIngredient(ingredientModal.ingredient!.documentId, ingredientModal.ingredient!.name)
+          : undefined
+        }
       />
 
       {/* Delete Confirmation Modal */}

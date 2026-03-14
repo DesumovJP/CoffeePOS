@@ -31,6 +31,8 @@ export interface RecipeFormModalProps {
   products: Product[];
   ingredients: Ingredient[];
   onSuccess: () => void;
+  /** Called when user clicks Delete (edit mode only) */
+  onDelete?: () => void;
 }
 
 // ============================================
@@ -54,6 +56,7 @@ export function RecipeFormModal({
   products,
   ingredients,
   onSuccess,
+  onDelete,
 }: RecipeFormModalProps) {
   const isEditing = !!recipe;
 
@@ -234,16 +237,23 @@ export function RecipeFormModal({
   };
 
   const footer = (
-    <Button
-      variant="primary"
-      size="lg"
-      onClick={handleSubmit}
-      loading={submitting}
-      fullWidth
-    >
-      <Icon name="check" size="md" />
-      {isEditing ? 'Зберегти' : 'Створити'}
-    </Button>
+    <div style={{ display: 'flex', gap: 8, width: '100%' }}>
+      {isEditing && onDelete && (
+        <Button variant="ghost" size="md" onClick={onDelete} style={{ flexShrink: 0 }}>
+          <Icon name="delete" size="sm" />
+        </Button>
+      )}
+      <Button
+        variant="primary"
+        size="lg"
+        onClick={handleSubmit}
+        loading={submitting}
+        fullWidth
+      >
+        <Icon name="check" size="md" />
+        {isEditing ? 'Зберегти' : 'Створити'}
+      </Button>
+    </div>
   );
 
   return (

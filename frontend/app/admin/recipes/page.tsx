@@ -93,6 +93,7 @@ export default function RecipesAdminPage() {
     try {
       await deleteRecipeMutation.mutateAsync(deleteConfirm.documentId);
       setDeleteConfirm(null);
+      setRecipeModal({ isOpen: false, recipe: null });
     } catch {
       // Error handled by mutation
     }
@@ -183,32 +184,7 @@ export default function RecipesAdminPage() {
         <Badge variant="default" size="sm">{recipe.ingredients.length} інгр.</Badge>
       ),
     },
-    {
-      key: 'actions',
-      header: '',
-      type: 'action' as const,
-      align: 'right',
-      width: '80px',
-      render: (recipe) => (
-        <div className={styles.actions}>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={(e) => { e.stopPropagation(); handleEdit(recipe); }}
-          >
-            <Icon name="edit" size="sm" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={(e) => { e.stopPropagation(); handleDelete(recipe); }}
-          >
-            <Icon name="delete" size="sm" />
-          </Button>
-        </div>
-      ),
-    },
-  ], [handleEdit, handleDelete, productImageMap]);
+  ], [handleEdit, productImageMap]);
 
   // ============================================
   // RENDER
@@ -263,6 +239,7 @@ export default function RecipesAdminPage() {
         products={products || []}
         ingredients={ingredients || []}
         onSuccess={handleRecipeSuccess}
+        onDelete={recipeModal.recipe ? () => handleDelete(recipeModal.recipe!) : undefined}
       />
 
       {/* Delete Confirmation Modal */}

@@ -28,6 +28,8 @@ export interface IngredientFormModalProps {
   categories: IngredientCategory[];
   /** Callback on successful create/update */
   onSuccess: () => void;
+  /** Called when user clicks Delete (edit mode only) */
+  onDelete?: () => void;
 }
 
 interface IngredientFormState {
@@ -69,6 +71,7 @@ export function IngredientFormModal({
   ingredient,
   categories,
   onSuccess,
+  onDelete,
 }: IngredientFormModalProps) {
   const isEditMode = !!ingredient;
   const [form, setForm] = useState<IngredientFormState>(INITIAL_STATE);
@@ -253,14 +256,21 @@ export function IngredientFormModal({
   );
 
   const footer = (
-    <Button
-      variant="primary"
-      onClick={handleSubmit as any}
-      loading={isSubmitting}
-      fullWidth
-    >
-      {isEditMode ? 'Зберегти' : 'Створити'}
-    </Button>
+    <div style={{ display: 'flex', gap: 8, width: '100%' }}>
+      {isEditMode && onDelete && (
+        <Button variant="ghost" size="md" onClick={onDelete} style={{ flexShrink: 0 }}>
+          <Icon name="delete" size="sm" />
+        </Button>
+      )}
+      <Button
+        variant="primary"
+        onClick={handleSubmit as any}
+        loading={isSubmitting}
+        fullWidth
+      >
+        {isEditMode ? 'Зберегти' : 'Створити'}
+      </Button>
+    </div>
   );
 
   return (
