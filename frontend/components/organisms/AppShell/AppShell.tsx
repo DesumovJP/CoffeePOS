@@ -152,6 +152,7 @@ export function AppShell({ children }: AppShellProps) {
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileTasksOpen, setMobileTasksOpen] = useState(false);
 
   // Auto-collapse sidebar on tablet
   const effectiveCollapsed = isDesktop ? sidebarCollapsed : true;
@@ -269,8 +270,6 @@ export function AppShell({ children }: AppShellProps) {
       </div>
     );
   }
-
-  const [mobileTasksOpen, setMobileTasksOpen] = useState(false);
 
   // Bottom nav items — top 4 most-used pages for quick access
   const bottomNavItems = [
