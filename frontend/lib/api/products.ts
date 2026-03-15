@@ -18,6 +18,8 @@ export interface GetProductsParams {
   search?: string;
   isActive?: boolean;
   isFeatured?: boolean;
+  /** Filter by inventoryType. Pass 'not_recipe' to exclude recipe-based products. */
+  inventoryType?: 'none' | 'simple' | 'recipe' | 'not_recipe';
   sort?: string;
   populate?: string;
 }
@@ -53,6 +55,13 @@ export const productsApi = {
 
     if (params.isFeatured !== undefined) {
       queryParams['filters[isFeatured][$eq]'] = params.isFeatured;
+    }
+
+    // inventoryType filter — 'not_recipe' excludes recipe-based products at the API level
+    if (params.inventoryType === 'not_recipe') {
+      queryParams['filters[inventoryType][$ne]'] = 'recipe';
+    } else if (params.inventoryType) {
+      queryParams['filters[inventoryType][$eq]'] = params.inventoryType;
     }
 
     return apiClient.get<Product[]>('/products', queryParams);

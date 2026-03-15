@@ -302,3 +302,20 @@
     display: none;
   }
 }
+
+/* ─── Supply detail modal ─────────────────────────────────────────────────── */
+
+.supplyDetailBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.supplyDetailMeta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--glass-border);
+}

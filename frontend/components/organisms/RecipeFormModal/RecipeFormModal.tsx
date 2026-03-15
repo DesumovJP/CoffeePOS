@@ -237,9 +237,9 @@ export function RecipeFormModal({
   };
 
   const footer = (
-    <div style={{ display: 'flex', gap: 8, width: '100%' }}>
+    <div className={styles.footer}>
       {isEditing && onDelete && (
-        <Button variant="ghost" size="md" onClick={onDelete} style={{ flex: 1 }}>
+        <Button variant="ghost" size="md" onClick={onDelete} className={styles.footerDelete}>
           <Icon name="delete" size="sm" /> Видалити
         </Button>
       )}
@@ -248,7 +248,7 @@ export function RecipeFormModal({
         size="lg"
         onClick={handleSubmit}
         loading={submitting}
-        style={{ flex: 1 }}
+        className={styles.footerSave}
       >
         <Icon name="check" size="md" />
         {isEditing ? 'Зберегти' : 'Створити'}
@@ -440,11 +440,12 @@ export function RecipeFormModal({
                   </Text>
                 )}
                 <Button
-                  variant="danger"
+                  variant="ghost"
                   size="xs"
                   iconOnly
                   onClick={() => removeIngredientRow(row.id)}
                   className={styles.removeButton}
+                  aria-label="Видалити рядок"
                 >
                   <Icon name="close" size="xs" />
                 </Button>

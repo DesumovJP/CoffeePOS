@@ -9,11 +9,9 @@
 .card {
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-xl);
-  background: var(--bg-primary);
-  box-shadow: var(--shadow-sm);
-  margin: var(--space-3) var(--space-2) 0;
+  border-top: 1px solid var(--glass-border);
+  background: transparent;
+  margin-top: var(--space-3);
   overflow: hidden;
 }
 
@@ -22,11 +20,10 @@
   display: flex;
   align-items: center;
   gap: var(--space-2-5);
-  padding: var(--space-2-5) var(--space-3);
+  padding: var(--space-2) var(--space-3);
   width: 100%;
-  background: var(--glass-bg-elevated);
+  background: transparent;
   border: none;
-  border-bottom: 1px solid var(--glass-border);
   cursor: pointer;
   color: var(--text-secondary);
   text-align: left;
@@ -78,11 +75,27 @@
   margin: 0;
 }
 
+.cardEmptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-5) var(--space-3);
+  opacity: 0.6;
+}
+
+.cardEmptyText {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  text-align: center;
+}
+
 .previewRow {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-1-5) var(--space-3);
   border-left: 3px solid transparent;
   border-bottom: 1px solid var(--glass-border);
   cursor: pointer;
@@ -130,6 +143,22 @@
   min-width: 0;
 }
 
+.previewAssignee {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-full);
+  background: var(--glass-bg-elevated);
+  border: 1px solid var(--glass-border);
+  font-size: 9px;
+  font-weight: var(--font-bold);
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+
 .previewRunning {
   font-size: 8px;
   color: var(--color-success);
@@ -149,7 +178,7 @@
   justify-content: space-between;
   padding: var(--space-2) var(--space-3);
   border-top: 1px solid var(--glass-border);
-  background: var(--glass-bg-elevated);
+  background: transparent;
 }
 
 .footerNewBtn {
@@ -594,12 +623,13 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--space-2-5);
+  gap: var(--space-3);
   flex: 1;
-  padding: var(--space-10) var(--space-4);
+  padding: var(--space-12) var(--space-4);
   border: 1.5px dashed var(--glass-border);
   border-radius: var(--radius-xl);
-  min-height: 8rem;
+  min-height: 10rem;
+  opacity: 0.7;
 }
 
 .emptyText {

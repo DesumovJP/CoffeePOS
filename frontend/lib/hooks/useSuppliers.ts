@@ -18,6 +18,8 @@ export function useSuppliers() {
     queryKey: supplierKeys.list(),
     queryFn: () => suppliersApi.getAll(),
     select: (data) => data.data,
+    // Suppliers change infrequently — cache for 5 minutes.
+    staleTime: 5 * 60 * 1000,
   });
 }
 

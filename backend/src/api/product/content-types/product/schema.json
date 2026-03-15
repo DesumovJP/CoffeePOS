@@ -81,6 +81,11 @@
       "type": "boolean",
       "default": false
     },
+    "inventoryType": {
+      "type": "enumeration",
+      "enum": ["none", "simple", "recipe"],
+      "default": "simple"
+    },
     "trackInventory": {
       "type": "boolean",
       "default": false

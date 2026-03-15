@@ -6,7 +6,7 @@
  * React Query hooks for orders data
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { ordersApi, type GetOrdersParams } from '@/lib/api';
 import type { Order, OrderStatus } from '@/lib/api';
 
@@ -35,6 +35,11 @@ export function useOrders(params: GetOrdersParams = {}) {
     queryKey: orderKeys.list(params),
     queryFn: () => ordersApi.getAll(params),
     select: (data) => data.data,
+    // Orders are POS real-time data — always consider stale so new orders appear immediately
+    staleTime: 0,
+    // Keep showing previous data while new query loads (prevents spinner flash on
+    // Zustand persist hydration, which changes the dateRange query key)
+    placeholderData: keepPreviousData,
   });
 }
 

@@ -409,27 +409,28 @@
   flex-wrap: wrap;
 }
 
-.headerStats {
-  display: flex;
-  gap: var(--space-2);
-  min-width: 180px;
-}
-
-.headerStats:last-child {
-  justify-content: flex-end;
-}
-
-.statPill {
+/* Calendar stats strip (replaces badge pills) */
+.calendarStatsStrip {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
   background: var(--glass-bg-elevated);
-  backdrop-filter: blur(var(--blur-md));
-  -webkit-backdrop-filter: blur(var(--blur-md));
   border: 1px solid var(--glass-border);
-  border-radius: var(--radius-full);
-  box-shadow: var(--shadow-sm);
+  border-radius: var(--radius-xl);
+}
+
+.calStripItem {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.calStripDivider {
+  width: 1px;
+  height: 2rem;
+  background: var(--glass-border);
+  flex-shrink: 0;
 }
 
 .monthNav {
@@ -477,26 +478,28 @@
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   grid-template-rows: repeat(6, 1fr);
+  border-top: 1px solid var(--glass-border);
+  border-left: 1px solid var(--glass-border);
 }
 
 .dayCell {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
-  padding: var(--space-2);
+  padding: var(--space-2-5) var(--space-2);
   border-right: 1px solid var(--glass-border);
   border-bottom: 1px solid var(--glass-border);
-  min-height: 80px;
+  min-height: 96px;
   transition: background-color var(--duration-fast) var(--ease-out);
 }
 
-.dayCell:nth-child(7n) { border-right: none; }
-.dayCell:nth-last-child(-n+7) { border-bottom: none; }
-
 .dayCell.hasData { cursor: pointer; }
 .dayCell.hasData:hover { background: var(--color-brand-bg); }
-.dayCell.today { background: var(--color-brand-subtle); }
-.dayCell.today.hasData:hover { background: rgba(44, 44, 46, 0.08); }
+.dayCell.today {
+  background: var(--color-brand-subtle);
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--color-brand) 35%, transparent);
+}
+.dayCell.today.hasData:hover { background: color-mix(in srgb, var(--color-brand) 10%, transparent); }
 .dayCell.otherMonth { background: var(--bg-tertiary); opacity: 0.5; }
 
 .dayNumber {
@@ -512,26 +515,33 @@
   border-radius: var(--radius-full);
 }
 
+/* Override Text atom's color token via higher selector specificity (0,3,1 > 0,1,0) */
 .dayCell.today .dayNumber span {
-  color: var(--text-inverse) !important;
+  color: var(--text-inverse);
 }
 
 .dayData {
   display: flex;
   flex-direction: column;
-  gap: var(--space-0-5, 2px);
+  gap: 3px;
   margin-top: auto;
 }
 
 .dayIndicator {
   display: flex;
   align-items: center;
-  gap: var(--space-1);
+  gap: var(--space-1-5);
+  min-width: 0;
+}
+
+.dayRevenue {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .dayIndicatorDot {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   border-radius: var(--radius-full);
   flex-shrink: 0;
 }
@@ -901,7 +911,7 @@
   }
 
   .dayCell {
-    min-height: 60px;
+    min-height: 64px;
     padding: var(--space-1);
   }
 
@@ -917,11 +927,11 @@
   .dayCell.hasData::after {
     content: '';
     display: block;
-    width: 6px;
-    height: 6px;
+    width: 5px;
+    height: 5px;
     background: var(--color-brand);
     border-radius: var(--radius-full);
-    margin: auto auto 0;
+    margin: auto auto var(--space-1);
   }
 }
 

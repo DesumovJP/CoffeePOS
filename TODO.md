@@ -1,49 +1,145 @@
-# TODO — UI Improvements Plan
+# CoffeePOS — Developer Context & TODO
 
-## Task 1 — Product table thumbnails
-**Files:** `app/admin/products/page.tsx`, `app/admin/products/page.module.css`
-
-- [ ] Add `image?: string` to `UnifiedProduct` interface
-- [ ] Include `image` in `productToUnified()` (use `formats.thumbnail.url` → fallback `url`)
-- [ ] Insert thumbnail column first in `productColumns` (52px wide, no header text)
-  - Shows `<img>` if `product.image` exists
-  - Shows icon placeholder (package icon) otherwise
-- [ ] Add CSS: `.thumbnail`, `.thumbnailPlaceholder` styles
+> Актуальний стан системи для відновлення контексту між сесіями.
+> Оновлено: 2026-03-15
 
 ---
 
-## Task 2 — Employee modal month switcher
-**Files:** `backend/src/api/employee/controllers/employee.ts`,
-`frontend/lib/api/employees.ts`, `frontend/lib/hooks/useEmployees.ts`,
-`frontend/components/organisms/EmployeeDetailModal/EmployeeDetailModal.tsx`
+## Стек
 
-- [ ] Backend `stats` endpoint: read `month` + `year` query params; filter
-  shifts/orders to that month's range; daily breakdown = days of that month
-- [ ] `employeesApi.getStats(id, { month, year })` — add optional params, pass as QS
-- [ ] `useEmployeeStats(id, params?)` — include month/year in query key
-- [ ] `EmployeeDetailModal`:
-  - Add `selectedMonth / selectedYear` state (default: current)
-  - Add month nav UI above StatsGrid (chevron-left | Month YYYY | chevron-right)
-  - Cannot navigate beyond current month (future locked)
-  - Update chart titles: "за місяць" instead of "за 7 днів"
+- **Frontend**: Next.js 15, `'use client'` компоненти, CSS Modules
+- **Backend**: Strapi v5 (documentId = UUID в роутах, числовий `id` в DB queries)
+- **Стан**: Zustand (`shiftStore`, `orderStore`, `notificationStore`)
+- **Запити**: React Query (TanStack Query v5)
+- **CSS**: тільки `*.module.css` + CSS-змінні дизайн-системи (`--space-*`, `--color-*`, `--radius-*`). ЗАБОРОНЕНО: `!important`, inline style для дизайнерських рішень.
+- **Специфічність CSS**: compound-selectors замість `!important` (`.chip.chipActive` б'є `.chip`)
 
 ---
 
-## Task 3 — History page: today-only + expandable orders
-**Files:** `app/orders/page.tsx`, `app/orders/page.module.css`
+## Ключові патерни
 
-- [ ] Remove `filterCategories`, `selectedFilter` state, `CategoryTabs` component
-- [ ] `getDateRange` → hardcode to today only; remove function, inline the date calc
-- [ ] Add `expandedOrderId: string | null` state
-- [ ] Make each order card a button/clickable row with chevron icon
-- [ ] Show expanded items list when `order.id === expandedOrderId`
-  - Each item: name, quantity × price = total
-- [ ] Add CSS: `.accordionTrigger`, `.accordionChevron`, `.accordionChevronOpen`,
-  `.itemsList`, `.itemRow`, `.itemName`, `.itemPrice`
+### Навігація (AppShell)
+- **main**: Каса → Історія → Продукція → **Поставки** (admin)
+- **management**: Аналітика → Працівники → **Рецепти** (admin)
+
+### Shift lifecycle
+- Відкриття: `ShiftGuard` на сторінці Каса → `useShiftStore().openShift()`
+- Закриття: `ShiftCloseModal` на сторінці **Профіль** → "Закрити зміну" button у hero card → `useShiftStore().closeShift()`
+- Backend route: `POST /shifts/:documentId/close` — контролер шукає shift через `where: { documentId: id }` ✅ (виправлено)
+
+### PickerItem (Поставки)
+Уніфікований тип для picker — інгредієнти + готові продукти:
+```ts
+interface PickerItem {
+  documentId: string;      // 'prod:' prefix for products
+  rawDocumentId: string;
+  name, unit, category, supplier, imageUrl, costPerUnit
+  kind: 'ingredient' | 'product'
+}
+```
+Готові продукти (`inventoryType !== 'recipe'`) фільтруються на рівні API:
+```ts
+useProducts({ pageSize: 200, isActive: true, inventoryType: 'not_recipe' })
+```
+API параметр `inventoryType: 'not_recipe'` → `filters[inventoryType][$ne]=recipe`
 
 ---
 
-## Order of implementation
-1. Task 1 (standalone, easiest)
-2. Task 3 (no backend changes)
-3. Task 2 (requires both backend + frontend)
+## Зміни за останні сесії
+
+### Session 2026-03-15 (поточна)
+
+#### ✅ Навігація (AppShell.tsx)
+- "Поставки" → main nav під "Продукцією"
+- "Рецепти" → "Управління" секція
+
+#### ✅ KPI працівників (employees/page.tsx + page.module.css)
+- Rank badges: `.rankBadge` + `.rank1/.rank2/.rank3` (gold/silver/bronze)
+- Row tints: `.perfRow1/.perfRow2/.perfRow3` через `getRowClassName` DataTable prop
+- Initials avatar: `.perfAvatar` (36px circle)
+- Sales bar: 5px висота, gradient fill
+- **Нова колонка "Ефект."**: composite score = `salesNorm*0.5 + ordersNorm*0.3 + avgNorm*0.2`
+  - Зелений ≥80%, жовтий ≥50%, сірий <50%
+  - CSS: `.efficiencyCell`, `.effBar`, `.effBarFill`, `.effHigh/.effMid/.effLow`
+
+#### ✅ TaskWidget (TaskWidget.tsx + module.css)
+- Порожній стан модалки: Icon + текст
+- Порожній стан sidebar card: `<div className={styles.cardEmptyState}>`
+- Preview rows: ініціали виконавця chip `.previewAssignee`
+
+#### ✅ Календар (dashboard/page.tsx + module.css)
+- `min-height` 96px для dayCell
+- Today: `box-shadow: inset 0 0 0 1.5px color-mix(...)`
+- `.dayRevenue` клас (tabular-nums, nowrap)
+- Прибрано `!important` (compound selector specificity)
+
+#### ✅ Поставки picker (suppliers/page.tsx + page.module.css)
+- `PickerItem` уніфікований тип (ingredients + products)
+- `readyProducts` — API-level filter `inventoryType: 'not_recipe'`
+- Ціни в picker: підказка під назвою
+- Invoice: `invoiceLineName` flex-column, `invoiceLineTotal` колонка
+- Прибрана колонка "Витрачено" з таблиці постачальників
+
+#### ✅ SupplierDetailModal
+- Замінено accordion (`expandedId`) на modal (`selectedSupply`)
+- `selectedSupply: Supply | null` state + `<Modal>` з деталями поставки
+- CSS: `.supplyDetailBody`, `.supplyDetailMeta`
+
+#### ✅ Shift close — Backend bug fix
+- `backend/src/api/shift/controllers/shift.ts`
+- `findOne({ where: { id } })` → `findOne({ where: { documentId: id } })`
+- `update({ where: { id } })` → `update({ where: { id: shift.id } })` (числовий id)
+
+#### ✅ ShiftCloseModal — з'явився у UI
+- `app/profile/page.tsx`: додано кнопку "Закрити зміну" у hero card (тільки якщо зміна відкрита)
+- `ShiftCloseModal` монтується в ProfilePage
+- CSS: `.heroShiftBar`, `.heroShiftInfo` в `profile/page.module.css`
+
+#### ✅ Recipe modal X buttons
+- `RecipeFormModal.tsx`: `variant="danger"` → `variant="ghost"` + `className={styles.removeButton}`
+- CSS: кнопка сіра за замовчуванням, червоніє при hover (no red circles)
+- Footer: прибрано inline styles → `.footer`, `.footerDelete`, `.footerSave`
+
+---
+
+## Відомі обмеження / TODO
+
+### History page
+- Сторінка вже використовує реальні дані (`useOrders` hook → Strapi API) ✅
+- "Мокові" дані — це реальні записи в БД із seed/тестових замовлень
+- Стара відкрита зміна (545г) — виникає через стару DB-запис; тепер закриття через Профіль
+
+### Activities endpoint
+- `activitiesApi` в `lib/api/activities.ts` викликає `/api/activities` якого не існує як окремого Strapi endpoint
+- Реальні activities зберігаються в `shift.activities` (JSON array)
+- Dashboard використовує `useDailyReport` → `/api/reports/daily` (повертає activities з shifts) ✅
+- `useActivities` hook — dead code, не використовується
+
+### POS mock fallback
+- `app/pos/page.tsx` має `mockProducts`/`mockCategories` як fallback якщо API недоступний
+- Це допустима graceful degradation, не баг
+
+### EmployeePerformance type
+- `EmployeePerformance` з `lib/api` має поля: `totalSales`, `totalOrders`, `avgOrderValue`, `shiftsCount`, `totalHours`, `role`, `employeeName`
+- Efficiency column обчислюється на фронтенді (не зберігається в БД)
+
+---
+
+## Важливі файли
+
+| Файл | Призначення |
+|------|-------------|
+| `frontend/app/orders/page.tsx` | Сторінка Історія (real data via useOrders) |
+| `frontend/app/profile/page.tsx` | Профіль + ShiftCloseModal |
+| `frontend/app/admin/employees/page.tsx` | KPI + efficiency % колонка |
+| `frontend/app/admin/suppliers/page.tsx` | Поставки + PickerItem |
+| `frontend/app/admin/dashboard/page.tsx` | Аналітика + Календар |
+| `frontend/lib/store/shiftStore.ts` | Zustand shift state |
+| `frontend/lib/api/products.ts` | `inventoryType: 'not_recipe'` filter |
+| `frontend/components/organisms/SupplierDetailModal/` | Modal замість accordion |
+| `frontend/components/organisms/RecipeFormModal/` | Ghost X кнопки |
+| `frontend/components/organisms/ShiftCloseModal/` | Закрити зміну modal |
+| `backend/src/api/shift/controllers/shift.ts` | closeShift documentId fix |
+| `backend/src/api/shift/services/shift.ts` | logActivity, addSale, addWriteOff, addSupply |
+| `backend/src/api/order/controllers/order.ts` | create (inventory deduction + shift tracking) |
+| `backend/src/api/report/controllers/report.ts` | /reports/daily, /reports/monthly |

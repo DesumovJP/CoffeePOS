@@ -282,6 +282,12 @@
 
 .removeButton {
   justify-self: end;
+  color: var(--text-tertiary);
+  transition: color var(--duration-fast) var(--ease-default);
+}
+
+.removeButton:hover {
+  color: var(--color-error);
 }
 
 /* ============================================
@@ -306,6 +312,29 @@
 .addButton:hover {
   border-color: var(--color-accent);
   background: var(--color-accent-subtle);
+}
+
+/* ============================================
+   FOOTER
+   ============================================ */
+
+.footer {
+  display: flex;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+.footerDelete {
+  flex: 1;
+  color: var(--text-secondary);
+}
+
+.footerDelete:hover {
+  color: var(--color-error);
+}
+
+.footerSave {
+  flex: 2;
 }
 
 /* ============================================

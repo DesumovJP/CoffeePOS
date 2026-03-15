@@ -9,7 +9,6 @@
 
 import React, { useState, useMemo, useCallback } from 'react';
 import { Icon, Button, Modal, Text } from '@/components/atoms';
-import { SearchInput } from '@/components/molecules';
 import { TaskFormModal, TaskCompleteModal } from '@/components/organisms';
 import { useToast } from '@/components/atoms';
 import {
@@ -215,8 +214,6 @@ export function TaskWidget({ collapsed = false, defaultOpen = false, onModalClos
   const [editingTask,    setEditingTask]    = useState<Task | null>(null);
   const [deleteTask,     setDeleteTask]     = useState<Task | null>(null);
   const [completingTask, setCompletingTask] = useState<Task | null>(null);
-  const [searchQuery,    setSearchQuery]    = useState('');
-  const [searchOpen,     setSearchOpen]     = useState(false);
   const [isUploading,    setIsUploading]    = useState(false);
   const [activeTab,      setActiveTab]      = useState<'active' | 'done'>('active');
 
@@ -225,9 +222,8 @@ export function TaskWidget({ collapsed = false, defaultOpen = false, onModalClos
   const queryParams = useMemo<GetTasksParams>(() => {
     const p: GetTasksParams = {};
     if (!isAdmin) p.assignedTo = currentUserName;
-    if (searchQuery.trim()) p.search = searchQuery.trim();
     return p;
-  }, [searchQuery, isAdmin, currentUserName]);
+  }, [isAdmin, currentUserName]);
 
   const { data: tasks, isLoading } = useTasks(queryParams);
 
@@ -361,28 +357,11 @@ export function TaskWidget({ collapsed = false, defaultOpen = false, onModalClos
                 </button>
               </div>
               <div className={styles.toolbarActions}>
-                <Button variant="ghost" size="sm" iconOnly
-                  onClick={() => { setSearchOpen(p => !p); if (searchOpen) setSearchQuery(''); }}
-                  aria-label="Пошук"
-                >
-                  <Icon name={searchOpen ? 'close' : 'search'} size="md" />
-                </Button>
                 <Button variant="primary" size="sm" onClick={openCreate}>
                   <Icon name="plus" size="sm" /> Додати
                 </Button>
               </div>
             </div>
-
-            {/* Search input — inline, only when open */}
-            {searchOpen && (
-              <SearchInput
-                value={searchQuery}
-                onChange={setSearchQuery}
-                placeholder="Пошук завдань..."
-                variant="glass"
-                autoFocus
-              />
-            )}
 
             {/* Task list */}
             <div className={styles.taskList}>
@@ -390,6 +369,7 @@ export function TaskWidget({ collapsed = false, defaultOpen = false, onModalClos
                 <><SkeletonRow /><SkeletonRow /><SkeletonRow /></>
               ) : displayedTasks.length === 0 ? (
                 <div className={styles.empty}>
+                  <Icon name={activeTab === 'active' ? 'check' : 'clock'} size="xl" color="tertiary" />
                   <span className={styles.emptyText}>
                     {activeTab === 'active' ? 'Немає активних завдань' : 'Немає виконаних завдань'}
                   </span>
@@ -473,7 +453,10 @@ export function TaskWidget({ collapsed = false, defaultOpen = false, onModalClos
 
         {/* Preview tasks */}
         {previewTasks.length === 0 ? (
-          <p className={styles.cardEmpty}>Немає активних завдань</p>
+          <div className={styles.cardEmptyState}>
+            <Icon name="check" size="md" color="tertiary" />
+            <span className={styles.cardEmptyText}>Немає активних завдань</span>
+          </div>
         ) : (
           <div className={styles.cardPreviews}>
             {previewTasks.map(task => (
@@ -485,6 +468,11 @@ export function TaskWidget({ collapsed = false, defaultOpen = false, onModalClos
               >
                 <span className={`${styles.previewDot} ${styles[`dot_${task.priority}`]}`} />
                 <span className={styles.previewTitle}>{task.title}</span>
+                {task.assignedTo && (
+                  <span className={styles.previewAssignee}>
+                    {task.assignedTo.trim().split(/\s+/).slice(0, 2).map((w: string) => w[0]?.toUpperCase() ?? '').join('')}
+                  </span>
+                )}
                 {task.status === 'in_progress' && (
                   <span className={styles.previewRunning}>●</span>
                 )}

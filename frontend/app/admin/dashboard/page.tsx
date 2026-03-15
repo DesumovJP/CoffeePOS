@@ -799,22 +799,22 @@ export default function AnalyticsPage() {
       {/* =========== CALENDAR TAB =========== */}
       {activeTab === 'calendar' && (
         <>
-          {/* Calendar Header — stats only (month nav is shared above) */}
+          {/* Calendar Header — stats strip like History page */}
           <div className={styles.calendarHeader}>
-            <div className={styles.headerStats}>
-              <div className={styles.statPill}>
-                <Icon name="cash" size="sm" color="success" />
-                <Text variant="labelMedium" weight="semibold">₴{formatNumber(monthSummary.totalRevenue)}</Text>
+            <div className={styles.calendarStatsStrip}>
+              <div className={styles.calStripItem}>
+                <Text variant="caption" color="tertiary">Виручка</Text>
+                <Text variant="labelLarge" weight="bold" color="success">₴{formatCurrency(Math.round(monthSummary.totalRevenue))}</Text>
               </div>
-              <div className={styles.statPill}>
-                <Icon name="receipt" size="sm" color="accent" />
-                <Text variant="labelMedium" weight="semibold">{monthSummary.totalOrders}</Text>
-                <Text variant="caption" color="tertiary">зам.</Text>
+              <div className={styles.calStripDivider} />
+              <div className={styles.calStripItem}>
+                <Text variant="caption" color="tertiary">Замовлень</Text>
+                <Text variant="labelLarge" weight="bold">{monthSummary.totalOrders}</Text>
               </div>
-              <div className={styles.statPill}>
-                <Icon name="chart" size="sm" color="info" />
-                <Text variant="labelMedium" weight="semibold">₴{monthSummary.avgOrder.toFixed(0)}</Text>
-                <Text variant="caption" color="tertiary">сер.</Text>
+              <div className={styles.calStripDivider} />
+              <div className={styles.calStripItem}>
+                <Text variant="caption" color="tertiary">Сер. чек</Text>
+                <Text variant="labelLarge" weight="bold">₴{formatCurrency(Math.round(monthSummary.avgOrder))}</Text>
               </div>
             </div>
           </div>
@@ -852,7 +852,7 @@ export default function AnalyticsPage() {
                         {/* Primary: revenue + orders count on same line */}
                         <div className={styles.dayIndicator}>
                           <span className={`${styles.dayIndicatorDot} ${styles.dotSuccess}`} />
-                          <Text variant="labelSmall" weight="semibold" color="accent">₴{formatNumber(day.revenue)}</Text>
+                          <Text variant="labelSmall" weight="semibold" color="accent" className={styles.dayRevenue}>₴{formatNumber(day.revenue)}</Text>
                           <Text variant="caption" color="tertiary">{day.ordersCount} зам.</Text>
                         </div>
                         {/* Employee initials chips */}

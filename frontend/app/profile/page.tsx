@@ -17,10 +17,12 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
-import { Text, Avatar, Badge, GlassCard, Spinner, Icon } from '@/components/atoms';
+import { Text, Avatar, Badge, GlassCard, Spinner, Icon, Button } from '@/components/atoms';
 import { DataTable, type Column } from '@/components/organisms';
+import { ShiftCloseModal } from '@/components/organisms/ShiftCloseModal';
 import { useEmployees, useEmployeeStats, useShifts } from '@/lib/hooks';
 import { useAuth } from '@/lib/providers/AuthProvider';
+import { useShiftStore, selectCurrentShift } from '@/lib/store';
 import type { Shift } from '@/lib/api';
 import styles from './page.module.css';
 
@@ -77,6 +79,8 @@ function ChartTooltip({ active, payload, label, valuePrefix = '' }: any) {
 
 export default function ProfilePage() {
   const { user } = useAuth();
+  const currentShift = useShiftStore(selectCurrentShift);
+  const [closeShiftOpen, setCloseShiftOpen] = useState(false);
   const { data: employees, isLoading } = useEmployees();
 
   const myEmployee = useMemo(() => {
@@ -225,6 +229,22 @@ export default function ProfilePage() {
           ══════════════════════════════════════════════ */}
       <GlassCard className={styles.heroCard}>
 
+        {/* Active shift close button */}
+        {currentShift?.status === 'open' && (
+          <div className={styles.heroShiftBar}>
+            <div className={styles.heroShiftInfo}>
+              <Icon name="clock" size="sm" color="success" />
+              <Text variant="labelSmall" weight="semibold" color="success">
+                Зміна відкрита · {currentShift.openedBy}
+              </Text>
+            </div>
+            <Button variant="secondary" size="sm" onClick={() => setCloseShiftOpen(true)}>
+              <Icon name="close" size="sm" />
+              Закрити зміну
+            </Button>
+          </div>
+        )}
+
         {/* Top row: avatar + name | hire info */}
         <div className={styles.heroTop}>
           <div className={styles.heroIdentity}>
@@ -351,6 +371,10 @@ export default function ProfilePage() {
         />
       </GlassCard>
 
+      <ShiftCloseModal
+        isOpen={closeShiftOpen}
+        onClose={() => setCloseShiftOpen(false)}
+      />
     </div>
   );
 }

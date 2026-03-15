@@ -35,8 +35,8 @@ function buildNavigation(role?: string): NavGroup[] {
         { id: 'pos',      label: 'Каса',      icon: 'cart',    href: '/pos' },
         { id: 'orders',   label: 'Історія',   icon: 'clock',   href: '/orders' },
         ...(isAdmin ? [
-          { id: 'products', label: 'Продукція', icon: 'package' as const, href: '/admin/products' },
-          { id: 'recipes',  label: 'Рецепти',   icon: 'receipt' as const, href: '/admin/recipes' },
+          { id: 'products',  label: 'Продукція', icon: 'package' as const, href: '/admin/products' },
+          { id: 'suppliers', label: 'Поставки',  icon: 'truck'   as const, href: '/admin/suppliers' },
         ] : []),
       ],
     },
@@ -47,9 +47,9 @@ function buildNavigation(role?: string): NavGroup[] {
       id: 'management',
       label: 'Управління',
       items: [
-        { id: 'analytics',  label: 'Аналітика',      icon: 'chart', href: '/admin/dashboard' },
-        { id: 'employees',  label: 'Працівники',     icon: 'user',  href: '/admin/employees' },
-        { id: 'suppliers',  label: 'Поставки',       icon: 'truck', href: '/admin/suppliers' },
+        { id: 'analytics',  label: 'Аналітика',      icon: 'chart',   href: '/admin/dashboard' },
+        { id: 'employees',  label: 'Працівники',     icon: 'user',    href: '/admin/employees' },
+        { id: 'recipes',    label: 'Рецепти',        icon: 'receipt', href: '/admin/recipes' },
       ],
     });
   }
@@ -91,7 +91,7 @@ const pageMeta: Record<string, PageMeta> = {
   '/admin/products': { title: 'Продукція', icon: 'package', search: true, action: { label: 'Додати', icon: 'plus' } },
   '/admin/recipes': { title: 'Рецепти', icon: 'receipt', search: true, action: { label: 'Додати рецепт', icon: 'plus' } },
   '/admin/employees': { title: 'Працівники', icon: 'user', search: true, action: { label: 'Додати', icon: 'plus' } },
-  '/admin/suppliers': { title: 'Поставки', icon: 'truck', search: true, action: { label: 'Додати постачальника', icon: 'plus' } },
+  '/admin/suppliers': { title: 'Поставки', icon: 'truck', action: { label: 'Додати постачальника', icon: 'plus' } },
   '/tasks': { title: 'Завдання', icon: 'check', search: true, action: { label: 'Додати', icon: 'plus' } },
   '/profile': { title: 'Профіль', icon: 'user' },
 };

@@ -8,9 +8,9 @@
  *  - "Постачальники" — manage supplier entities
  */
 
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { Text, Button, Icon, Badge, Spinner } from '@/components/atoms';
-import { SearchInput, SegmentedControl } from '@/components/molecules';
+import { SearchInput, SegmentedControl, QuantityControl } from '@/components/molecules';
 import {
   DataTable,
   SupplierDetailModal,
@@ -23,6 +23,7 @@ import {
   useSuppliers,
   useDeleteSupplier,
   useIngredients,
+  useProducts,
 } from '@/lib/hooks';
 import type { Supply, SupplyStatus, Supplier, Ingredient, IngredientUnit } from '@/lib/api';
 import styles from './page.module.css';
@@ -169,33 +170,118 @@ function getActiveStatus(profile: SupplierProfile): { status: SupplyStatus; expe
 }
 
 // ============================================
+// UNIFIED PICKER ITEM
+// ============================================
+
+// Unified item for the picker (can be ingredient or ready-made product)
+interface PickerItem {
+  documentId: string;  // prefixed 'prod:' for products to avoid collisions
+  rawDocumentId: string; // original documentId without prefix
+  name: string;
+  unit: IngredientUnit;
+  category: string;
+  supplier: string; // empty string for products (no supplier field)
+  imageUrl?: string;
+  costPerUnit: number;
+  kind: 'ingredient' | 'product';
+}
+
+// ============================================
 // ORDER LINE TYPE
 // ============================================
 
 interface OrderLine {
   key: string;
   ingredientDocumentId: string;
+  kind: 'ingredient' | 'product';
   name: string;
   unit: IngredientUnit;
   category: string;
   quantity: number;
   supplier: string;
   note: string;
+  imageUrl?: string;
+  costPerUnit: number;
+}
+
+function getInitials(name: string): string {
+  return name
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() ?? '')
+    .join('');
+}
+
+function formatInvoiceDate(date: Date): string {
+  return date.toLocaleDateString('uk-UA', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+}
+
+function formatInvoiceTime(date: Date): string {
+  return date.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
 }
 
 // ============================================
-// ORDER TAB
+// ORDER TAB — REDESIGNED
 // ============================================
 
 function OrderTab() {
   const [lines, setLines] = useState<OrderLine[]>([]);
-  const [selectedSupplierName, setSelectedSupplierName] = useState<string | null>(null);
+  const [activeSupplier, setActiveSupplier] = useState<string | null>(null); // null = all
   const [search, setSearch] = useState('');
+  const [invoiceCreatedAt, setInvoiceCreatedAt] = useState<Date | null>(null);
+  const chipsRef = useRef<HTMLDivElement>(null);
 
   const { data: ingredients = [], isLoading: loadingIng } = useIngredients({ pageSize: 200 });
   const { data: suppliers = [], isLoading: loadingSuppliers } = useSuppliers();
+  // Same params as POS/other pages → shared React Query cache → instant on revisit.
+  // Filter recipes client-side: undefined/null/'none'/'simple' all pass through safely.
+  const { data: allProducts = [], isLoading: loadingProducts } = useProducts({ pageSize: 200 });
+  const readyProducts = useMemo(
+    () => allProducts.filter((p) => p.inventoryType !== 'recipe'),
+    [allProducts],
+  );
 
-  // Build unique supplier list from both Supplier entities and ingredient supplier strings
+  // Keep separate loading flags so chips and picker can appear independently
+  const isPickerLoading = loadingIng || loadingProducts;
+
+  // Track invoice creation time
+  useEffect(() => {
+    if (lines.length > 0 && invoiceCreatedAt === null) {
+      setInvoiceCreatedAt(new Date());
+    } else if (lines.length === 0 && invoiceCreatedAt !== null) {
+      setInvoiceCreatedAt(null);
+    }
+  }, [lines.length, invoiceCreatedAt]);
+
+  // Active supplier entity (for invoice header)
+  const activeSupplierEntity = useMemo(
+    () =>
+      activeSupplier
+        ? (suppliers.find((s) => s.name.toLowerCase() === activeSupplier.toLowerCase()) ?? null)
+        : null,
+    [activeSupplier, suppliers],
+  );
+
+  // Invoice number derived from creation time
+  const invoiceNumber = useMemo(() => {
+    if (!invoiceCreatedAt) return '';
+    const d = invoiceCreatedAt;
+    const ymd = d.toISOString().slice(0, 10).replace(/-/g, '');
+    const hhmm = `${String(d.getHours()).padStart(2, '0')}${String(d.getMinutes()).padStart(2, '0')}`;
+    return `#${ymd}-${hhmm}`;
+  }, [invoiceCreatedAt]);
+
+  // Approximate total amount
+  const totalAmount = useMemo(
+    () => lines.reduce((sum, l) => sum + l.quantity * l.costPerUnit, 0),
+    [lines],
+  );
+
+  // Build unique supplier list from ingredient supplier strings
   const availableSuppliers = useMemo(() => {
     const map = new Map<string, number>(); // name (lower) → ingredient count
     for (const ing of ingredients) {
@@ -207,7 +293,6 @@ function OrderTab() {
         map.set(key, (map.get(key) ?? 0) + 1);
       });
     }
-    // Build result: prefer display name from Supplier entities, fallback to ingredient string
     const entityByLower = new Map(suppliers.map((s) => [s.name.toLowerCase(), s.name]));
     return [...map.entries()]
       .map(([lower, count]) => ({
@@ -217,57 +302,137 @@ function OrderTab() {
       .sort((a, b) => a.name.localeCompare(b.name, 'uk'));
   }, [ingredients, suppliers]);
 
-  // Ingredients belonging to the selected supplier
-  const supplierIngredients = useMemo(() => {
-    if (!selectedSupplierName) return [];
-    const name = selectedSupplierName.toLowerCase();
-    return ingredients.filter((i) => i.supplier?.toLowerCase().includes(name));
-  }, [ingredients, selectedSupplierName]);
+  // How many lines in cart belong to each supplier
+  const linesBySupplier = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const line of lines) {
+      const key = line.supplier.toLowerCase();
+      map.set(key, (map.get(key) ?? 0) + 1);
+    }
+    return map;
+  }, [lines]);
 
-  const filtered = useMemo(() => {
+  // Convert ingredients to unified PickerItem format
+  const ingredientItems = useMemo((): PickerItem[] =>
+    ingredients.map((ing) => ({
+      documentId: ing.documentId,
+      rawDocumentId: ing.documentId,
+      name: ing.name,
+      unit: ing.unit,
+      category: ing.category?.name || 'Без категорії',
+      supplier: ing.supplier || '',
+      imageUrl: ing.image?.formats?.thumbnail?.url || ing.image?.url,
+      costPerUnit: ing.costPerUnit,
+      kind: 'ingredient' as const,
+    })),
+    [ingredients],
+  );
+
+  // Convert ready products to unified PickerItem format (prefixed to avoid id collisions)
+  const productItems = useMemo((): PickerItem[] =>
+    readyProducts.map((p) => ({
+      documentId: 'prod:' + p.documentId,
+      rawDocumentId: p.documentId,
+      name: p.name,
+      unit: 'pcs' as IngredientUnit,
+      category: p.category?.name || 'Готові товари',
+      supplier: '',
+      imageUrl: p.image?.formats?.thumbnail?.url || p.image?.url,
+      costPerUnit: p.costPrice || 0,
+      kind: 'product' as const,
+    })),
+    [readyProducts],
+  );
+
+  // Filtered items by active supplier + search
+  const filteredItems = useMemo(() => {
+    const ingList = activeSupplier
+      ? ingredientItems.filter((i) => i.supplier.toLowerCase().includes(activeSupplier.toLowerCase()))
+      : ingredientItems;
+
+    // Products always show (no supplier filtering) unless there's a text search
+    const allItems = [...ingList, ...productItems];
     const q = search.trim().toLowerCase();
-    if (!q) return supplierIngredients;
-    return supplierIngredients.filter(
-      (i) => i.name.toLowerCase().includes(q) || i.category?.name?.toLowerCase().includes(q),
+    if (!q) return allItems;
+    return allItems.filter(
+      (i) => i.name.toLowerCase().includes(q) || i.category.toLowerCase().includes(q),
     );
-  }, [supplierIngredients, search]);
+  }, [ingredientItems, productItems, activeSupplier, search]);
 
   const grouped = useMemo(() => {
-    const map = new Map<string, Ingredient[]>();
-    for (const ing of filtered) {
-      const cat = ing.category?.name || 'Без категорії';
-      if (!map.has(cat)) map.set(cat, []);
-      map.get(cat)!.push(ing);
+    const map = new Map<string, PickerItem[]>();
+    for (const item of filteredItems) {
+      if (!map.has(item.category)) map.set(item.category, []);
+      map.get(item.category)!.push(item);
     }
     return [...map.entries()].sort(([a], [b]) => a.localeCompare(b, 'uk'));
-  }, [filtered]);
+  }, [filteredItems]);
 
-  const addLine = useCallback((ing: Ingredient) => {
-    setLines((prev) => {
-      const existing = prev.find((l) => l.ingredientDocumentId === ing.documentId);
-      if (existing) {
-        return prev.map((l) =>
-          l.ingredientDocumentId === ing.documentId ? { ...l, quantity: l.quantity + 1 } : l,
-        );
+  // Get quantity in cart for a picker item (ingredient or product)
+  const getLineQty = useCallback(
+    (itemDocumentId: string) => {
+      const line = lines.find((l) => l.ingredientDocumentId === itemDocumentId);
+      return line ? line.quantity : 0;
+    },
+    [lines],
+  );
+
+  const setLineQty = useCallback(
+    (item: PickerItem, qty: number) => {
+      if (qty <= 0) {
+        setLines((prev) => {
+          const next = prev.filter((l) => l.ingredientDocumentId !== item.documentId);
+          if (next.length === 0) setActiveSupplier(null);
+          return next;
+        });
+        return;
       }
-      return [
-        ...prev,
-        {
-          key: ing.documentId + '_' + Date.now(),
-          ingredientDocumentId: ing.documentId,
-          name: ing.name,
-          unit: ing.unit,
-          category: ing.category?.name || '',
-          quantity: 1,
-          supplier: selectedSupplierName || ing.supplier || '',
-          note: '',
-        },
-      ];
-    });
-  }, [selectedSupplierName]);
+      const isNewLine = !lines.some((l) => l.ingredientDocumentId === item.documentId);
+
+      // Auto-select supplier when on "Всі" and adding a new ingredient item.
+      // Use the canonical name from availableSuppliers if found (suppliers already loaded),
+      // otherwise fall back to the raw ingredient supplier string. Chip comparison is
+      // case-insensitive, so even a stale fallback name will correctly highlight the chip.
+      if (isNewLine && activeSupplier === null && item.kind === 'ingredient' && item.supplier) {
+        const firstRaw = item.supplier.split(',')[0].trim();
+        const match = availableSuppliers.find((s) => s.name.toLowerCase() === firstRaw.toLowerCase());
+        setActiveSupplier(match?.name ?? firstRaw);
+      }
+
+      setLines((prev) => {
+        const existing = prev.find((l) => l.ingredientDocumentId === item.documentId);
+        if (existing) {
+          return prev.map((l) =>
+            l.ingredientDocumentId === item.documentId ? { ...l, quantity: qty } : l,
+          );
+        }
+        return [
+          ...prev,
+          {
+            key: item.documentId + '_' + Date.now(),
+            ingredientDocumentId: item.documentId,
+            kind: item.kind,
+            name: item.name,
+            unit: item.unit,
+            category: item.category,
+            quantity: qty,
+            supplier: activeSupplier || item.supplier || '',
+            note: '',
+            imageUrl: item.imageUrl,
+            costPerUnit: item.costPerUnit,
+          },
+        ];
+      });
+    },
+    [activeSupplier, availableSuppliers, lines],
+  );
 
   const removeLine = useCallback((key: string) => {
-    setLines((prev) => prev.filter((l) => l.key !== key));
+    setLines((prev) => {
+      const next = prev.filter((l) => l.key !== key);
+      if (next.length === 0) setActiveSupplier(null);
+      return next;
+    });
   }, []);
 
   const updateLine = useCallback((key: string, updates: Partial<OrderLine>) => {
@@ -299,177 +464,267 @@ function OrderTab() {
 
   return (
     <div className={styles.orderTab}>
-      {/* Tab header */}
-      <div className={styles.orderTabHeader}>
-        <Text variant="bodySmall" color="secondary">
-          {lines.length > 0 ? pluralLines(lines.length) + ' у замовленні' : 'Замовлення порожнє'}
-        </Text>
-        <div className={styles.orderTabActions}>
-          {lines.length > 0 && (
-            <Button variant="ghost" size="sm" onClick={() => setLines([])}>
-              Очистити
-            </Button>
-          )}
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={exportCSV}
-            disabled={lines.length === 0}
-          >
-            <Icon name="download" size="sm" />
-            Експортувати CSV
-          </Button>
-        </div>
+      {/* ── Top bar: supplier chips only ── */}
+      <div className={styles.supplierChipsWrap} ref={chipsRef}>
+        {loadingSuppliers ? (
+          <div className={styles.chipsLoading}><Spinner size="sm" /></div>
+        ) : (
+          <>
+            <button
+              className={`${styles.supplierChip} ${activeSupplier === null ? styles.supplierChipActive : ''}`}
+              onClick={() => setActiveSupplier(null)}
+            >
+              Всі
+            </button>
+            {availableSuppliers.map((s) => {
+              const cartCount = linesBySupplier.get(s.name.toLowerCase()) ?? 0;
+              const isActive = activeSupplier?.toLowerCase() === s.name.toLowerCase();
+              return (
+                <button
+                  key={s.name}
+                  className={`${styles.supplierChip} ${isActive ? styles.supplierChipActive : ''} ${cartCount > 0 ? styles.supplierChipHasItems : ''}`}
+                  onClick={() => setActiveSupplier(isActive ? null : s.name)}
+                >
+                  {s.name}
+                </button>
+              );
+            })}
+          </>
+        )}
       </div>
 
-      {/* Split layout */}
+      {/* ── Split layout ── */}
       <div className={styles.orderLayout}>
-        {/* Left: supplier picker → ingredient picker */}
+
+        {/* Left: ingredient picker with inline search */}
         <div className={styles.pickerPanel}>
-          {!selectedSupplierName ? (
-            /* ── Step 1: choose supplier ── */
-            <>
-              <div className={styles.pickerHeader}>
-                <Text variant="labelSmall" color="tertiary">Оберіть постачальника</Text>
-              </div>
-              <div className={styles.pickerList}>
-                {loadingSuppliers || loadingIng ? (
-                  <div className={styles.pickerLoading}><Spinner size="sm" /></div>
-                ) : availableSuppliers.length === 0 ? (
-                  <div className={styles.pickerEmpty}>
-                    <Text variant="bodySmall" color="tertiary">Немає постачальників</Text>
-                  </div>
-                ) : (
-                  availableSuppliers.map((s) => (
-                    <button
-                      key={s.name}
-                      className={styles.supplierPickerItem}
-                      onClick={() => setSelectedSupplierName(s.name)}
-                    >
-                      <div className={styles.pickerItemInfo}>
-                        <Text variant="labelSmall" weight="semibold">{s.name}</Text>
-                        <Text variant="caption" color="tertiary">{s.count} товарів</Text>
-                      </div>
-                      <Icon name="chevron-right" size="sm" color="tertiary" />
-                    </button>
-                  ))
+          <div className={styles.pickerSearchWrap}>
+            <SearchInput
+              value={search}
+              onChange={setSearch}
+              placeholder="Пошук товару..."
+            />
+          </div>
+          <div className={styles.pickerList}>
+            {isPickerLoading ? (
+              <div className={styles.pickerLoading}><Spinner size="sm" /></div>
+            ) : grouped.length === 0 ? (
+              <div className={styles.pickerEmpty}>
+                <Icon name={search ? 'search' : 'package'} size="xl" color="tertiary" />
+                <Text variant="bodySmall" color="tertiary">
+                  {search ? 'Нічого не знайдено' : 'Немає товарів'}
+                </Text>
+                {search && (
+                  <Button variant="ghost" size="sm" onClick={() => setSearch('')}>
+                    Скинути пошук
+                  </Button>
                 )}
               </div>
-            </>
-          ) : (
-            /* ── Step 2: pick ingredients from supplier ── */
-            <>
-              <div className={styles.pickerSearch}>
-                <button
-                  className={styles.pickerBackBtn}
-                  onClick={() => { setSelectedSupplierName(null); setSearch(''); }}
-                >
-                  <Icon name="chevron-left" size="sm" color="accent" />
-                  <Text variant="labelSmall" weight="semibold" color="accent">{selectedSupplierName}</Text>
-                </button>
-                <SearchInput
-                  value={search}
-                  onChange={setSearch}
-                  placeholder="Пошук товару..."
-                />
-              </div>
-              <div className={styles.pickerList}>
-                {grouped.length === 0 ? (
-                  <div className={styles.pickerEmpty}>
-                    <Text variant="bodySmall" color="tertiary">
-                      {search ? 'Нічого не знайдено' : 'Немає товарів цього постачальника'}
-                    </Text>
-                  </div>
-                ) : (
-                  grouped.map(([catName, ings]) => (
-                    <div key={catName} className={styles.pickerGroup}>
-                      <Text variant="overline" color="tertiary" className={styles.pickerGroupLabel}>
-                        {catName}
-                      </Text>
-                      {ings.map((ing) => {
-                        const inOrder = lines.some((l) => l.ingredientDocumentId === ing.documentId);
-                        return (
-                          <button
-                            key={ing.documentId}
-                            className={`${styles.pickerItem} ${inOrder ? styles.pickerItemInOrder : ''}`}
-                            onClick={() => addLine(ing)}
-                          >
-                            <div className={styles.pickerItemInfo}>
-                              <Text variant="labelSmall" weight="semibold">{ing.name}</Text>
-                              <Text variant="caption" color="tertiary">{UNIT_LABELS[ing.unit]}</Text>
-                            </div>
-                            <Icon
-                              name={inOrder ? 'check' : 'plus'}
+            ) : (
+              grouped.map(([catName, items]) => (
+                <div key={catName} className={styles.pickerGroup}>
+                  <Text variant="overline" color="tertiary" className={styles.pickerGroupLabel}>
+                    {catName}
+                  </Text>
+                  {items.map((item) => {
+                    const qty = getLineQty(item.documentId);
+                    const inCart = qty > 0;
+                    return (
+                      <div
+                        key={item.documentId}
+                        className={`${styles.pickerItem} ${inCart ? styles.pickerItemInOrder : ''}`}
+                      >
+                        {item.imageUrl ? (
+                          <img
+                            src={item.imageUrl}
+                            alt={item.name}
+                            className={styles.pickerItemThumb}
+                          />
+                        ) : (
+                          <div className={styles.pickerItemThumbPlaceholder}>
+                            <Icon name="package" size="xs" color="tertiary" />
+                          </div>
+                        )}
+                        <div className={styles.pickerItemInfo}>
+                          <Text variant="labelSmall" weight="semibold">{item.name}</Text>
+                          <Text variant="caption" color="tertiary">
+                            {UNIT_LABELS[item.unit]}{item.costPerUnit > 0 ? ` · ₴${item.costPerUnit}` : ''}
+                          </Text>
+                        </div>
+                        <div className={styles.pickerItemControl}>
+                          {inCart ? (
+                            <QuantityControl
+                              value={qty}
+                              min={1}
+                              step={1}
                               size="sm"
-                              color={inOrder ? 'success' : 'tertiary'}
+                              onChange={(v) => setLineQty(item, v)}
                             />
-                          </button>
-                        );
-                      })}
-                    </div>
-                  ))
-                )}
-              </div>
-            </>
-          )}
+                          ) : (
+                            <button
+                              className={styles.addBtn}
+                              onClick={() => setLineQty(item, 1)}
+                              aria-label={`Додати ${item.name}`}
+                            >
+                              <Icon name="plus" size="xs" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ))
+            )}
+          </div>
         </div>
 
-        {/* Right: order lines */}
+        {/* Right: invoice preview */}
         <div className={styles.linesPanel}>
           {lines.length === 0 ? (
             <div className={styles.linesEmpty}>
-              <Icon name="package" size="2xl" color="tertiary" />
-              <Text variant="bodyMedium" color="tertiary">
-                {selectedSupplierName
-                  ? 'Натисніть «+» біля товару щоб додати до замовлення'
-                  : 'Спочатку оберіть постачальника'}
+              <div className={styles.linesEmptyIcon}>
+                <Icon name="package" size="2xl" color="tertiary" />
+              </div>
+              <Text variant="bodyMedium" weight="semibold" color="secondary">
+                Накладна порожня
+              </Text>
+              <Text variant="bodySmall" color="tertiary">
+                Натисніть «+» біля товару зліва щоб додати
               </Text>
             </div>
           ) : (
-            <div className={styles.linesTable}>
-              <div className={styles.lineRow + ' ' + styles.lineHeader}>
-                <span className={styles.colName}>Назва</span>
-                <span className={styles.colQty}>Кількість</span>
-                <span className={styles.colNote}>Примітка</span>
-                <span className={styles.colRemove} />
+            <div className={styles.invoiceDoc}>
+
+              {/* ── Invoice header: supplier info + meta ── */}
+              <div className={styles.invoiceHeader}>
+                <div className={styles.invoiceSupplierRow}>
+                  <div className={styles.supplierInitialsAvatar}>
+                    {activeSupplier
+                      ? getInitials(activeSupplier)
+                      : <Icon name="truck" size="sm" color="secondary" />}
+                  </div>
+                  <div className={styles.invoiceSupplierText}>
+                    <Text variant="labelMedium" weight="bold">
+                      {activeSupplier || 'Замовлення'}
+                    </Text>
+                    {activeSupplierEntity?.address && (
+                      <Text variant="caption" color="tertiary">
+                        {activeSupplierEntity.address}
+                      </Text>
+                    )}
+                    {(activeSupplierEntity?.phone || activeSupplierEntity?.telegram) && (
+                      <Text variant="caption" color="tertiary">
+                        {activeSupplierEntity.phone || activeSupplierEntity.telegram}
+                      </Text>
+                    )}
+                    {activeSupplierEntity?.contactPerson && (
+                      <Text variant="caption" color="tertiary">
+                        {activeSupplierEntity.contactPerson}
+                      </Text>
+                    )}
+                  </div>
+                </div>
+                <div className={styles.invoiceMeta}>
+                  <Text variant="overline" color="tertiary">НАКЛАДНА</Text>
+                  <Text variant="labelSmall" weight="semibold">{invoiceNumber}</Text>
+                  {invoiceCreatedAt && (
+                    <>
+                      <Text variant="caption" color="tertiary">
+                        {formatInvoiceDate(invoiceCreatedAt)}
+                      </Text>
+                      <Text variant="caption" color="tertiary">
+                        {formatInvoiceTime(invoiceCreatedAt)}
+                      </Text>
+                    </>
+                  )}
+                </div>
               </div>
-              {lines.map((line) => (
-                <div key={line.key} className={styles.lineRow}>
-                  <div className={styles.colName}>
-                    <Text variant="bodySmall" weight="semibold">{line.name}</Text>
-                    <Text variant="caption" color="tertiary">{line.category}</Text>
-                  </div>
-                  <div className={styles.colQty}>
-                    <input
-                      type="number"
-                      min={0.01}
-                      step={0.01}
-                      value={line.quantity}
-                      onChange={(e) =>
-                        updateLine(line.key, { quantity: parseFloat(e.target.value) || 0 })
-                      }
-                      className={styles.qtyInput}
-                    />
-                    <Text variant="caption" color="tertiary">{UNIT_LABELS[line.unit]}</Text>
-                  </div>
-                  <div className={styles.colNote}>
+
+              <div className={styles.invoiceDivider} />
+
+              {/* ── Invoice lines ── */}
+              <div className={styles.invoiceBody}>
+                {lines.map((line) => (
+                  <div key={line.key} className={styles.invoiceLine}>
+                    {line.imageUrl ? (
+                      <img
+                        src={line.imageUrl}
+                        alt={line.name}
+                        className={styles.invoiceLineThumb}
+                      />
+                    ) : (
+                      <div className={styles.invoiceLineThumbPlaceholder}>
+                        <Icon name="package" size="xs" color="tertiary" />
+                      </div>
+                    )}
+                    <div className={styles.invoiceLineName}>
+                      <Text variant="bodySmall" weight="semibold">{line.name}</Text>
+                      {line.costPerUnit > 0 && (
+                        <Text variant="caption" color="tertiary">
+                          ₴{line.costPerUnit}/{UNIT_LABELS[line.unit]}
+                        </Text>
+                      )}
+                    </div>
+                    <div className={styles.invoiceLineQty}>
+                      <QuantityControl
+                        value={line.quantity}
+                        min={1}
+                        step={1}
+                        size="sm"
+                        onChange={(v) => updateLine(line.key, { quantity: v })}
+                      />
+                    </div>
+                    {line.costPerUnit > 0 && (
+                      <div className={styles.invoiceLineTotal}>
+                        <Text variant="labelSmall" weight="semibold">
+                          ₴{formatCurrency(line.quantity * line.costPerUnit)}
+                        </Text>
+                      </div>
+                    )}
                     <input
                       type="text"
                       placeholder="Примітка..."
                       value={line.note}
                       onChange={(e) => updateLine(line.key, { note: e.target.value })}
-                      className={styles.noteInput}
+                      className={`${styles.noteInput} ${styles.invoiceLineNote}`}
                     />
+                    <button
+                      className={styles.invoiceLineRemove}
+                      onClick={() => removeLine(line.key)}
+                      aria-label="Видалити рядок"
+                    >
+                      <Icon name="close" size="sm" color="tertiary" />
+                    </button>
                   </div>
-                  <button
-                    className={styles.colRemove}
-                    onClick={() => removeLine(line.key)}
-                    aria-label="Видалити рядок"
-                  >
-                    <Icon name="close" size="sm" color="tertiary" />
-                  </button>
+                ))}
+              </div>
+
+              <div className={styles.invoiceDivider} />
+
+              {/* ── Invoice footer ── */}
+              <div className={styles.invoiceFooter}>
+                <div className={styles.invoiceTotal}>
+                  <Text variant="labelSmall" color="secondary" weight="semibold">
+                    {pluralLines(lines.length)} у замовленні
+                  </Text>
+                  {totalAmount > 0 && (
+                    <Text variant="labelMedium" weight="bold">
+                      ≈ ₴{formatCurrency(totalAmount)}
+                    </Text>
+                  )}
                 </div>
-              ))}
+                <div className={styles.linesFooterActions}>
+                  <Button variant="ghost" size="sm" onClick={() => { setLines([]); setActiveSupplier(null); }}>
+                    Очистити
+                  </Button>
+                  <Button variant="primary" size="sm" onClick={exportCSV}>
+                    <Icon name="download" size="sm" />
+                    Експортувати CSV
+                  </Button>
+                </div>
+              </div>
+
             </div>
           )}
         </div>
@@ -645,18 +900,6 @@ function SuppliersTab() {
         render: (p) => (
           <Text variant="bodySmall" color="secondary">
             {p.ingredientCount ?? 0}
-          </Text>
-        ),
-      },
-      {
-        key: 'totalSpent',
-        header: 'Витрачено',
-        width: '120px',
-        align: 'right',
-        hideOnMobile: true,
-        render: (p) => (
-          <Text variant="labelSmall" weight="semibold" color="secondary">
-            ₴{formatCurrency(p.totalSpent)}
           </Text>
         ),
       },

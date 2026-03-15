@@ -48,6 +48,9 @@ export default {
     // Migrate categories 8→4 (idempotent)
     await migrateCategoriesV2(strapi);
 
+    // Auto-tag products with inventoryType based on recipe presence (idempotent)
+    await migrateProductInventoryTypes(strapi);
+
     // Check if we should seed the database
     const shouldSeed = process.env.SEED_DATABASE === 'true';
 
@@ -72,6 +75,53 @@ export default {
     await ensureDailyShifts(strapi);
   },
 };
+
+/**
+ * Auto-tag products with inventoryType based on whether they have associated recipes.
+ * Runs only for products where inventoryType is still null (new field, not yet set).
+ * Idempotent — skips products that already have a value.
+ *
+ * Rules:
+ *  - product has ≥1 recipe  → inventoryType = 'recipe'  (made in-house, not purchased)
+ *  - product has 0 recipes  → inventoryType = 'simple'  (purchased/resold as-is)
+ */
+async function migrateProductInventoryTypes(strapi: Core.Strapi) {
+  try {
+    const productQuery = strapi.db.query('api::product.product') as any;
+    const recipeQuery  = strapi.db.query('api::recipe.recipe')  as any;
+
+    // Only process products that haven't been tagged yet
+    const untagged = await productQuery.findMany({
+      where: { inventoryType: { $null: true } },
+      select: ['id'],
+    });
+
+    if (untagged.length === 0) return;
+
+    let recipeCount = 0;
+    let simpleCount = 0;
+
+    for (const product of untagged) {
+      const hasRecipe = (await recipeQuery.count({
+        where: { product: { id: product.id } },
+      })) > 0;
+
+      await productQuery.update({
+        where: { id: product.id },
+        data: { inventoryType: hasRecipe ? 'recipe' : 'simple' },
+      });
+
+      if (hasRecipe) recipeCount++; else simpleCount++;
+    }
+
+    strapi.log.info(
+      `[bootstrap] migrateProductInventoryTypes: tagged ${recipeCount} recipe + ${simpleCount} simple products`,
+    );
+  } catch (error) {
+    strapi.log.error('[bootstrap] migrateProductInventoryTypes failed:');
+    console.error(error);
+  }
+}
 
 /**
  * Migrate categories from 8 old slugs to 4 new ones.

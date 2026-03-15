@@ -263,7 +263,7 @@ export function SupplierDetailModal({
   onSupplierUpdated,
 }: SupplierDetailModalProps) {
   const [showHistory, setShowHistory] = useState(false);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [selectedSupply, setSelectedSupply] = useState<Supply | null>(null);
   const [editOpen, setEditOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
 
@@ -281,7 +281,7 @@ export function SupplierDetailModal({
     {
       key: 'date',
       header: 'Дата',
-      width: '120px',
+      width: '110px',
       render: (s) => (
         <Text variant="bodySmall" color="secondary">
           {formatDate(s.receivedAt || s.orderedAt || s.createdAt)}
@@ -299,21 +299,11 @@ export function SupplierDetailModal({
       ),
     },
     {
-      key: 'expectedAt',
-      header: 'Очікується',
-      width: '120px',
-      hideOnMobile: true,
-      render: (s) => (
-        <Text variant="bodySmall" color="secondary">
-          {formatDate(s.expectedAt)}
-        </Text>
-      ),
-    },
-    {
       key: 'items',
       header: 'Позицій',
-      width: '90px',
+      width: '80px',
       align: 'right',
+      hideOnMobile: true,
       render: (s) => (
         <Text variant="bodySmall" color="secondary">{s.items?.length ?? 0}</Text>
       ),
@@ -321,33 +311,20 @@ export function SupplierDetailModal({
     {
       key: 'totalCost',
       header: 'Сума',
-      width: '110px',
+      width: '100px',
       align: 'right',
       render: (s) => (
         <Text variant="labelSmall" weight="semibold">₴{formatCurrency(s.totalCost)}</Text>
       ),
     },
     {
-      key: 'expand',
+      key: 'chevron',
       header: '',
-      width: '44px',
+      width: '36px',
       align: 'right',
-      render: (s) => (
-        <Button
-          variant="ghost"
-          size="sm"
-          iconOnly
-          onClick={(e) => {
-            e.stopPropagation();
-            setExpandedId((prev) => (prev === s.documentId ? null : s.documentId));
-          }}
-          aria-label={expandedId === s.documentId ? 'Згорнути' : 'Деталі'}
-        >
-          <Icon name={expandedId === s.documentId ? 'chevron-up' : 'chevron-down'} size="sm" />
-        </Button>
-      ),
+      render: () => <Icon name="chevron-right" size="sm" color="tertiary" />,
     },
-  ], [expandedId]);
+  ], []);
 
   if (!supplier) return null;
 
@@ -374,24 +351,34 @@ export function SupplierDetailModal({
     </div>
   );
 
-  const renderExpandedDetail = (supplies: Supply[]) => {
-    if (!expandedId) return null;
-    const supply = supplies.find((s) => s.documentId === expandedId);
-    if (!supply) return null;
-    return (
-      <div className={styles.expandedWrap}>
-        <div className={styles.expandedHeader}>
-          <Text variant="labelMedium" weight="semibold">
-            Деталі поставки від {formatDate(supply.receivedAt || supply.orderedAt || supply.createdAt)}
-          </Text>
-          <Button variant="ghost" size="sm" iconOnly onClick={() => setExpandedId(null)}>
-            <Icon name="close" size="sm" />
-          </Button>
+  const supplyDetailModal = selectedSupply ? (
+    <Modal
+      open={!!selectedSupply}
+      onClose={() => setSelectedSupply(null)}
+      title={`Поставка · ${formatDate(selectedSupply.receivedAt || selectedSupply.orderedAt || selectedSupply.createdAt)}`}
+      icon="truck"
+      size="sm"
+    >
+      <div className={styles.supplyDetailBody}>
+        <div className={styles.supplyDetailMeta}>
+          <Badge variant={STATUS_VARIANTS[selectedSupply.status]} size="sm">
+            {STATUS_LABELS[selectedSupply.status]}
+          </Badge>
+          {selectedSupply.expectedAt && (
+            <Text variant="caption" color="tertiary">
+              Очікується: {formatDate(selectedSupply.expectedAt)}
+            </Text>
+          )}
+          {selectedSupply.receivedBy && (
+            <Text variant="caption" color="tertiary">
+              Прийняв: {selectedSupply.receivedBy}
+            </Text>
+          )}
         </div>
-        <SupplyItemsDetail supply={supply} />
+        <SupplyItemsDetail supply={selectedSupply} />
       </div>
-    );
-  };
+    </Modal>
+  ) : null;
 
   return (
     <>
@@ -451,9 +438,8 @@ export function SupplierDetailModal({
                   data={activeSupplies}
                   getRowKey={(s) => s.documentId}
                   emptyState={{ icon: 'truck', title: 'Немає активних поставок' }}
-                  onRowClick={(s) => setExpandedId((prev) => (prev === s.documentId ? null : s.documentId))}
+                  onRowClick={(s) => setSelectedSupply(s)}
                 />
-                {renderExpandedDetail(activeSupplies)}
               </div>
             )}
 
@@ -462,7 +448,7 @@ export function SupplierDetailModal({
               <div className={styles.section}>
                 <button
                   className={styles.historyToggle}
-                  onClick={() => { setShowHistory((v) => !v); setExpandedId(null); }}
+                  onClick={() => setShowHistory((v) => !v)}
                 >
                   <Text variant="labelMedium" weight="semibold">
                     Історія поставок ({historySupplies.length})
@@ -470,16 +456,13 @@ export function SupplierDetailModal({
                   <Icon name={showHistory ? 'chevron-up' : 'chevron-down'} size="sm" />
                 </button>
                 {showHistory && (
-                  <>
-                    <DataTable
-                      columns={columns}
-                      data={historySupplies}
-                      getRowKey={(s) => s.documentId}
-                      emptyState={{ icon: 'truck', title: 'Немає записів' }}
-                      onRowClick={(s) => setExpandedId((prev) => (prev === s.documentId ? null : s.documentId))}
-                    />
-                    {renderExpandedDetail(historySupplies)}
-                  </>
+                  <DataTable
+                    columns={columns}
+                    data={historySupplies}
+                    getRowKey={(s) => s.documentId}
+                    emptyState={{ icon: 'truck', title: 'Немає записів' }}
+                    onRowClick={(s) => setSelectedSupply(s)}
+                  />
                 )}
               </div>
             )}
@@ -535,6 +518,9 @@ export function SupplierDetailModal({
         initialName={supplier?.name}
         onSuccess={() => { onSupplierUpdated?.(); setCreateOpen(false); }}
       />
+
+      {/* Supply detail modal */}
+      {supplyDetailModal}
     </>
   );
 }

@@ -187,7 +187,7 @@ export default function HistoryPage() {
     return getTodayRange();
   }, [currentShift]);
 
-  const { data: ordersRaw = [], isLoading } = useOrders({
+  const { data: ordersRaw = [], isLoading, isFetching } = useOrders({
     ...dateRange,
     pageSize: 200,
     sort: 'createdAt:asc',
@@ -289,6 +289,7 @@ export default function HistoryPage() {
             ? `${isStaleShift ? '⚠ ' : ''}Зміна · ${currentShift.openedBy} · ${formatDateTime(currentShift.openedAt)} · ${formatDuration(shiftDuration)}`
             : 'Зміна не відкрита — замовлення за сьогодні'}
         </Text>
+        {isFetching && !isLoading && <span className={styles.fetchingDot} aria-hidden />}
       </div>
 
       {/* Stats strip */}
@@ -324,14 +325,6 @@ export default function HistoryPage() {
           </>
         )}
       </div>
-
-      {/* Search */}
-      <SearchInput
-        value={search}
-        onChange={setSearch}
-        placeholder="Пошук за номером або товаром..."
-        variant="glass"
-      />
 
       {/* Orders */}
       <div className={styles.ordersList}>

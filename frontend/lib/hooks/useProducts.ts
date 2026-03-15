@@ -36,6 +36,9 @@ export function useProducts(params: GetProductsParams = {}) {
     queryKey: productKeys.list(params),
     queryFn: () => productsApi.getAll(params),
     select: (data) => data.data,
+    // Products (menu) are static during a shift.
+    // Cache for 10 minutes so repeated page visits are instant.
+    staleTime: 10 * 60 * 1000,
   });
 }
 

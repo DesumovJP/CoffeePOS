@@ -365,28 +365,43 @@ function KpiTab() {
     return null;
   };
 
-  // Sort by sales descending and compute rank + relative bar width
-  type RankedPerformance = EmployeePerformance & { rank: number; salesPct: number };
+  // Sort by sales descending and compute rank + relative bar width + efficiency %
+  type RankedPerformance = EmployeePerformance & { rank: number; salesPct: number; efficiency: number };
 
   const rankedPerformance = useMemo((): RankedPerformance[] => {
     if (!performance) return [];
     const sorted = [...performance].sort((a, b) => b.totalSales - a.totalSales);
-    const maxSales = sorted[0]?.totalSales || 1;
-    return sorted.map((p, i) => ({
-      ...p,
-      rank: i + 1,
-      salesPct: maxSales > 0 ? (p.totalSales / maxSales) * 100 : 0,
-    }));
+    const maxSales  = Math.max(...sorted.map((p) => p.totalSales), 1);
+    const maxOrders = Math.max(...sorted.map((p) => p.totalOrders), 1);
+    const maxAvg    = Math.max(...sorted.map((p) => p.avgOrderValue), 1);
+    return sorted.map((p, i) => {
+      // Composite: 50% revenue + 30% order volume + 20% avg check
+      const salesNorm  = maxSales  > 0 ? (p.totalSales    / maxSales)  * 100 : 0;
+      const ordersNorm = maxOrders > 0 ? (p.totalOrders   / maxOrders) * 100 : 0;
+      const avgNorm    = maxAvg    > 0 ? (p.avgOrderValue / maxAvg)    * 100 : 0;
+      const efficiency = Math.round(salesNorm * 0.5 + ordersNorm * 0.3 + avgNorm * 0.2);
+      return {
+        ...p,
+        rank: i + 1,
+        salesPct: maxSales > 0 ? (p.totalSales / maxSales) * 100 : 0,
+        efficiency,
+      };
+    });
   }, [performance]);
 
   const performanceColumns: Column<RankedPerformance>[] = useMemo(() => [
     {
       key: 'rank',
       header: '#',
-      width: '48px',
+      width: '56px',
       render: (p) => (
         <div className={styles.rankCell}>
-          <span className={`${styles.rankNum} ${p.rank === 1 ? styles.rank1 : p.rank === 2 ? styles.rank2 : p.rank === 3 ? styles.rank3 : ''}`}>
+          <span className={`${styles.rankBadge} ${
+            p.rank === 1 ? styles.rank1 :
+            p.rank === 2 ? styles.rank2 :
+            p.rank === 3 ? styles.rank3 :
+            styles.rankDefault
+          }`}>
             {p.rank}
           </span>
         </div>
@@ -398,10 +413,15 @@ function KpiTab() {
       type: 'primary' as const,
       render: (p) => (
         <div className={styles.perfNameCell}>
-          <Text variant="labelMedium" weight="semibold">{p.employeeName}</Text>
-          <Badge variant={ROLE_VARIANTS[p.role] || 'default'} size="sm">
-            {ROLE_LABELS[p.role] || p.role}
-          </Badge>
+          <div className={styles.perfAvatar}>
+            {p.employeeName.split(' ').slice(0, 2).map((w: string) => w[0]?.toUpperCase() ?? '').join('')}
+          </div>
+          <div className={styles.perfNameInfo}>
+            <Text variant="labelSmall" weight="semibold">{p.employeeName}</Text>
+            <Badge variant={ROLE_VARIANTS[p.role] || 'default'} size="sm">
+              {ROLE_LABELS[p.role] || p.role}
+            </Badge>
+          </div>
         </div>
       ),
     },
@@ -447,6 +467,30 @@ function KpiTab() {
       type: 'numeric' as const,
       hideOnMobile: true,
       render: (p) => <Text variant="bodySmall" color="secondary">₴{formatCurrency(p.avgOrderValue)}</Text>,
+    },
+    {
+      key: 'efficiency',
+      header: 'Ефект.',
+      width: '88px',
+      type: 'numeric' as const,
+      render: (p) => (
+        <div className={styles.efficiencyCell}>
+          <Text
+            variant="labelSmall"
+            weight="bold"
+            className={`${styles.efficiencyPct} ${
+              p.efficiency >= 80 ? styles.effHigh :
+              p.efficiency >= 50 ? styles.effMid :
+              styles.effLow
+            }`}
+          >
+            {p.efficiency}%
+          </Text>
+          <div className={styles.effBar}>
+            <div className={styles.effBarFill} style={{ width: `${p.efficiency}%` }} />
+          </div>
+        </div>
+      ),
     },
   ], []);
 
@@ -571,6 +615,12 @@ function KpiTab() {
             columns={performanceColumns}
             data={rankedPerformance}
             getRowKey={(p) => String(p.employeeId)}
+            getRowClassName={(p) =>
+              p.rank === 1 ? styles.perfRow1 :
+              p.rank === 2 ? styles.perfRow2 :
+              p.rank === 3 ? styles.perfRow3 :
+              ''
+            }
             emptyState={{ icon: 'user', title: 'Немає даних' }}
           />
         )}

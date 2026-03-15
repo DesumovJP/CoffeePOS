@@ -229,42 +229,89 @@
   justify-content: center;
 }
 
-.rankNum {
+/* Base rank badge — circle */
+.rankBadge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
-  border-radius: var(--radius-sm);
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full);
   font-size: var(--text-sm);
   font-weight: var(--font-bold);
   font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+/* Ranks 4+ — neutral pill */
+.rankDefault {
   color: var(--text-tertiary);
   background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
 }
 
-/* Gold / Silver / Bronze */
+/* Gold */
 .rank1 {
-  color: #997000;
-  background: rgba(212, 175, 55, 0.14);
+  color: #7a5800;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.22) 0%, rgba(212, 175, 55, 0.18) 100%);
+  border: 1px solid rgba(212, 175, 55, 0.45);
 }
 
+/* Silver */
 .rank2 {
   color: var(--text-secondary);
-  background: rgba(140, 140, 140, 0.12);
+  background: linear-gradient(135deg, rgba(192, 192, 192, 0.2) 0%, rgba(160, 160, 160, 0.14) 100%);
+  border: 1px solid rgba(180, 180, 180, 0.35);
 }
 
+/* Bronze */
 .rank3 {
-  color: #8B5E3C;
-  background: rgba(196, 120, 80, 0.12);
+  color: #7a3f22;
+  background: linear-gradient(135deg, rgba(205, 127, 50, 0.2) 0%, rgba(180, 100, 60, 0.14) 100%);
+  border: 1px solid rgba(196, 120, 80, 0.38);
 }
 
-/* Name + role badge inline */
+/* Row tints for top 3 */
+.perfRow1 {
+  background: rgba(212, 175, 55, 0.05);
+}
+
+.perfRow2 {
+  background: rgba(192, 192, 192, 0.04);
+}
+
+.perfRow3 {
+  background: rgba(196, 120, 80, 0.04);
+}
+
+/* Employee initials avatar */
+.perfAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  background: var(--color-brand-subtle);
+  color: var(--color-brand);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-xs);
+  font-weight: var(--font-bold);
+  letter-spacing: 0.03em;
+  flex-shrink: 0;
+}
+
+/* Name + role badge stacked */
 .perfNameCell {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  flex-wrap: wrap;
+  gap: var(--space-2-5);
+}
+
+.perfNameInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
 }
 
 /* Shifts / hours stacked */
@@ -285,7 +332,7 @@
 
 .salesBar {
   width: 80px;
-  height: 3px;
+  height: 5px;
   background: var(--glass-border);
   border-radius: var(--radius-full);
   overflow: hidden;
@@ -293,7 +340,50 @@
 
 .salesBarFill {
   height: 100%;
-  background: var(--color-brand);
+  background: linear-gradient(90deg, var(--color-brand) 0%, var(--color-accent-400, var(--color-brand)) 100%);
+  border-radius: var(--radius-full);
+  transition: width var(--duration-normal) var(--ease-out);
+}
+
+/* ============================================
+   EFFICIENCY COLUMN
+   ============================================ */
+
+.efficiencyCell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+}
+
+.efficiencyPct {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.effHigh {
+  color: var(--color-success);
+}
+
+.effMid {
+  color: var(--color-warning, var(--color-accent));
+}
+
+.effLow {
+  color: var(--text-secondary);
+}
+
+.effBar {
+  width: 48px;
+  height: 3px;
+  background: var(--glass-border);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.effBarFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-success) 0%, color-mix(in srgb, var(--color-success) 70%, var(--color-brand)) 100%);
   border-radius: var(--radius-full);
   transition: width var(--duration-normal) var(--ease-out);
 }

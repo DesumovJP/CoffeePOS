@@ -78,8 +78,9 @@ export default factories.createCoreController('api::shift.shift', ({ strapi }) =
       throw error;
     }
 
+    // Route param is documentId (Strapi v5 — UUID string), not numeric primary key
     const shift = await strapi.db.query('api::shift.shift').findOne({
-      where: { id },
+      where: { documentId: id },
     });
 
     if (!shift) {
@@ -91,7 +92,7 @@ export default factories.createCoreController('api::shift.shift', ({ strapi }) =
     }
 
     const updated = await strapi.db.query('api::shift.shift').update({
-      where: { id },
+      where: { id: shift.id },
       data: {
         status: 'closed',
         closedAt: new Date().toISOString(),

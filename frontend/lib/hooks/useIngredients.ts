@@ -63,6 +63,9 @@ export function useIngredients(params: GetIngredientsParams = {}) {
     queryKey: ingredientKeys.list(params),
     queryFn: () => ingredientsApi.getAll(params),
     select: (data) => data.data,
+    // Ingredients are reference data — rarely change during a shift.
+    // Cache for 10 minutes so repeated page visits are instant.
+    staleTime: 10 * 60 * 1000,
   });
 }
 

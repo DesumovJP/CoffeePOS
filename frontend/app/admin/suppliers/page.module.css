@@ -28,24 +28,65 @@
   overflow: hidden;
 }
 
-.orderTabHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  flex-shrink: 0;
-}
-
-.orderTabActions {
+.supplierChipsWrap {
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.supplierChipsWrap::-webkit-scrollbar {
+  display: none;
+}
+
+.chipsLoading {
+  padding: var(--space-1);
+}
+
+.supplierChip {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-1) var(--space-2-5);
+  background: var(--glass-bg-elevated);
+  border: 1.5px solid var(--glass-border);
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--duration-fast), border-color var(--duration-fast), color var(--duration-fast);
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+  font-family: inherit;
+  line-height: 1.4;
+}
+
+.supplierChip:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+/* Compound selector (2 classes) beats base .supplierChip (1 class) — no !important needed */
+.supplierChip.supplierChipActive,
+.supplierChip.supplierChipActive:hover {
+  background: var(--color-brand, var(--color-accent));
+  border-color: var(--color-brand, var(--color-accent));
+  color: var(--text-inverse);
+}
+
+/* Chip with items in cart — colored border only, no badge */
+.supplierChipHasItems:not(.supplierChipActive) {
+  border-color: var(--color-brand, var(--color-accent));
+  color: var(--color-brand, var(--color-accent));
 }
 
 /* Split layout */
 .orderLayout {
   display: grid;
-  grid-template-columns: 280px 1fr;
+  grid-template-columns: 300px 1fr;
   gap: var(--space-4);
   flex: 1;
   min-height: 0;
@@ -66,59 +107,10 @@
   min-height: 0;
 }
 
-.pickerHeader {
+/* Search bar inside picker panel */
+.pickerSearchWrap {
   flex-shrink: 0;
-  padding: var(--space-2-5) var(--space-3);
-  background: var(--bg-tertiary);
-  border-bottom: 1px solid var(--glass-border);
-}
-
-.pickerSearch {
-  flex-shrink: 0;
-  padding: var(--space-3);
-  border-bottom: 1px solid var(--glass-border);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.pickerBackBtn {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.supplierPickerItem {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2);
-  width: 100%;
-  padding: var(--space-2-5) var(--space-3);
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid var(--glass-border);
-  cursor: pointer;
-  transition: background var(--duration-fast);
-  text-align: left;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.supplierPickerItem:last-child {
-  border-bottom: none;
-}
-
-.supplierPickerItem:hover {
-  background: rgba(0, 0, 0, 0.04);
-}
-
-.supplierPickerItem:active {
-  background: rgba(0, 0, 0, 0.06);
+  padding: var(--space-2) var(--space-2) 0;
 }
 
 .pickerList {
@@ -127,12 +119,21 @@
   padding: var(--space-2);
 }
 
-.pickerLoading,
-.pickerEmpty {
+.pickerLoading {
   display: flex;
   align-items: center;
   justify-content: center;
   padding: var(--space-8);
+}
+
+.pickerEmpty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-8) var(--space-4);
+  text-align: center;
 }
 
 .pickerGroup {
@@ -150,36 +151,34 @@
   margin-bottom: var(--space-1);
 }
 
+/* Each ingredient row: info + control side by side */
 .pickerItem {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-2);
   width: 100%;
-  padding: var(--space-2) var(--space-2-5);
+  padding: var(--space-1-5) var(--space-2);
   background: transparent;
-  border: none;
   border-radius: var(--radius-md);
-  cursor: pointer;
   transition: background var(--duration-fast) var(--ease-default);
-  text-align: left;
-  -webkit-tap-highlight-color: transparent;
 }
 
 .pickerItem:hover {
-  background: rgba(0, 0, 0, 0.04);
+  background: rgba(0, 0, 0, 0.03);
 }
 
-.pickerItem:active {
-  background: rgba(0, 0, 0, 0.06);
+.pickerItem:hover .addBtn {
+  border-color: var(--text-tertiary);
+  color: var(--text-secondary);
 }
 
 .pickerItemInOrder {
-  background: var(--color-success-bg, rgba(48, 179, 80, 0.08));
+  background: var(--color-success-bg, rgba(48, 179, 80, 0.07));
 }
 
 .pickerItemInOrder:hover {
-  background: var(--color-success-bg, rgba(48, 179, 80, 0.12));
+  background: var(--color-success-bg, rgba(48, 179, 80, 0.11));
 }
 
 .pickerItemInfo {
@@ -187,6 +186,40 @@
   flex-direction: column;
   gap: 1px;
   min-width: 0;
+  flex: 1;
+}
+
+/* Right side of a picker item: either "+Додати" or stepper */
+.pickerItemControl {
+  flex-shrink: 0;
+}
+
+/* Add button — icon-only circle */
+.addBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  border: 1.5px solid var(--glass-border);
+  border-radius: var(--radius-full);
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: background var(--duration-fast), border-color var(--duration-fast), color var(--duration-fast);
+  flex-shrink: 0;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.addBtn:hover {
+  background: var(--color-brand, var(--color-accent));
+  border-color: var(--color-brand, var(--color-accent));
+  color: #fff;
+}
+
+.addBtn:active {
+  opacity: 0.85;
 }
 
 /* ============================================
@@ -205,78 +238,191 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--space-4);
+  gap: var(--space-3);
   height: 100%;
   padding: var(--space-12) var(--space-4);
   text-align: center;
   background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
+  border: 2px dashed var(--glass-border);
   border-radius: var(--radius-xl);
 }
 
-.linesTable {
+.linesEmptyIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-xl);
+  margin-bottom: var(--space-1);
+}
+
+/* ── Picker: thumbnail ── */
+.pickerItemThumb {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.pickerItemThumbPlaceholder {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  border: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ============================================
+   INVOICE DOC (right panel when has items)
+   ============================================ */
+
+.invoiceDoc {
   display: flex;
   flex-direction: column;
+  height: 100%;
   background: var(--glass-bg-elevated);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-xl);
   overflow: hidden;
-  overflow-y: auto;
 }
 
-/* Header row */
-.lineHeader {
-  background: var(--glass-bg);
-  border-bottom: 1px solid var(--glass-border);
-  font-size: var(--text-xs);
-  font-weight: var(--font-semibold);
-  color: var(--text-tertiary);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-/* Table row (header + data share same grid layout) */
-.lineRow {
-  display: grid;
-  grid-template-columns: 1fr 130px 1fr 36px;
-  gap: var(--space-3);
-  align-items: center;
-  padding: var(--space-2-5) var(--space-4);
-  border-bottom: 1px solid var(--glass-border);
-}
-
-.lineRow:last-child {
-  border-bottom: none;
-}
-
-.lineRow:not(.lineHeader):hover {
-  background: rgba(0, 0, 0, 0.02);
-}
-
-/* Columns */
-.colName {
+/* ── Supplier header ── */
+.invoiceHeader {
   display: flex;
-  flex-direction: column;
-  gap: 1px;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  flex-shrink: 0;
+}
+
+.invoiceSupplierRow {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
   min-width: 0;
 }
 
-.colQty {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1-5);
-}
-
-.colSupplier {}
-
-.colNote {}
-
-.colRemove {
+.supplierInitialsAvatar {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  background: var(--color-brand, var(--color-accent));
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  font-size: var(--text-sm);
+  font-weight: var(--font-bold);
+  color: #fff;
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+}
+
+.invoiceSupplierText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.invoiceMeta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.invoiceDivider {
+  height: 1px;
+  background: var(--glass-border);
+  flex-shrink: 0;
+}
+
+/* ── Scrollable item list ── */
+.invoiceBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-1) 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--glass-border) transparent;
+}
+
+.invoiceLine {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1-5) var(--space-4);
+  transition: background var(--duration-fast);
+}
+
+.invoiceLine:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.invoiceLineThumb {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.invoiceLineThumbPlaceholder {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  border: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.invoiceLineName {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.invoiceLineQty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  flex-shrink: 0;
+}
+
+.invoiceLineTotal {
+  flex-shrink: 0;
+  text-align: right;
+  min-width: 56px;
+  white-space: nowrap;
+}
+
+.invoiceLineNote {
+  flex: 1;
+  min-width: 70px;
+  max-width: 140px;
+}
+
+.invoiceLineRemove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
   background: none;
   border: none;
   border-radius: var(--radius-sm);
@@ -286,9 +432,33 @@
   flex-shrink: 0;
 }
 
-.colRemove:hover {
+.invoiceLineRemove:hover {
   color: var(--color-error);
   background: rgba(255, 59, 48, 0.08);
+}
+
+/* ── Invoice footer ── */
+.invoiceFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--glass-border);
+  flex-shrink: 0;
+  background: var(--glass-bg);
+}
+
+.invoiceTotal {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.linesFooterActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
 }
 
 /* Inputs */
@@ -423,7 +593,11 @@
 }
 
 .deleteBtn {
-  color: var(--color-error) !important;
+  color: var(--color-error);
+}
+
+.deleteBtn:hover {
+  color: var(--color-error);
 }
 
 /* ============================================
@@ -443,13 +617,24 @@
    RESPONSIVE
    ============================================ */
 
+@media (max-width: 1100px) {
+  .orderLayout {
+    grid-template-columns: 280px 1fr;
+  }
+  .invoiceLineNote {
+    max-width: 120px;
+  }
+}
+
 @media (max-width: 900px) {
   .orderLayout {
     grid-template-columns: 240px 1fr;
   }
-
-  .lineRow {
-    grid-template-columns: 1fr 110px 0.8fr 36px;
+  .invoiceLineNote {
+    display: none;
+  }
+  .invoiceHeader {
+    padding: var(--space-3);
   }
 }
 
@@ -461,6 +646,11 @@
 
   .orderTab {
     overflow: visible;
+    gap: var(--space-2);
+  }
+
+  .supplierChipsWrap {
+    padding-bottom: 0;
   }
 
   .orderLayout {
@@ -470,34 +660,40 @@
   }
 
   .pickerPanel {
-    max-height: 260px;
+    max-height: 280px;
   }
 
   .linesPanel {
-    min-height: 200px;
+    min-height: 300px;
     overflow: visible;
   }
 
-  .linesTable {
+  .invoiceDoc {
     overflow: visible;
   }
 
-  .lineRow {
-    grid-template-columns: 1fr 100px 1fr 28px;
+  .invoiceBody {
+    overflow: visible;
   }
 
-  /* Hide note column on mobile */
-  .colNote {
-    display: none;
-  }
-
-  .lineHeader .colNote {
-    display: none;
+  /* Compact invoice header on mobile */
+  .supplierInitialsAvatar {
+    width: 36px;
+    height: 36px;
+    font-size: var(--text-xs);
   }
 }
 
 @media (max-width: 480px) {
-  .lineRow {
-    grid-template-columns: 1fr 90px 28px;
+  .supplierChipsWrap {
+    flex-wrap: wrap;
+  }
+  .invoiceLineQty {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+  .invoiceMeta {
+    display: none;
   }
 }
