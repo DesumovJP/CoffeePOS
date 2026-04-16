@@ -1,6 +1,6 @@
 # CoffeePOS — Architecture
 
-> Last updated: 2026-02-24
+> Last updated: 2026-04-16
 
 ## System Overview
 
@@ -10,7 +10,7 @@
 │  ┌────────────────────────────────────────────────────────┐  │
 │  │  Next.js 16 Frontend (React 19)                        │  │
 │  │  Zustand 5 │ React Query 5 │ CSS Modules + Tailwind v4 │  │
-│  │  12 pages │ ~52 components │ Atomic Design              │  │
+│  │  14 pages │ ~52 components │ Atomic Design              │  │
 │  └──────────────────────┬─────────────────────────────────┘  │
 │      Vercel             │ HTTPS + JWT Bearer                  │
 │  coffee-pos-ten.vercel.app                                    │
@@ -19,7 +19,7 @@
 ┌─────────────────────────┼────────────────────────────────────┐
 │  Strapi 5.34 (Railway)  │                                     │
 │  coffeepos-production-c0e1.up.railway.app                     │
-│  Auth → 17 Content Types + Custom Controllers                 │
+│  Auth → 18 Content Types + Custom Controllers                 │
 │  Orders(FSM) │ Shifts │ Reports │ Inventory │ Tasks           │
 │  ┌────────────────────────────────────────────────────────┐   │
 │  │  PostgreSQL (Railway addon)                            │   │
@@ -59,16 +59,17 @@
 | Health Check | https://coffeepos-production-c0e1.up.railway.app/_health |
 | Media (DO Spaces) | https://mymediastorage.fra1.digitaloceanspaces.com/coffeepos/ |
 
-## Database Schema (17 Content Types)
+## Database Schema (18 Content Types)
 
 ### Core Business
 
 | Content Type | Description | Key Relations |
 |---|---|---|
-| **category** | Product categories (Кава, Чай, etc.) | → products (1:N) |
-| **product** | Menu items | → category (N:1), → modifier-groups (M:N) |
+| **category** | Product categories (Гарячі напої, Холодні, Кондитерка, Гріль) | → products (1:N) |
+| **product** | Menu items with `inventoryType` enum (`none`/`simple`/`recipe`) | → category (N:1), → modifier-groups (M:N) |
 | **modifier-group** | Groups of modifiers (Size, Milk) | → modifiers (1:N), → products (M:N) |
 | **modifier** | Individual modifiers (Oat milk +₴15) | → modifier-group (N:1) |
+| **supplier** | Ingredient suppliers | ↔ ingredients (M:N) |
 | **cafe** | Coffee shop location | Referenced by orders, shifts, tables |
 | **cafe-table** | Physical tables (number, seats, zone) | → cafe (N:1) |
 
@@ -80,13 +81,13 @@
 | **order-item** | Line items | → order (N:1), → product (N:1) |
 | **payment** | Payment records (cash/card/qr) | → order (1:1) |
 
-### Inventory
+### Inventory & Recipes
 
 | Content Type | Description | Key Relations |
 |---|---|---|
-| **ingredient-category** | Ingredient groupings | → ingredients (1:N) |
-| **ingredient** | Raw materials + stock tracking | → ingredient-category (N:1) |
-| **recipe** | Links products to ingredients by size | → product (N:1) |
+| **ingredient-category** | Ingredient groupings (Кава, Молочні, Овочі, etc.) | → ingredients (1:N) |
+| **ingredient** | Raw materials + stock tracking | → ingredient-category (N:1), ↔ suppliers (M:N) |
+| **recipe** | Variant-based product recipes (variant + ingredients + cost) | → product (N:1) |
 | **inventory-transaction** | Stock movement audit log | → ingredient, → shift |
 
 ### Operations
@@ -97,6 +98,50 @@
 | **supply** | Ingredient deliveries |
 | **write-off** | Ingredient losses |
 | **task** | Staff tasks (Kanban) |
+
+## Recipe & Variant System
+
+Recipes define **variants** of a product — different sizes, preparation styles, etc. Each recipe variant has its own ingredients and price.
+
+### Recipe Schema
+
+| Field | Type | Description |
+|---|---|---|
+| `variantId` | string | Machine-readable ID (`s`, `m`, `l`, `standard`, `spicy`) |
+| `variantName` | string | Display name (`S`, `M`, `L`, `Стандарт`) |
+| `variantDescription` | string? | Additional info (`250 мл`, `30 см`) |
+| `price` | decimal | Selling price for this variant |
+| `costPrice` | decimal | Auto-calculated from ingredients |
+| `isDefault` | boolean | Default variant for the product |
+| `ingredients` | JSON | Array of `{ ingredientSlug, ingredientId, amount }` |
+| `product` | relation | → Product (N:1) |
+
+### Lifecycle Hooks (`recipe/lifecycles.ts`)
+
+| Hook | Action |
+|---|---|
+| `beforeCreate` / `beforeUpdate` | Auto-calculate `costPrice` = Σ(ingredient.costPerUnit × amount) |
+| `afterCreate` / `afterUpdate` | Set linked product's `inventoryType = 'recipe'` |
+
+### Ingredient Lifecycle Hooks (`ingredient/lifecycles.ts`)
+
+| Hook | Action |
+|---|---|
+| `afterUpdate` | If `costPerUnit` changed, recalculate `costPrice` on all recipes using this ingredient |
+
+### Product `inventoryType` Enum
+
+| Value | Meaning | Set By |
+|---|---|---|
+| `none` | Default, not categorized | — |
+| `simple` | Physical/purchased goods (pastry, sandwiches) | Bootstrap migration |
+| `recipe` | Made in-house from recipe (drinks) | Recipe lifecycle hook or bootstrap |
+
+Used for server-side filtering: `inventoryType: 'not_recipe'` on Products/Suppliers pages excludes recipe-based products (drinks) from inventory management views.
+
+### Ingredient ↔ Supplier Relation
+
+ManyToMany relation: each ingredient can have multiple suppliers, each supplier serves multiple ingredients. Replaced the old freetext `supplier` string field.
 
 ## Custom API Endpoints
 
@@ -116,21 +161,56 @@
 | `GET` | `/api/reports/z-report` | End-of-shift report |
 | `GET` | `/_health` | Health check (public) |
 
+## Bootstrap Migrations
+
+Idempotent migrations that run on every server start:
+
+| Migration | Description |
+|---|---|
+| `ensurePermissions` | Auto-configure public/authenticated permissions for all content types + custom endpoints |
+| `migrateCategoriesV2` | Consolidate 8 old product categories → 4 new ones |
+| `migrateProductInventoryTypes` | Tag products with `inventoryType` based on recipe presence |
+| `migrateRecipeVariantFields` | Copy data from old `size_id/size_name/size_volume` columns to new `variant_id/variant_name/variant_description` |
+| `migrateIngredientSupplierRelations` | Convert old freetext `supplier` strings to manyToMany join-table entries |
+| `ensureEmployees` | Seed 5 employees if missing |
+| `ensureDailyShifts` | Auto-create closed shifts for past days with orders but no shift |
+
 ## Frontend Pages (14)
 
 | Route | Description |
 |---|---|
 | `/` | Landing page |
 | `/login` | Auth (email + password) |
-| `/pos` | POS terminal (requires open shift) |
-| `/orders` | Order history |
+| `/pos` | POS terminal — product grid with VariantPicker, order cart, payment |
+| `/orders` | Order history — compact OrderCard list + detail modal + stats strip |
 | `/tasks` | Kanban board |
-| `/admin/dashboard` | Analytics (Огляд + Календар tabs via SegmentedControl) |
-| `/admin/products` | CRUD: products (with stock tracking) + ingredients |
-| `/admin/recipes` | CRUD: recipes — view/add/edit/delete recipe sizes and ingredients |
+| `/admin/dashboard` | Analytics (Огляд + Календар tabs, day-detail modal) |
+| `/admin/products` | Products tab (category filter) + Ingredients tab (category + supplier filters) |
+| `/admin/recipes` | Recipe management — category filter chips, variant/ingredients/cost per recipe |
+| `/admin/suppliers` | Suppliers tab + Orders tab (supplier-first ingredient ordering + CSV export) |
+| `/admin/employees` | Employee CRUD + KPI performance table |
 | `/admin/reports` | Monthly calendar, X/Z reports |
 | `/admin/inventory` | Inventory overview |
 | `/profile` | User profile + shift schedule |
+
+## Frontend API Compatibility Layer
+
+The frontend API layer normalizes responses to work with both old and new backend schemas during rolling deployments:
+
+### Recipes (`lib/api/recipes.ts`)
+`normalizeRecipe()` maps old field names to new:
+- `sizeId` → `variantId`, `sizeName` → `variantName`, `sizeVolume` → `variantDescription`
+- Uses `??` fallback: `raw.variantId ?? raw.sizeId`
+
+### Ingredients (`lib/api/ingredients.ts`)
+`normalizeIngredient()` converts old freetext supplier to relation format:
+- If `suppliers` array exists and has entries → use as-is
+- If old `supplier` string exists → split by comma, create synthetic `{ id, name }` objects
+
+### Products (`lib/api/products.ts`)
+`inventoryType: 'not_recipe'` filter with graceful fallback:
+- Sends `$or` filter: `inventoryType ≠ 'recipe' OR inventoryType IS NULL`
+- If backend returns 400 (field unknown) → retries without filter
 
 ## Business Logic
 
@@ -164,7 +244,7 @@ When an order is paid, the backend deducts ingredient quantities automatically v
 
 **Flow per order item:**
 1. Find Recipes where `product.documentId = item.productDocumentId`
-2. Select the Recipe matching `item.sizeId`, else the default Recipe, else the first Recipe
+2. Select the Recipe matching `item.variantId`, else the default Recipe, else the first Recipe
 3. For each `{ingredientSlug, amount}` in `recipe.ingredients`:
    - Find Ingredient by `slug = ingredientSlug`
    - Deduct `amount × quantity` from `ingredient.quantity` (floor at 0)
@@ -173,7 +253,7 @@ When an order is paid, the backend deducts ingredient quantities automatically v
 **Frontend → Backend data flow:**
 - `OrderItem.productDocumentId` — set in Zustand store when adding items to cart
 - Passed in `ordersApi.create()` payload under `items[].productDocumentId`
-- `sizeId` passed alongside to select the correct size Recipe
+- `variantId` passed alongside to select the correct variant Recipe
 
 **Seed data:** Recipe ingredients stored as `{ ingredientSlug, ingredientId, amount }` — slug is authoritative for lookups, `ingredientId` kept for audit/display.
 
@@ -221,6 +301,7 @@ CLOSE  → records closingCash, calculates difference, logs shift_close activity
 - **Root directory**: `frontend`
 - **Framework**: Next.js (auto-detected)
 - **Env vars**: `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_API_MODE=live`
+- **API Proxy**: Next.js rewrites `/api/*` → Strapi backend (avoids CORS)
 
 ### Environment Variables (Railway)
 
@@ -266,15 +347,18 @@ CLOSE  → records closingCash, calculates difference, logs shift_close activity
 
 | Entity | Count |
 |---|---|
-| Categories | 5 (Кава, Чай, Десерти, Їжа, Напої) |
-| Products | 20 |
-| Ingredients | 24 |
-| Recipes | 25 |
+| Categories | 4 (Гарячі напої, Холодні, Кондитерка, Гріль) |
+| Products | 24 |
+| Ingredients | 26 |
+| Ingredient Categories | 7 |
+| Recipes | 30 (variant-based) |
+| Suppliers | 5 |
 | Tables | 12 |
 | Modifier groups | 3 (Розмір, Молоко, Додатки) |
 | Modifiers | 11 |
 | Cafes | 1 (Paradise Coffee — Центр) |
 | Users | 3 (owner / manager / barista) |
+| Employees | 5 |
 
 ### Default Users
 
@@ -355,8 +439,8 @@ Bell-icon button in AppShell header. Renders a floating dropdown panel.
 | Panel opens | Click bell; closes on click-outside |
 | List | Shows up to `maxItems` (default 20), newest first |
 | Click notification | Marks read; navigates to `actionUrl` if present |
-| Per-item dismiss | ✕ button removes without navigating |
-| "Прочитати всі" | Marks all read in one tap |
+| Per-item dismiss | X button removes without navigating |
+| "Прочитати всi" | Marks all read in one tap |
 | "Очистити" | Removes all notifications |
 | Overflow footer | "Показано X з Y" if list is truncated |
 
@@ -387,3 +471,5 @@ selectNotificationsByType(type)
 - **Middleware**: must use `module.exports`, NOT `export default` (CommonJS interop issue)
 - **Dockerfile**: must copy `dist/config` → `./config/`, `dist/src` → `./src/`, `dist/build` → `./build/` (Strapi expects these at root)
 - **Users seeding**: use `strapi.service('plugin::users-permissions.user').add()`, NOT `create()` or `hashPassword()`
+- **Populate syntax**: Strapi 5 rejects comma-separated populate (`populate=image,category` → 400). Use indexed: `populate[0]=image&populate[1]=category`
+- **documentId**: Strapi 5 uses `documentId` (string UUID) for all REST API route params. Numeric `id` is only for internal/relational filtering

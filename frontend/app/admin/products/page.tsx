@@ -337,6 +337,7 @@ function DeleteConfirmModal({ isOpen, onClose, onConfirm, title, description, is
 export default function ProductsAdminPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('products');
   const [search, setSearch] = useState('');
+  const [selectedProductCategory, setSelectedProductCategory] = useState<string | null>(null);
 
   // CRUD modal states
   const [productModal, setProductModal] = useState<{ isOpen: boolean; product: Product | null }>({ isOpen: false, product: null });
@@ -353,8 +354,9 @@ export default function ProductsAdminPage() {
   // React Query
   const queryClient = useQueryClient();
 
-  // Supplier filter for ingredients tab
+  // Ingredient filters
   const [selectedSupplierFilter, setSelectedSupplierFilter] = useState<string | null>(null);
+  const [selectedIngCategoryFilter, setSelectedIngCategoryFilter] = useState<string | null>(null);
 
   // API data — inventoryType: 'not_recipe' filters at the API level (server-side)
   const { data: apiProducts, isLoading: productsLoading } = useProducts({ inventoryType: 'not_recipe' });
@@ -383,15 +385,24 @@ export default function ProductsAdminPage() {
     setSearch('');
   };
 
-  // Filtered data — search only, no category filter
+  // Filtered data — category + search
   const filteredProducts = useMemo(() => {
-    if (!search) return products;
-    const q = search.toLowerCase();
-    return products.filter((item) => item.name.toLowerCase().includes(q));
-  }, [products, search]);
+    let list = products;
+    if (selectedProductCategory) {
+      list = list.filter((item) => item.category === selectedProductCategory);
+    }
+    if (search) {
+      const q = search.toLowerCase();
+      list = list.filter((item) => item.name.toLowerCase().includes(q));
+    }
+    return list;
+  }, [products, search, selectedProductCategory]);
 
   const filteredIngredients = useMemo(() => {
     let list = ingredientsList;
+    if (selectedIngCategoryFilter) {
+      list = list.filter((ing) => ing.category?.slug === selectedIngCategoryFilter);
+    }
     if (selectedSupplierFilter) {
       list = list.filter((ing) =>
         ing.suppliers?.some((s) => s.name === selectedSupplierFilter)
@@ -403,7 +414,7 @@ export default function ProductsAdminPage() {
       ing.name.toLowerCase().includes(q) ||
       ing.suppliers?.some((s) => s.name.toLowerCase().includes(q))
     );
-  }, [ingredientsList, search, selectedSupplierFilter]);
+  }, [ingredientsList, search, selectedSupplierFilter, selectedIngCategoryFilter]);
 
   // ============================================
   // CRUD HANDLERS
@@ -687,7 +698,9 @@ export default function ProductsAdminPage() {
   const handleViewModeChangeWrapped = useCallback((mode: ViewMode) => {
     handleViewModeChange(mode);
     setMobileSearchOpen(false);
+    setSelectedProductCategory(null);
     setSelectedSupplierFilter(null);
+    setSelectedIngCategoryFilter(null);
   }, []);
 
   return (
@@ -725,24 +738,70 @@ export default function ProductsAdminPage() {
         </div>
       )}
 
-      {/* Supplier filter chips — ingredients tab only */}
-      {viewMode === 'ingredients' && apiSuppliers.length > 0 && (
+      {/* Product category filter chips — products tab only */}
+      {viewMode === 'products' && apiCategories && apiCategories.length > 0 && (
         <div className={styles.supplierFilter}>
           <button
-            className={`${styles.supplierChip} ${!selectedSupplierFilter ? styles.supplierChipActive : ''}`}
-            onClick={() => setSelectedSupplierFilter(null)}
+            className={`${styles.supplierChip} ${!selectedProductCategory ? styles.supplierChipActive : ''}`}
+            onClick={() => setSelectedProductCategory(null)}
           >
             Всі
           </button>
-          {apiSuppliers.map((s) => (
+          {apiCategories.map((cat) => (
             <button
-              key={s.documentId}
-              className={`${styles.supplierChip} ${selectedSupplierFilter === s.name ? styles.supplierChipActive : ''}`}
-              onClick={() => setSelectedSupplierFilter(selectedSupplierFilter === s.name ? null : s.name)}
+              key={cat.slug}
+              className={`${styles.supplierChip} ${selectedProductCategory === cat.slug ? styles.supplierChipActive : ''}`}
+              onClick={() => setSelectedProductCategory(selectedProductCategory === cat.slug ? null : cat.slug)}
             >
-              {s.name}
+              {cat.name}
             </button>
           ))}
+        </div>
+      )}
+
+      {/* Ingredient filters — category + supplier */}
+      {viewMode === 'ingredients' && (apiIngredientCategories?.length || apiSuppliers.length > 0) && (
+        <div className={styles.filterGroup}>
+          {/* Category filter */}
+          {apiIngredientCategories && apiIngredientCategories.length > 0 && (
+            <div className={styles.supplierFilter}>
+              <button
+                className={`${styles.supplierChip} ${!selectedIngCategoryFilter ? styles.supplierChipActive : ''}`}
+                onClick={() => setSelectedIngCategoryFilter(null)}
+              >
+                Всі категорії
+              </button>
+              {apiIngredientCategories.map((cat) => (
+                <button
+                  key={cat.slug}
+                  className={`${styles.supplierChip} ${selectedIngCategoryFilter === cat.slug ? styles.supplierChipActive : ''}`}
+                  onClick={() => setSelectedIngCategoryFilter(selectedIngCategoryFilter === cat.slug ? null : cat.slug)}
+                >
+                  {cat.name}
+                </button>
+              ))}
+            </div>
+          )}
+          {/* Supplier filter */}
+          {apiSuppliers.length > 0 && (
+            <div className={styles.supplierFilter}>
+              <button
+                className={`${styles.supplierChip} ${!selectedSupplierFilter ? styles.supplierChipActive : ''}`}
+                onClick={() => setSelectedSupplierFilter(null)}
+              >
+                Всі постачальники
+              </button>
+              {apiSuppliers.map((s) => (
+                <button
+                  key={s.documentId}
+                  className={`${styles.supplierChip} ${selectedSupplierFilter === s.name ? styles.supplierChipActive : ''}`}
+                  onClick={() => setSelectedSupplierFilter(selectedSupplierFilter === s.name ? null : s.name)}
+                >
+                  {s.name}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

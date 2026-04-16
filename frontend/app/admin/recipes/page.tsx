@@ -14,6 +14,7 @@ import {
   useRecipes,
   useProducts,
   useIngredients,
+  useCategories,
   useDeleteRecipe,
   recipeKeys,
 } from '@/lib/hooks';
@@ -28,6 +29,7 @@ import styles from './page.module.css';
 export default function RecipesAdminPage() {
   const [search, setSearch] = useState('');
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const [recipeModal, setRecipeModal] = useState<{ isOpen: boolean; recipe: ApiRecipe | null }>({
     isOpen: false,
@@ -39,6 +41,7 @@ export default function RecipesAdminPage() {
   const { data: recipes, isLoading } = useRecipes();
   const { data: products } = useProducts();
   const { data: ingredients } = useIngredients({ pageSize: 200 });
+  const { data: categories } = useCategories();
   const deleteRecipeMutation = useDeleteRecipe();
   const queryClient = useQueryClient();
 
@@ -55,7 +58,7 @@ export default function RecipesAdminPage() {
     return () => window.removeEventListener('appshell:search', handler);
   }, []);
 
-  // Product image map for thumbnails
+  // Product image + category maps for thumbnails and filtering
   const productImageMap = useMemo(() => {
     const map = new Map<number, string>();
     (products || []).forEach((p) => {
@@ -65,13 +68,38 @@ export default function RecipesAdminPage() {
     return map;
   }, [products]);
 
-  // Filtered recipes — search only
+  const productCategoryMap = useMemo(() => {
+    const map = new Map<number, string>();
+    (products || []).forEach((p) => {
+      if (p.category?.slug) map.set(p.id, p.category.slug);
+    });
+    return map;
+  }, [products]);
+
+  // Categories that actually have recipes
+  const recipeCategories = useMemo(() => {
+    if (!categories || !recipes) return [];
+    const slugsWithRecipes = new Set<string>();
+    for (const r of recipes) {
+      const slug = productCategoryMap.get(r.product?.id ?? -1);
+      if (slug) slugsWithRecipes.add(slug);
+    }
+    return categories.filter((c) => slugsWithRecipes.has(c.slug));
+  }, [categories, recipes, productCategoryMap]);
+
+  // Filtered recipes — category + search
   const filteredRecipes = useMemo(() => {
     if (!recipes) return [];
-    if (!search) return recipes;
-    const q = search.toLowerCase();
-    return recipes.filter((r) => r.product?.name.toLowerCase().includes(q));
-  }, [recipes, search]);
+    let list = recipes;
+    if (selectedCategory) {
+      list = list.filter((r) => productCategoryMap.get(r.product?.id ?? -1) === selectedCategory);
+    }
+    if (search) {
+      const q = search.toLowerCase();
+      list = list.filter((r) => r.product?.name.toLowerCase().includes(q));
+    }
+    return list;
+  }, [recipes, search, selectedCategory, productCategoryMap]);
 
   // ============================================
   // CRUD HANDLERS
@@ -212,6 +240,27 @@ export default function RecipesAdminPage() {
           >
             <Icon name="close" size="md" />
           </Button>
+        </div>
+      )}
+
+      {/* Category filter chips */}
+      {recipeCategories.length > 0 && (
+        <div className={styles.filterChips}>
+          <button
+            className={`${styles.chip} ${!selectedCategory ? styles.chipActive : ''}`}
+            onClick={() => setSelectedCategory(null)}
+          >
+            Всі
+          </button>
+          {recipeCategories.map((cat) => (
+            <button
+              key={cat.slug}
+              className={`${styles.chip} ${selectedCategory === cat.slug ? styles.chipActive : ''}`}
+              onClick={() => setSelectedCategory(selectedCategory === cat.slug ? null : cat.slug)}
+            >
+              {cat.name}
+            </button>
+          ))}
         </div>
       )}
 

@@ -51,6 +51,12 @@ export default {
     // Auto-tag products with inventoryType based on recipe presence (idempotent)
     await migrateProductInventoryTypes(strapi);
 
+    // Migrate recipe fields: size_id/size_name/size_volume → variant_id/variant_name/variant_description
+    await migrateRecipeVariantFields(strapi);
+
+    // Migrate ingredient supplier strings → manyToMany relations
+    await migrateIngredientSupplierRelations(strapi);
+
     // Check if we should seed the database
     const shouldSeed = process.env.SEED_DATABASE === 'true';
 
@@ -119,6 +125,100 @@ async function migrateProductInventoryTypes(strapi: Core.Strapi) {
     );
   } catch (error) {
     strapi.log.error('[bootstrap] migrateProductInventoryTypes failed:');
+    console.error(error);
+  }
+}
+
+/**
+ * Migrate recipe fields from old size_* columns to new variant_* columns.
+ * When the schema was renamed (sizeId→variantId, etc.), Strapi created new columns
+ * but left data in the old ones. This copies old→new via raw SQL.
+ * Idempotent — only updates rows where variant_id IS NULL AND size_id IS NOT NULL.
+ */
+async function migrateRecipeVariantFields(strapi: Core.Strapi) {
+  try {
+    const knex = strapi.db.connection;
+
+    // Check if old columns exist
+    const hasOldColumns = await knex.schema.hasColumn('recipes', 'size_id');
+    if (!hasOldColumns) return; // Old columns already dropped or never existed
+
+    const result = await knex.raw(`
+      UPDATE recipes
+      SET variant_id = size_id,
+          variant_name = size_name,
+          variant_description = size_volume
+      WHERE variant_id IS NULL AND size_id IS NOT NULL
+    `);
+
+    const count = result?.rowCount ?? result?.[0]?.affectedRows ?? 0;
+    if (count > 0) {
+      strapi.log.info(`[bootstrap] migrateRecipeVariantFields: migrated ${count} recipes (size→variant)`);
+    }
+  } catch (error) {
+    strapi.log.error('[bootstrap] migrateRecipeVariantFields failed:');
+    console.error(error);
+  }
+}
+
+/**
+ * Migrate ingredient.supplier (freetext string) → ingredient↔supplier manyToMany.
+ * Reads the old `supplier` column via raw SQL, splits by comma, and creates
+ * join-table entries for matching Supplier entities.
+ * Idempotent — only processes ingredients that have the old column set and no relations yet.
+ */
+async function migrateIngredientSupplierRelations(strapi: Core.Strapi) {
+  try {
+    const knex = strapi.db.connection;
+
+    // Check if old `supplier` column exists
+    const hasOldColumn = await knex.schema.hasColumn('ingredients', 'supplier');
+    if (!hasOldColumn) return;
+
+    // Get ingredients that have old supplier text but we haven't migrated yet
+    const rows = await knex.raw(`
+      SELECT i.id, i.supplier
+      FROM ingredients i
+      WHERE i.supplier IS NOT NULL AND i.supplier != ''
+        AND NOT EXISTS (
+          SELECT 1 FROM ingredients_suppliers_lnk isl WHERE isl.ingredient_id = i.id
+        )
+    `);
+
+    const ingredients = rows?.rows ?? rows?.[0] ?? [];
+    if (ingredients.length === 0) return;
+
+    // Build supplier name→id map
+    const suppliers = await strapi.db.query('api::supplier.supplier').findMany({ select: ['id', 'name'] });
+    const supplierMap = new Map<string, number>();
+    for (const s of suppliers) {
+      supplierMap.set(s.name.toLowerCase().trim(), s.id);
+    }
+
+    let linked = 0;
+    for (const ing of ingredients) {
+      const names = (ing.supplier as string).split(',').map((n: string) => n.trim()).filter(Boolean);
+      for (const name of names) {
+        const supplierId = supplierMap.get(name.toLowerCase());
+        if (supplierId) {
+          try {
+            await knex('ingredients_suppliers_lnk').insert({
+              ingredient_id: ing.id,
+              supplier_id: supplierId,
+            });
+            linked++;
+          } catch {
+            // Duplicate or constraint — skip
+          }
+        }
+      }
+    }
+
+    if (linked > 0) {
+      strapi.log.info(`[bootstrap] migrateIngredientSupplierRelations: created ${linked} ingredient↔supplier links`);
+    }
+  } catch (error) {
+    strapi.log.error('[bootstrap] migrateIngredientSupplierRelations failed:');
     console.error(error);
   }
 }

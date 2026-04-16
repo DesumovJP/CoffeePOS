@@ -87,6 +87,45 @@
   color: var(--color-error);
 }
 
+/* Category filter chips */
+.filterChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.chip {
+  padding: var(--space-1-5) var(--space-3);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-default);
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.chip:hover {
+  background: var(--glass-bg-elevated);
+  color: var(--text-primary);
+}
+
+.chipActive {
+  background: var(--color-brand);
+  border-color: var(--color-brand);
+  color: #fff;
+}
+
+.chipActive:hover {
+  background: var(--color-brand);
+  opacity: 0.9;
+  color: #fff;
+}
+
 /* Actions cell */
 .actions {
   display: flex;
