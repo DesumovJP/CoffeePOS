@@ -334,6 +334,19 @@ export default async function seed({ strapi }: StrapiContext) {
       { slug: 'orange-fresh', name: 'Фреш апельсин', price: 75 },
       { slug: 'berry-smoothie', name: 'Смузі ягідний', price: 85 },
       { slug: 'virgin-mojito', name: 'Мохіто безалк.', price: 65 },
+      { slug: 'chicken-shawarma', name: 'Шаурма з куркою', price: 135 },
+      { slug: 'beef-shawarma', name: 'Шаурма з яловичиною', price: 155 },
+      { slug: 'doner-kebab', name: 'Донер кебаб', price: 165 },
+      { slug: 'falafel-pita', name: 'Фалафель у піті', price: 125 },
+      { slug: 'chicken-taco', name: 'Тако з куркою', price: 120 },
+      { slug: 'beef-taco', name: 'Тако з яловичиною', price: 130 },
+      { slug: 'chicken-burrito', name: 'Буріто з куркою', price: 155 },
+      { slug: 'vanilla-ice-cream', name: 'Морозиво ванільне', price: 65 },
+      { slug: 'pistachio-ice-cream', name: 'Морозиво фісташкове', price: 80 },
+      { slug: 'affogato', name: 'Афогато', price: 95 },
+      { slug: 'pepsi-500', name: 'Pepsi 0.5л', price: 45 },
+      { slug: '7up-500', name: '7UP 0.5л', price: 45 },
+      { slug: 'mineral-water', name: 'Вода 0.5л', price: 30 },
     ];
 
     // Generate 72 orders across all shifts
@@ -412,6 +425,8 @@ export default async function seed({ strapi }: StrapiContext) {
       { supplierName: 'Молочна Ферма «Зоря»', status: 'received', items: [{ ingredientName: 'Молоко 2.5% 10л', quantity: 2, unitCost: 145, totalCost: 290 }, { ingredientName: 'Вершки 33% 1л', quantity: 4, unitCost: 98, totalCost: 392 }], totalCost: 682, orderedAt: day(-3, 8), shippedAt: day(-2, 7), receivedAt: day(-2, 8, 20), createdBy_barista: 'Андрій Мельник', receivedBy: 'Дмитро Козлов' },
       { supplierName: 'Пекарня «Добра»', status: 'shipped', items: [{ ingredientName: 'Круасан масляний (10шт)', quantity: 3, unitCost: 180, totalCost: 540 }, { ingredientName: 'Круасан шоколадний (10шт)', quantity: 3, unitCost: 210, totalCost: 630 }, { ingredientName: 'Бейгл (10шт)', quantity: 2, unitCost: 200, totalCost: 400 }], totalCost: 1570, orderedAt: day(-1, 11), shippedAt: day(0, 6), createdBy_barista: 'Софія Ткаченко' },
       { supplierName: 'Фреш Маркет', status: 'ordered', items: [{ ingredientName: 'Апельсин 1кг', quantity: 10, unitCost: 58, totalCost: 580 }, { ingredientName: 'Лимон 1кг', quantity: 3, unitCost: 65, totalCost: 195 }, { ingredientName: "М'ята свіжа (пучок)", quantity: 10, unitCost: 25, totalCost: 250 }], totalCost: 1025, orderedAt: day(0, 9), createdBy_barista: 'Олена Бондаренко' },
+      { supplierName: "М'ясний Двір", status: 'received', items: [{ ingredientName: 'Куряче філе 1кг', quantity: 5, unitCost: 180, totalCost: 900 }, { ingredientName: 'Яловичина (фарш) 1кг', quantity: 3, unitCost: 280, totalCost: 840 }, { ingredientName: 'Баранина для донера 1кг', quantity: 2, unitCost: 350, totalCost: 700 }], totalCost: 2440, orderedAt: day(-4, 8), shippedAt: day(-3, 7), receivedAt: day(-3, 8, 30), createdBy_barista: 'Марія Коваленко', receivedBy: 'Андрій Мельник' },
+      { supplierName: 'PepsiCo Україна', status: 'received', items: [{ ingredientName: 'Pepsi 0.5л (уп. 24шт)', quantity: 2, unitCost: 528, totalCost: 1056 }, { ingredientName: 'Pepsi Max 0.5л (уп. 24шт)', quantity: 1, unitCost: 528, totalCost: 528 }, { ingredientName: '7UP 0.5л (уп. 24шт)', quantity: 1, unitCost: 528, totalCost: 528 }, { ingredientName: 'Lipton Ice Tea 0.5л (уп. 24шт)', quantity: 1, unitCost: 480, totalCost: 480 }], totalCost: 2592, orderedAt: day(-5, 10), shippedAt: day(-4, 9), receivedAt: day(-4, 10), createdBy_barista: 'Софія Ткаченко', receivedBy: 'Дмитро Козлов' },
     ];
 
     for (const sup of suppliesData) {

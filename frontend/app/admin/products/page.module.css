@@ -443,6 +443,28 @@
   color: #fff;
 }
 
+.addChip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: var(--glass-bg);
+  border: 1px dashed var(--glass-border);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-default);
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.addChip:hover {
+  background: var(--glass-bg-elevated);
+  border-style: solid;
+  color: var(--text-primary);
+}
+
 /* ============================================
    MOBILE SEARCH BAR (triggered from header)
    ============================================ */

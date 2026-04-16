@@ -16,6 +16,8 @@ import {
   type Column,
   ProductFormModal,
   IngredientFormModal,
+  CategoryFormModal,
+  IngredientCategoryFormModal,
 } from '@/components/organisms';
 import {
   useProducts,
@@ -25,15 +27,19 @@ import {
   useRecipesByProduct,
   useDeleteProduct,
   useDeleteIngredient,
+  useDeleteCategory,
+  useDeleteIngredientCategory,
   useSuppliers,
 } from '@/lib/hooks';
 import { useQueryClient } from '@tanstack/react-query';
-import { productKeys, ingredientKeys } from '@/lib/hooks';
+import { productKeys, ingredientKeys, categoryKeys, ingredientCategoryKeys } from '@/lib/hooks';
 import type {
   Product,
   Ingredient,
   IngredientUnit,
   ApiRecipe,
+  Category,
+  IngredientCategory,
 } from '@/lib/api';
 import styles from './page.module.css';
 
@@ -343,10 +349,14 @@ export default function ProductsAdminPage() {
   const [productModal, setProductModal] = useState<{ isOpen: boolean; product: Product | null }>({ isOpen: false, product: null });
   const [ingredientModal, setIngredientModal] = useState<{ isOpen: boolean; ingredient: Ingredient | null }>({ isOpen: false, ingredient: null });
 
+  // Category modal states
+  const [categoryModal, setCategoryModal] = useState<{ isOpen: boolean; category: Category | null }>({ isOpen: false, category: null });
+  const [ingCategoryModal, setIngCategoryModal] = useState<{ isOpen: boolean; category: IngredientCategory | null }>({ isOpen: false, category: null });
+
   // Delete confirmation state
   const [deleteConfirm, setDeleteConfirm] = useState<{
     isOpen: boolean;
-    type: 'product' | 'ingredient';
+    type: 'product' | 'ingredient' | 'category' | 'ingredientCategory';
     documentId: string;
     name: string;
   } | null>(null);
@@ -368,6 +378,8 @@ export default function ProductsAdminPage() {
   // Delete mutations
   const deleteProductMutation = useDeleteProduct();
   const deleteIngredientMutation = useDeleteIngredient();
+  const deleteCategoryMutation = useDeleteCategory();
+  const deleteIngCategoryMutation = useDeleteIngredientCategory();
 
   // Transform products to unified format
   const allProducts = useMemo(() => {
@@ -466,6 +478,32 @@ export default function ProductsAdminPage() {
     queryClient.invalidateQueries({ queryKey: ingredientKeys.lists() });
   }, [queryClient]);
 
+  // Category CRUD
+  const handleEditCategory = useCallback((cat: Category) => {
+    setCategoryModal({ isOpen: true, category: cat });
+  }, []);
+
+  const handleDeleteCategory = useCallback((documentId: string, name: string) => {
+    setDeleteConfirm({ isOpen: true, type: 'category', documentId, name });
+  }, []);
+
+  const handleCategorySuccess = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: categoryKeys.lists() });
+  }, [queryClient]);
+
+  // Ingredient Category CRUD
+  const handleEditIngCategory = useCallback((cat: IngredientCategory) => {
+    setIngCategoryModal({ isOpen: true, category: cat });
+  }, []);
+
+  const handleDeleteIngCategory = useCallback((documentId: string, name: string) => {
+    setDeleteConfirm({ isOpen: true, type: 'ingredientCategory', documentId, name });
+  }, []);
+
+  const handleIngCategorySuccess = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ingredientCategoryKeys.lists() });
+  }, [queryClient]);
+
   // Delete confirmation handler
   const handleConfirmDelete = useCallback(async () => {
     if (!deleteConfirm) return;
@@ -477,12 +515,18 @@ export default function ProductsAdminPage() {
       } else if (deleteConfirm.type === 'ingredient') {
         await deleteIngredientMutation.mutateAsync(deleteConfirm.documentId);
         setIngredientModal({ isOpen: false, ingredient: null });
+      } else if (deleteConfirm.type === 'category') {
+        await deleteCategoryMutation.mutateAsync(deleteConfirm.documentId);
+        setCategoryModal({ isOpen: false, category: null });
+      } else if (deleteConfirm.type === 'ingredientCategory') {
+        await deleteIngCategoryMutation.mutateAsync(deleteConfirm.documentId);
+        setIngCategoryModal({ isOpen: false, category: null });
       }
       setDeleteConfirm(null);
     } catch {
       // Error is handled by mutation
     }
-  }, [deleteConfirm, deleteProductMutation, deleteIngredientMutation]);
+  }, [deleteConfirm, deleteProductMutation, deleteIngredientMutation, deleteCategoryMutation, deleteIngCategoryMutation]);
 
   // ============================================
   // COLUMNS
@@ -739,49 +783,73 @@ export default function ProductsAdminPage() {
       )}
 
       {/* Product category filter chips — products tab only */}
-      {viewMode === 'products' && apiCategories && apiCategories.length > 0 && (
+      {viewMode === 'products' && (
         <div className={styles.supplierFilter}>
-          <button
-            className={`${styles.supplierChip} ${!selectedProductCategory ? styles.supplierChipActive : ''}`}
-            onClick={() => setSelectedProductCategory(null)}
-          >
-            Всі
-          </button>
-          {apiCategories.map((cat) => (
-            <button
-              key={cat.slug}
-              className={`${styles.supplierChip} ${selectedProductCategory === cat.slug ? styles.supplierChipActive : ''}`}
-              onClick={() => setSelectedProductCategory(selectedProductCategory === cat.slug ? null : cat.slug)}
-            >
-              {cat.name}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Ingredient filters — category + supplier */}
-      {viewMode === 'ingredients' && (apiIngredientCategories?.length || apiSuppliers.length > 0) && (
-        <div className={styles.filterGroup}>
-          {/* Category filter */}
-          {apiIngredientCategories && apiIngredientCategories.length > 0 && (
-            <div className={styles.supplierFilter}>
+          {apiCategories && apiCategories.length > 0 && (
+            <>
               <button
-                className={`${styles.supplierChip} ${!selectedIngCategoryFilter ? styles.supplierChipActive : ''}`}
-                onClick={() => setSelectedIngCategoryFilter(null)}
+                className={`${styles.supplierChip} ${!selectedProductCategory ? styles.supplierChipActive : ''}`}
+                onClick={() => setSelectedProductCategory(null)}
               >
-                Всі категорії
+                Всі
               </button>
-              {apiIngredientCategories.map((cat) => (
+              {apiCategories.map((cat) => (
                 <button
                   key={cat.slug}
-                  className={`${styles.supplierChip} ${selectedIngCategoryFilter === cat.slug ? styles.supplierChipActive : ''}`}
-                  onClick={() => setSelectedIngCategoryFilter(selectedIngCategoryFilter === cat.slug ? null : cat.slug)}
+                  className={`${styles.supplierChip} ${selectedProductCategory === cat.slug ? styles.supplierChipActive : ''}`}
+                  onClick={() => setSelectedProductCategory(selectedProductCategory === cat.slug ? null : cat.slug)}
+                  onDoubleClick={() => handleEditCategory(cat)}
+                  title="Подвійний клік — редагувати"
                 >
                   {cat.name}
                 </button>
               ))}
-            </div>
+            </>
           )}
+          <button
+            className={styles.addChip}
+            onClick={() => setCategoryModal({ isOpen: true, category: null })}
+            title="Додати категорію"
+          >
+            <Icon name="plus" size="xs" />
+          </button>
+        </div>
+      )}
+
+      {/* Ingredient filters — category + supplier */}
+      {viewMode === 'ingredients' && (
+        <div className={styles.filterGroup}>
+          {/* Category filter */}
+          <div className={styles.supplierFilter}>
+            {apiIngredientCategories && apiIngredientCategories.length > 0 && (
+              <>
+                <button
+                  className={`${styles.supplierChip} ${!selectedIngCategoryFilter ? styles.supplierChipActive : ''}`}
+                  onClick={() => setSelectedIngCategoryFilter(null)}
+                >
+                  Всі категорії
+                </button>
+                {apiIngredientCategories.map((cat) => (
+                  <button
+                    key={cat.slug}
+                    className={`${styles.supplierChip} ${selectedIngCategoryFilter === cat.slug ? styles.supplierChipActive : ''}`}
+                    onClick={() => setSelectedIngCategoryFilter(selectedIngCategoryFilter === cat.slug ? null : cat.slug)}
+                    onDoubleClick={() => handleEditIngCategory(cat)}
+                    title="Подвійний клік — редагувати"
+                  >
+                    {cat.name}
+                  </button>
+                ))}
+              </>
+            )}
+            <button
+              className={styles.addChip}
+              onClick={() => setIngCategoryModal({ isOpen: true, category: null })}
+              title="Додати категорію інгредієнтів"
+            >
+              <Icon name="plus" size="xs" />
+            </button>
+          </div>
           {/* Supplier filter */}
           {apiSuppliers.length > 0 && (
             <div className={styles.supplierFilter}>
@@ -859,6 +927,29 @@ export default function ProductsAdminPage() {
         }
       />
 
+      {/* Category Form Modals */}
+      <CategoryFormModal
+        isOpen={categoryModal.isOpen}
+        onClose={() => setCategoryModal({ isOpen: false, category: null })}
+        category={categoryModal.category}
+        onSuccess={handleCategorySuccess}
+        onDelete={categoryModal.category
+          ? () => handleDeleteCategory(categoryModal.category!.documentId, categoryModal.category!.name)
+          : undefined
+        }
+      />
+
+      <IngredientCategoryFormModal
+        isOpen={ingCategoryModal.isOpen}
+        onClose={() => setIngCategoryModal({ isOpen: false, category: null })}
+        category={ingCategoryModal.category}
+        onSuccess={handleIngCategorySuccess}
+        onDelete={ingCategoryModal.category
+          ? () => handleDeleteIngCategory(ingCategoryModal.category!.documentId, ingCategoryModal.category!.name)
+          : undefined
+        }
+      />
+
       {/* Delete Confirmation Modal */}
       {deleteConfirm && (
         <DeleteConfirmModal
@@ -866,12 +957,16 @@ export default function ProductsAdminPage() {
           onClose={() => setDeleteConfirm(null)}
           onConfirm={handleConfirmDelete}
           title={`Видалити ${
-            deleteConfirm.type === 'product' ? 'продукт' : 'інгредієнт'
+            deleteConfirm.type === 'product' ? 'продукт' :
+            deleteConfirm.type === 'ingredient' ? 'інгредієнт' :
+            'категорію'
           }?`}
           description={`Ви впевнені, що хочете видалити "${deleteConfirm.name}"? Цю дію неможливо скасувати.`}
           isDeleting={
             deleteProductMutation.isPending ||
-            deleteIngredientMutation.isPending
+            deleteIngredientMutation.isPending ||
+            deleteCategoryMutation.isPending ||
+            deleteIngCategoryMutation.isPending
           }
         />
       )}

@@ -1,49 +1,37 @@
 'use client';
 
 /**
- * CoffeePOS - CategoryFormModal Component
+ * CoffeePOS - IngredientCategoryFormModal Component
  *
- * Modal form for creating and editing product categories.
- * Supports both CREATE and EDIT modes.
+ * Modal form for creating and editing ingredient categories.
  */
 
 import { useState, useEffect, useCallback, type FormEvent } from 'react';
 import { Text, Button, Input, Modal, Icon } from '@/components/atoms';
-import { categoriesApi } from '@/lib/api';
-import type { Category, CategoryInput } from '@/lib/api';
-import styles from './CategoryFormModal.module.css';
+import { ingredientCategoriesApi } from '@/lib/api';
+import type { IngredientCategory } from '@/lib/api';
+import styles from '../CategoryFormModal/CategoryFormModal.module.css';
 
 // ============================================
 // TYPES
 // ============================================
 
-export interface CategoryFormModalProps {
-  /** Whether modal is open */
+export interface IngredientCategoryFormModalProps {
   isOpen: boolean;
-  /** Callback to close modal */
   onClose: () => void;
-  /** Category to edit (null = create mode) */
-  category?: Category | null;
-  /** Callback on successful create/update */
+  category?: IngredientCategory | null;
   onSuccess: () => void;
-  /** Called when user clicks Delete (edit mode only) */
   onDelete?: () => void;
 }
 
-interface CategoryFormState {
+interface FormState {
   name: string;
-  description: string;
-  icon: string;
-  color: string;
   sortOrder: string;
   isActive: boolean;
 }
 
-const INITIAL_STATE: CategoryFormState = {
+const INITIAL_STATE: FormState = {
   name: '',
-  description: '',
-  icon: '',
-  color: '#4a90d9',
   sortOrder: '0',
   isActive: true,
 };
@@ -52,27 +40,23 @@ const INITIAL_STATE: CategoryFormState = {
 // COMPONENT
 // ============================================
 
-export function CategoryFormModal({
+export function IngredientCategoryFormModal({
   isOpen,
   onClose,
   category,
   onSuccess,
   onDelete,
-}: CategoryFormModalProps) {
+}: IngredientCategoryFormModalProps) {
   const isEditMode = !!category;
-  const [form, setForm] = useState<CategoryFormState>(INITIAL_STATE);
-  const [errors, setErrors] = useState<Partial<Record<keyof CategoryFormState, string>>>({});
+  const [form, setForm] = useState<FormState>(INITIAL_STATE);
+  const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  // Populate form when editing
   useEffect(() => {
     if (category) {
       setForm({
         name: category.name || '',
-        description: category.description || '',
-        icon: category.icon || '',
-        color: category.color || '#4a90d9',
         sortOrder: String(category.sortOrder ?? 0),
         isActive: category.isActive ?? true,
       });
@@ -84,9 +68,9 @@ export function CategoryFormModal({
   }, [category, isOpen]);
 
   const handleChange = useCallback(
-    (field: keyof CategoryFormState) =>
-      (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        const value = e.target.type === 'checkbox' ? (e.target as HTMLInputElement).checked : e.target.value;
+    (field: keyof FormState) =>
+      (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
         setForm((prev) => ({ ...prev, [field]: value }));
         if (errors[field]) {
           setErrors((prev) => {
@@ -100,12 +84,10 @@ export function CategoryFormModal({
   );
 
   const validate = useCallback((): boolean => {
-    const newErrors: Partial<Record<keyof CategoryFormState, string>> = {};
-
+    const newErrors: Partial<Record<keyof FormState, string>> = {};
     if (!form.name.trim()) {
       newErrors.name = 'Назва обов\'язкова';
     }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   }, [form]);
@@ -118,20 +100,17 @@ export function CategoryFormModal({
       setIsSubmitting(true);
       setSubmitError(null);
 
-      const data: CategoryInput = {
+      const data = {
         name: form.name.trim(),
-        description: form.description.trim() || undefined,
-        icon: form.icon.trim() || undefined,
-        color: form.color || undefined,
         sortOrder: form.sortOrder ? Number(form.sortOrder) : 0,
         isActive: form.isActive,
       };
 
       try {
         if (isEditMode && category) {
-          await categoriesApi.update(category.documentId, data);
+          await ingredientCategoriesApi.update(category.documentId, data);
         } else {
-          await categoriesApi.create(data);
+          await ingredientCategoriesApi.create(data);
         }
         onSuccess();
         onClose();
@@ -168,9 +147,9 @@ export function CategoryFormModal({
     <Modal
       open={isOpen}
       onClose={onClose}
-      title={isEditMode ? 'Редагувати категорію' : 'Нова категорія'}
+      title={isEditMode ? 'Редагувати категорію інгредієнтів' : 'Нова категорія інгредієнтів'}
       icon="store"
-      size="md"
+      size="sm"
       footer={footer}
     >
       <form onSubmit={handleSubmit} className={styles.form}>
@@ -180,7 +159,6 @@ export function CategoryFormModal({
           </div>
         )}
 
-        {/* Name */}
         <Input
           label="Назва *"
           value={form.name}
@@ -191,47 +169,6 @@ export function CategoryFormModal({
           fullWidth
         />
 
-        {/* Description */}
-        <div className={styles.field}>
-          <label className={styles.label}>Опис</label>
-          <textarea
-            className={styles.textarea}
-            value={form.description}
-            onChange={handleChange('description')}
-            placeholder="Опис категорії"
-            rows={3}
-          />
-        </div>
-
-        {/* Icon + Color */}
-        <div className={styles.row}>
-          <Input
-            label="Іконка (емодзі)"
-            value={form.icon}
-            onChange={handleChange('icon')}
-            placeholder="&#9749;"
-            fullWidth
-          />
-          <div className={styles.field}>
-            <label className={styles.label}>Колір</label>
-            <div className={styles.colorInputWrapper}>
-              <input
-                type="color"
-                className={styles.colorInput}
-                value={form.color}
-                onChange={handleChange('color')}
-              />
-              <Input
-                value={form.color}
-                onChange={handleChange('color')}
-                placeholder="#4a90d9"
-                fullWidth
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Sort Order */}
         <Input
           label="Порядок сортування"
           type="number"
@@ -242,7 +179,6 @@ export function CategoryFormModal({
           fullWidth
         />
 
-        {/* Active toggle */}
         <div className={styles.toggleRow}>
           <label className={styles.toggle}>
             <input
@@ -259,4 +195,4 @@ export function CategoryFormModal({
   );
 }
 
-export default CategoryFormModal;
+export default IngredientCategoryFormModal;
