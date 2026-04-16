@@ -46,6 +46,38 @@ export interface GetInventoryTransactionsParams {
 }
 
 // ============================================
+// HELPERS
+// ============================================
+
+/**
+ * Normalize ingredient from the API response.
+ * Production backend may still use old `supplier` (string) field.
+ * This converts it to the new `suppliers` relation array format
+ * so the frontend works with both old and new backend schemas.
+ */
+function normalizeIngredient(raw: any): Ingredient {
+  if (raw.suppliers && Array.isArray(raw.suppliers) && raw.suppliers.length > 0) {
+    return raw;
+  }
+  // Old schema: `supplier` is a comma-separated string
+  if (raw.supplier && typeof raw.supplier === 'string') {
+    return {
+      ...raw,
+      suppliers: raw.supplier.split(',').map((name: string, i: number) => ({
+        id: -(i + 1),
+        documentId: `legacy-${i}`,
+        name: name.trim(),
+      })),
+    };
+  }
+  return raw;
+}
+
+function normalizeIngredients(response: ApiResponse<Ingredient[]>): ApiResponse<Ingredient[]> {
+  return { ...response, data: response.data.map(normalizeIngredient) };
+}
+
+// ============================================
 // INGREDIENTS API
 // ============================================
 
@@ -86,19 +118,23 @@ export const ingredientsApi = {
     // Populate relations
     query.append('populate[0]', 'category');
     query.append('populate[1]', 'image');
+    query.append('populate[2]', 'suppliers');
 
     const queryString = query.toString();
-    return apiClient.get<Ingredient[]>(`/ingredients${queryString ? `?${queryString}` : ''}`);
+    const response = await apiClient.get<Ingredient[]>(`/ingredients${queryString ? `?${queryString}` : ''}`);
+    return normalizeIngredients(response);
   },
 
   /**
    * Get single ingredient by ID
    */
   async getById(documentId: string): Promise<ApiResponse<Ingredient>> {
-    return apiClient.get<Ingredient>(`/ingredients/${documentId}`, {
+    const response = await apiClient.get<Ingredient>(`/ingredients/${documentId}`, {
       'populate[0]': 'category',
       'populate[1]': 'image',
+      'populate[2]': 'suppliers',
     });
+    return { ...response, data: normalizeIngredient(response.data) };
   },
 
   /**

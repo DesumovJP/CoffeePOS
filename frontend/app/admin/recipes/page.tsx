@@ -83,8 +83,8 @@ export default function RecipesAdminPage() {
 
   const handleDelete = useCallback((recipe: ApiRecipe) => {
     const name = recipe.product?.name
-      ? `${recipe.product.name} (${recipe.sizeName})`
-      : recipe.sizeName;
+      ? `${recipe.product.name} (${recipe.variantName})`
+      : recipe.variantName;
     setDeleteConfirm({ documentId: recipe.documentId, name });
   }, []);
 
@@ -131,13 +131,13 @@ export default function RecipesAdminPage() {
     },
     {
       key: 'size',
-      header: 'Розмір',
+      header: 'Варіант',
       width: '130px',
       render: (recipe) => (
         <div className={styles.sizeCell}>
-          <Text variant="bodySmall" weight="medium">{recipe.sizeName}</Text>
-          {recipe.sizeVolume && (
-            <Text variant="caption" color="tertiary">{recipe.sizeVolume}</Text>
+          <Text variant="bodySmall" weight="medium">{recipe.variantName}</Text>
+          {recipe.variantDescription && (
+            <Text variant="caption" color="tertiary">{recipe.variantDescription}</Text>
           )}
         </div>
       ),

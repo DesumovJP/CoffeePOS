@@ -161,61 +161,61 @@ export interface SeedIngredient {
   quantity: number;
   minQuantity: number;
   costPerUnit: number;
-  supplier?: string;
+  supplierNames?: string[];
   categorySlug: string;
   isActive: boolean;
 }
 
 export const ingredients: SeedIngredient[] = [
   // Молочні продукти (6)
-  { name: 'Молоко 2.5%', slug: 'milk-2-5', unit: 'ml', quantity: 10000, minQuantity: 3000, costPerUnit: 0.032, supplier: 'Молочна Ферма «Зоря»', categorySlug: 'dairy', isActive: true },
-  { name: 'Вершки 33%', slug: 'cream-33', unit: 'ml', quantity: 2000, minQuantity: 1000, costPerUnit: 0.12, supplier: 'Молочна Ферма «Зоря»', categorySlug: 'dairy', isActive: true },
-  { name: 'Молоко вівсяне', slug: 'oat-milk', unit: 'ml', quantity: 2000, minQuantity: 1000, costPerUnit: 0.08, supplier: 'Alpro', categorySlug: 'dairy', isActive: true },
-  { name: 'Молоко мигдальне', slug: 'almond-milk', unit: 'ml', quantity: 1500, minQuantity: 800, costPerUnit: 0.10, supplier: 'Alpro', categorySlug: 'dairy', isActive: true },
-  { name: 'Молоко кокосове', slug: 'coconut-milk', unit: 'ml', quantity: 1000, minQuantity: 500, costPerUnit: 0.12, supplier: 'Alpro', categorySlug: 'dairy', isActive: true },
-  { name: 'Молоко безлактозне', slug: 'lactose-free-milk', unit: 'ml', quantity: 2000, minQuantity: 800, costPerUnit: 0.05, supplier: 'Молочна Ферма «Зоря»', categorySlug: 'dairy', isActive: true },
+  { name: 'Молоко 2.5%', slug: 'milk-2-5', unit: 'ml', quantity: 10000, minQuantity: 3000, costPerUnit: 0.032, supplierNames: ['Молочна Ферма «Зоря»'], categorySlug: 'dairy', isActive: true },
+  { name: 'Вершки 33%', slug: 'cream-33', unit: 'ml', quantity: 2000, minQuantity: 1000, costPerUnit: 0.12, supplierNames: ['Молочна Ферма «Зоря»'], categorySlug: 'dairy', isActive: true },
+  { name: 'Молоко вівсяне', slug: 'oat-milk', unit: 'ml', quantity: 2000, minQuantity: 1000, costPerUnit: 0.08, supplierNames: ['Alpro'], categorySlug: 'dairy', isActive: true },
+  { name: 'Молоко мигдальне', slug: 'almond-milk', unit: 'ml', quantity: 1500, minQuantity: 800, costPerUnit: 0.10, supplierNames: ['Alpro'], categorySlug: 'dairy', isActive: true },
+  { name: 'Молоко кокосове', slug: 'coconut-milk', unit: 'ml', quantity: 1000, minQuantity: 500, costPerUnit: 0.12, supplierNames: ['Alpro'], categorySlug: 'dairy', isActive: true },
+  { name: 'Молоко безлактозне', slug: 'lactose-free-milk', unit: 'ml', quantity: 2000, minQuantity: 800, costPerUnit: 0.05, supplierNames: ['Молочна Ферма «Зоря»'], categorySlug: 'dairy', isActive: true },
 
   // Кава та какао (3)
-  { name: 'Кава Арабіка (зерно)', slug: 'arabica-beans', unit: 'g', quantity: 5000, minQuantity: 2000, costPerUnit: 0.85, supplier: 'Кава Україна', categorySlug: 'coffee-beans', isActive: true },
-  { name: 'Кава Декаф (зерно)', slug: 'decaf-beans', unit: 'g', quantity: 1000, minQuantity: 500, costPerUnit: 0.95, supplier: 'Кава Україна', categorySlug: 'coffee-beans', isActive: true },
-  { name: 'Какао порошок', slug: 'cocoa-powder', unit: 'g', quantity: 500, minQuantity: 200, costPerUnit: 0.25, supplier: 'Callebaut', categorySlug: 'coffee-beans', isActive: true },
+  { name: 'Кава Арабіка (зерно)', slug: 'arabica-beans', unit: 'g', quantity: 5000, minQuantity: 2000, costPerUnit: 0.85, supplierNames: ['Кава Україна'], categorySlug: 'coffee-beans', isActive: true },
+  { name: 'Кава Декаф (зерно)', slug: 'decaf-beans', unit: 'g', quantity: 1000, minQuantity: 500, costPerUnit: 0.95, supplierNames: ['Кава Україна'], categorySlug: 'coffee-beans', isActive: true },
+  { name: 'Какао порошок', slug: 'cocoa-powder', unit: 'g', quantity: 500, minQuantity: 200, costPerUnit: 0.25, supplierNames: ['Callebaut'], categorySlug: 'coffee-beans', isActive: true },
 
   // Чай (4)
-  { name: 'Чай чорний (листовий)', slug: 'black-tea', unit: 'g', quantity: 500, minQuantity: 200, costPerUnit: 0.45, supplier: 'TeaTime', categorySlug: 'tea-leaves', isActive: true },
-  { name: 'Чай зелений (листовий)', slug: 'green-tea', unit: 'g', quantity: 400, minQuantity: 200, costPerUnit: 0.55, supplier: 'TeaTime', categorySlug: 'tea-leaves', isActive: true },
-  { name: 'Матча преміум', slug: 'matcha', unit: 'g', quantity: 200, minQuantity: 100, costPerUnit: 2.50, supplier: 'TeaTime', categorySlug: 'tea-leaves', isActive: true },
-  { name: 'Чай трав\'яний (мікс)', slug: 'herbal-tea-mix', unit: 'g', quantity: 300, minQuantity: 150, costPerUnit: 0.65, supplier: 'TeaTime', categorySlug: 'tea-leaves', isActive: true },
+  { name: 'Чай чорний (листовий)', slug: 'black-tea', unit: 'g', quantity: 500, minQuantity: 200, costPerUnit: 0.45, supplierNames: ['TeaTime'], categorySlug: 'tea-leaves', isActive: true },
+  { name: 'Чай зелений (листовий)', slug: 'green-tea', unit: 'g', quantity: 400, minQuantity: 200, costPerUnit: 0.55, supplierNames: ['TeaTime'], categorySlug: 'tea-leaves', isActive: true },
+  { name: 'Матча преміум', slug: 'matcha', unit: 'g', quantity: 200, minQuantity: 100, costPerUnit: 2.50, supplierNames: ['TeaTime'], categorySlug: 'tea-leaves', isActive: true },
+  { name: 'Чай трав\'яний (мікс)', slug: 'herbal-tea-mix', unit: 'g', quantity: 300, minQuantity: 150, costPerUnit: 0.65, supplierNames: ['TeaTime'], categorySlug: 'tea-leaves', isActive: true },
 
   // Сиропи та соуси (6)
-  { name: 'Сироп ваніль', slug: 'vanilla-syrup', unit: 'ml', quantity: 750, minQuantity: 300, costPerUnit: 0.08, supplier: 'Monin', categorySlug: 'syrups', isActive: true },
-  { name: 'Сироп карамель', slug: 'caramel-syrup', unit: 'ml', quantity: 750, minQuantity: 300, costPerUnit: 0.08, supplier: 'Monin', categorySlug: 'syrups', isActive: true },
-  { name: 'Сироп лісовий горіх', slug: 'hazelnut-syrup', unit: 'ml', quantity: 500, minQuantity: 300, costPerUnit: 0.08, supplier: 'Monin', categorySlug: 'syrups', isActive: true },
-  { name: 'Сироп кокос', slug: 'coconut-syrup', unit: 'ml', quantity: 500, minQuantity: 300, costPerUnit: 0.08, supplier: 'Monin', categorySlug: 'syrups', isActive: true },
-  { name: 'Сироп лаванда', slug: 'lavender-syrup', unit: 'ml', quantity: 500, minQuantity: 200, costPerUnit: 0.12, supplier: 'Monin', categorySlug: 'syrups', isActive: true },
-  { name: 'Соус карамельний', slug: 'caramel-sauce', unit: 'ml', quantity: 500, minQuantity: 200, costPerUnit: 0.10, supplier: 'Monin', categorySlug: 'syrups', isActive: true },
+  { name: 'Сироп ваніль', slug: 'vanilla-syrup', unit: 'ml', quantity: 750, minQuantity: 300, costPerUnit: 0.08, supplierNames: ['Monin'], categorySlug: 'syrups', isActive: true },
+  { name: 'Сироп карамель', slug: 'caramel-syrup', unit: 'ml', quantity: 750, minQuantity: 300, costPerUnit: 0.08, supplierNames: ['Monin'], categorySlug: 'syrups', isActive: true },
+  { name: 'Сироп лісовий горіх', slug: 'hazelnut-syrup', unit: 'ml', quantity: 500, minQuantity: 300, costPerUnit: 0.08, supplierNames: ['Monin'], categorySlug: 'syrups', isActive: true },
+  { name: 'Сироп кокос', slug: 'coconut-syrup', unit: 'ml', quantity: 500, minQuantity: 300, costPerUnit: 0.08, supplierNames: ['Monin'], categorySlug: 'syrups', isActive: true },
+  { name: 'Сироп лаванда', slug: 'lavender-syrup', unit: 'ml', quantity: 500, minQuantity: 200, costPerUnit: 0.12, supplierNames: ['Monin'], categorySlug: 'syrups', isActive: true },
+  { name: 'Соус карамельний', slug: 'caramel-sauce', unit: 'ml', quantity: 500, minQuantity: 200, costPerUnit: 0.10, supplierNames: ['Monin'], categorySlug: 'syrups', isActive: true },
 
   // Топінги (3)
-  { name: 'Шоколад темний', slug: 'dark-chocolate', unit: 'g', quantity: 500, minQuantity: 200, costPerUnit: 0.15, supplier: 'Callebaut', categorySlug: 'toppings', isActive: true },
-  { name: 'Шоколад білий', slug: 'white-chocolate', unit: 'g', quantity: 300, minQuantity: 150, costPerUnit: 0.18, supplier: 'Callebaut', categorySlug: 'toppings', isActive: true },
-  { name: 'Вершки збиті (балон)', slug: 'whipped-cream', unit: 'ml', quantity: 500, minQuantity: 200, costPerUnit: 0.10, supplier: 'Молочна Ферма «Зоря»', categorySlug: 'toppings', isActive: true },
+  { name: 'Шоколад темний', slug: 'dark-chocolate', unit: 'g', quantity: 500, minQuantity: 200, costPerUnit: 0.15, supplierNames: ['Callebaut'], categorySlug: 'toppings', isActive: true },
+  { name: 'Шоколад білий', slug: 'white-chocolate', unit: 'g', quantity: 300, minQuantity: 150, costPerUnit: 0.18, supplierNames: ['Callebaut'], categorySlug: 'toppings', isActive: true },
+  { name: 'Вершки збиті (балон)', slug: 'whipped-cream', unit: 'ml', quantity: 500, minQuantity: 200, costPerUnit: 0.10, supplierNames: ['Молочна Ферма «Зоря»'], categorySlug: 'toppings', isActive: true },
 
   // Фрукти та ягоди (3)
-  { name: 'Банан', slug: 'banana', unit: 'g', quantity: 2000, minQuantity: 500, costPerUnit: 0.04, supplier: 'Фреш Маркет', categorySlug: 'fruits', isActive: true },
-  { name: 'Мікс лісових ягід (заморожені)', slug: 'berry-mix', unit: 'g', quantity: 1500, minQuantity: 500, costPerUnit: 0.18, supplier: 'Фреш Маркет', categorySlug: 'fruits', isActive: true },
-  { name: 'Апельсин', slug: 'orange', unit: 'pcs', quantity: 30, minQuantity: 10, costPerUnit: 18, supplier: 'Фреш Маркет', categorySlug: 'fruits', isActive: true },
+  { name: 'Банан', slug: 'banana', unit: 'g', quantity: 2000, minQuantity: 500, costPerUnit: 0.04, supplierNames: ['Фреш Маркет'], categorySlug: 'fruits', isActive: true },
+  { name: 'Мікс лісових ягід (заморожені)', slug: 'berry-mix', unit: 'g', quantity: 1500, minQuantity: 500, costPerUnit: 0.18, supplierNames: ['Фреш Маркет'], categorySlug: 'fruits', isActive: true },
+  { name: 'Апельсин', slug: 'orange', unit: 'pcs', quantity: 30, minQuantity: 10, costPerUnit: 18, supplierNames: ['Фреш Маркет'], categorySlug: 'fruits', isActive: true },
 
   // Упаковка (5)
-  { name: 'Стакан паперовий 250мл', slug: 'cup-250', unit: 'pcs', quantity: 200, minQuantity: 100, costPerUnit: 2.50, supplier: 'Пакувальник', categorySlug: 'packaging', isActive: true },
-  { name: 'Стакан паперовий 350мл', slug: 'cup-350', unit: 'pcs', quantity: 200, minQuantity: 100, costPerUnit: 3.00, supplier: 'Пакувальник', categorySlug: 'packaging', isActive: true },
-  { name: 'Стакан паперовий 450мл', slug: 'cup-450', unit: 'pcs', quantity: 150, minQuantity: 100, costPerUnit: 3.50, supplier: 'Пакувальник', categorySlug: 'packaging', isActive: true },
-  { name: 'Кришка для стакану', slug: 'cup-lid', unit: 'pcs', quantity: 500, minQuantity: 200, costPerUnit: 0.80, supplier: 'Пакувальник', categorySlug: 'packaging', isActive: true },
-  { name: 'Трубочка паперова', slug: 'paper-straw', unit: 'pcs', quantity: 300, minQuantity: 150, costPerUnit: 0.50, supplier: 'Пакувальник', categorySlug: 'packaging', isActive: true },
+  { name: 'Стакан паперовий 250мл', slug: 'cup-250', unit: 'pcs', quantity: 200, minQuantity: 100, costPerUnit: 2.50, supplierNames: ['Пакувальник'], categorySlug: 'packaging', isActive: true },
+  { name: 'Стакан паперовий 350мл', slug: 'cup-350', unit: 'pcs', quantity: 200, minQuantity: 100, costPerUnit: 3.00, supplierNames: ['Пакувальник'], categorySlug: 'packaging', isActive: true },
+  { name: 'Стакан паперовий 450мл', slug: 'cup-450', unit: 'pcs', quantity: 150, minQuantity: 100, costPerUnit: 3.50, supplierNames: ['Пакувальник'], categorySlug: 'packaging', isActive: true },
+  { name: 'Кришка для стакану', slug: 'cup-lid', unit: 'pcs', quantity: 500, minQuantity: 200, costPerUnit: 0.80, supplierNames: ['Пакувальник'], categorySlug: 'packaging', isActive: true },
+  { name: 'Трубочка паперова', slug: 'paper-straw', unit: 'pcs', quantity: 300, minQuantity: 150, costPerUnit: 0.50, supplierNames: ['Пакувальник'], categorySlug: 'packaging', isActive: true },
 
   // Інше (5)
   { name: 'Цукор', slug: 'sugar', unit: 'g', quantity: 5000, minQuantity: 2000, costPerUnit: 0.02, categorySlug: 'other', isActive: true },
   { name: 'Цукор тростинний', slug: 'brown-sugar', unit: 'g', quantity: 2000, minQuantity: 1000, costPerUnit: 0.04, categorySlug: 'other', isActive: true },
   { name: 'Лід', slug: 'ice', unit: 'g', quantity: 10000, minQuantity: 3000, costPerUnit: 0.005, categorySlug: 'other', isActive: true },
-  { name: 'Маршмелоу', slug: 'marshmallow', unit: 'g', quantity: 500, minQuantity: 200, costPerUnit: 0.12, supplier: 'Солодкий Дім', categorySlug: 'other', isActive: true },
+  { name: 'Маршмелоу', slug: 'marshmallow', unit: 'g', quantity: 500, minQuantity: 200, costPerUnit: 0.12, supplierNames: ['Солодкий Дім'], categorySlug: 'other', isActive: true },
   { name: 'Кокосова стружка', slug: 'coconut-flakes', unit: 'g', quantity: 300, minQuantity: 100, costPerUnit: 0.15, categorySlug: 'other', isActive: true },
 ];
 
@@ -266,9 +266,9 @@ export interface SeedRecipeIngredient {
 
 export interface SeedRecipe {
   productSlug: string;
-  sizeId: string;
-  sizeName: string;
-  sizeVolume?: string;
+  variantId: string;
+  variantName: string;
+  variantDescription?: string;
   price: number;
   costPrice: number;
   isDefault: boolean;
@@ -277,94 +277,94 @@ export interface SeedRecipe {
 
 export const recipes: SeedRecipe[] = [
   // Espresso
-  { productSlug: 'espresso', sizeId: 'single', sizeName: 'Сінгл', price: 45, costPrice: 15.30, isDefault: true,
+  { productSlug: 'espresso', variantId: 'single', variantName: 'Сінгл', price: 45, costPrice: 15.30, isDefault: true,
     ingredients: [{ ingredientSlug: 'arabica-beans', amount: 18 }] },
-  { productSlug: 'espresso', sizeId: 'double', sizeName: 'Допіо', price: 65, costPrice: 30.60, isDefault: false,
+  { productSlug: 'espresso', variantId: 'double', variantName: 'Допіо', price: 65, costPrice: 30.60, isDefault: false,
     ingredients: [{ ingredientSlug: 'arabica-beans', amount: 36 }] },
 
   // Americano
-  { productSlug: 'americano', sizeId: 's', sizeName: 'S', sizeVolume: '250 мл', price: 55, costPrice: 17.80, isDefault: true,
+  { productSlug: 'americano', variantId: 's', variantName: 'S', variantDescription: '250 мл', price: 55, costPrice: 17.80, isDefault: true,
     ingredients: [{ ingredientSlug: 'arabica-beans', amount: 18 }, { ingredientSlug: 'cup-250', amount: 1 }, { ingredientSlug: 'cup-lid', amount: 1 }] },
-  { productSlug: 'americano', sizeId: 'm', sizeName: 'M', sizeVolume: '350 мл', price: 65, costPrice: 18.80, isDefault: false,
+  { productSlug: 'americano', variantId: 'm', variantName: 'M', variantDescription: '350 мл', price: 65, costPrice: 18.80, isDefault: false,
     ingredients: [{ ingredientSlug: 'arabica-beans', amount: 18 }, { ingredientSlug: 'cup-350', amount: 1 }, { ingredientSlug: 'cup-lid', amount: 1 }] },
-  { productSlug: 'americano', sizeId: 'l', sizeName: 'L', sizeVolume: '450 мл', price: 75, costPrice: 24.70, isDefault: false,
+  { productSlug: 'americano', variantId: 'l', variantName: 'L', variantDescription: '450 мл', price: 75, costPrice: 24.70, isDefault: false,
     ingredients: [{ ingredientSlug: 'arabica-beans', amount: 24 }, { ingredientSlug: 'cup-450', amount: 1 }, { ingredientSlug: 'cup-lid', amount: 1 }] },
 
   // Cappuccino
-  { productSlug: 'cappuccino', sizeId: 's', sizeName: 'S', sizeVolume: '250 мл', price: 65, costPrice: 23.56, isDefault: true,
+  { productSlug: 'cappuccino', variantId: 's', variantName: 'S', variantDescription: '250 мл', price: 65, costPrice: 23.56, isDefault: true,
     ingredients: [{ ingredientSlug: 'arabica-beans', amount: 18 }, { ingredientSlug: 'milk-2-5', amount: 180 }, { ingredientSlug: 'cup-250', amount: 1 }, { ingredientSlug: 'cup-lid', amount: 1 }] },
-  { productSlug: 'cappuccino', sizeId: 'm', sizeName: 'M', sizeVolume: '350 мл', price: 75, costPrice: 27.76, isDefault: false,
+  { productSlug: 'cappuccino', variantId: 'm', variantName: 'M', variantDescription: '350 мл', price: 75, costPrice: 27.76, isDefault: false,
     ingredients: [{ ingredientSlug: 'arabica-beans', amount: 18 }, { ingredientSlug: 'milk-2-5', amount: 280 }, { ingredientSlug: 'cup-350', amount: 1 }, { ingredientSlug: 'cup-lid', amount: 1 }] },
-  { productSlug: 'cappuccino', sizeId: 'l', sizeName: 'L', sizeVolume: '450 мл', price: 85, costPrice: 35.06, isDefault: false,
+  { productSlug: 'cappuccino', variantId: 'l', variantName: 'L', variantDescription: '450 мл', price: 85, costPrice: 35.06, isDefault: false,
     ingredients: [{ ingredientSlug: 'arabica-beans', amount: 24 }, { ingredientSlug: 'milk-2-5', amount: 380 }, { ingredientSlug: 'cup-450', amount: 1 }, { ingredientSlug: 'cup-lid', amount: 1 }] },
 
   // Latte
-  { productSlug: 'latte', sizeId: 's', sizeName: 'S', sizeVolume: '300 мл', price: 70, costPrice: 26.30, isDefault: true,
+  { productSlug: 'latte', variantId: 's', variantName: 'S', variantDescription: '300 мл', price: 70, costPrice: 26.30, isDefault: true,
     ingredients: [{ ingredientSlug: 'arabica-beans', amount: 18 }, { ingredientSlug: 'milk-2-5', amount: 250 }, { ingredientSlug: 'cup-350', amount: 1 }, { ingredientSlug: 'cup-lid', amount: 1 }] },
-  { productSlug: 'latte', sizeId: 'm', sizeName: 'M', sizeVolume: '400 мл', price: 85, costPrice: 32.50, isDefault: false,
+  { productSlug: 'latte', variantId: 'm', variantName: 'M', variantDescription: '400 мл', price: 85, costPrice: 32.50, isDefault: false,
     ingredients: [{ ingredientSlug: 'arabica-beans', amount: 18 }, { ingredientSlug: 'milk-2-5', amount: 350 }, { ingredientSlug: 'cup-450', amount: 1 }, { ingredientSlug: 'cup-lid', amount: 1 }] },
-  { productSlug: 'latte', sizeId: 'l', sizeName: 'L', sizeVolume: '500 мл', price: 95, costPrice: 38.10, isDefault: false,
+  { productSlug: 'latte', variantId: 'l', variantName: 'L', variantDescription: '500 мл', price: 95, costPrice: 38.10, isDefault: false,
     ingredients: [{ ingredientSlug: 'arabica-beans', amount: 24 }, { ingredientSlug: 'milk-2-5', amount: 450 }, { ingredientSlug: 'cup-450', amount: 1 }, { ingredientSlug: 'cup-lid', amount: 1 }] },
 
   // Flat White
-  { productSlug: 'flat-white', sizeId: 'standard', sizeName: 'Стандарт', sizeVolume: '250 мл', price: 75, costPrice: 35.60, isDefault: true,
+  { productSlug: 'flat-white', variantId: 'standard', variantName: 'Стандарт', variantDescription: '250 мл', price: 75, costPrice: 35.60, isDefault: true,
     ingredients: [{ ingredientSlug: 'arabica-beans', amount: 36 }, { ingredientSlug: 'milk-2-5', amount: 150 }, { ingredientSlug: 'cup-250', amount: 1 }, { ingredientSlug: 'cup-lid', amount: 1 }] },
 
   // Raf
-  { productSlug: 'raf', sizeId: 's', sizeName: 'S', sizeVolume: '300 мл', price: 85, costPrice: 42.70, isDefault: true,
+  { productSlug: 'raf', variantId: 's', variantName: 'S', variantDescription: '300 мл', price: 85, costPrice: 42.70, isDefault: true,
     ingredients: [{ ingredientSlug: 'arabica-beans', amount: 18 }, { ingredientSlug: 'cream-33', amount: 200 }, { ingredientSlug: 'vanilla-syrup', amount: 20 }, { ingredientSlug: 'cup-350', amount: 1 }, { ingredientSlug: 'cup-lid', amount: 1 }] },
-  { productSlug: 'raf', sizeId: 'm', sizeName: 'M', sizeVolume: '400 мл', price: 100, costPrice: 57.10, isDefault: false,
+  { productSlug: 'raf', variantId: 'm', variantName: 'M', variantDescription: '400 мл', price: 100, costPrice: 57.10, isDefault: false,
     ingredients: [{ ingredientSlug: 'arabica-beans', amount: 18 }, { ingredientSlug: 'cream-33', amount: 300 }, { ingredientSlug: 'vanilla-syrup', amount: 30 }, { ingredientSlug: 'cup-450', amount: 1 }, { ingredientSlug: 'cup-lid', amount: 1 }] },
 
   // Mocha
-  { productSlug: 'mocha', sizeId: 'standard', sizeName: 'Стандарт', sizeVolume: '350 мл', price: 80, costPrice: 32.10, isDefault: true,
+  { productSlug: 'mocha', variantId: 'standard', variantName: 'Стандарт', variantDescription: '350 мл', price: 80, costPrice: 32.10, isDefault: true,
     ingredients: [{ ingredientSlug: 'arabica-beans', amount: 18 }, { ingredientSlug: 'milk-2-5', amount: 200 }, { ingredientSlug: 'dark-chocolate', amount: 20 }, { ingredientSlug: 'whipped-cream', amount: 30 }, { ingredientSlug: 'cup-350', amount: 1 }, { ingredientSlug: 'cup-lid', amount: 1 }] },
 
   // Iced Latte
-  { productSlug: 'iced-latte', sizeId: 'm', sizeName: 'M', sizeVolume: '400 мл', price: 75, costPrice: 41.10, isDefault: true,
+  { productSlug: 'iced-latte', variantId: 'm', variantName: 'M', variantDescription: '400 мл', price: 75, costPrice: 41.10, isDefault: true,
     ingredients: [{ ingredientSlug: 'arabica-beans', amount: 36 }, { ingredientSlug: 'milk-2-5', amount: 250 }, { ingredientSlug: 'ice', amount: 100 }, { ingredientSlug: 'cup-450', amount: 1 }, { ingredientSlug: 'cup-lid', amount: 1 }, { ingredientSlug: 'paper-straw', amount: 1 }] },
-  { productSlug: 'iced-latte', sizeId: 'l', sizeName: 'L', sizeVolume: '500 мл', price: 90, costPrice: 47.30, isDefault: false,
+  { productSlug: 'iced-latte', variantId: 'l', variantName: 'L', variantDescription: '500 мл', price: 90, costPrice: 47.30, isDefault: false,
     ingredients: [{ ingredientSlug: 'arabica-beans', amount: 36 }, { ingredientSlug: 'milk-2-5', amount: 350 }, { ingredientSlug: 'ice', amount: 150 }, { ingredientSlug: 'cup-450', amount: 1 }, { ingredientSlug: 'cup-lid', amount: 1 }, { ingredientSlug: 'paper-straw', amount: 1 }] },
 
   // Lavender Latte
-  { productSlug: 'lavender-latte', sizeId: 's', sizeName: 'S', sizeVolume: '300 мл', price: 95, costPrice: 32.00, isDefault: true,
+  { productSlug: 'lavender-latte', variantId: 's', variantName: 'S', variantDescription: '300 мл', price: 95, costPrice: 32.00, isDefault: true,
     ingredients: [{ ingredientSlug: 'arabica-beans', amount: 18 }, { ingredientSlug: 'milk-2-5', amount: 250 }, { ingredientSlug: 'lavender-syrup', amount: 20 }, { ingredientSlug: 'cup-350', amount: 1 }, { ingredientSlug: 'cup-lid', amount: 1 }] },
 
   // Caramel Macchiato
-  { productSlug: 'caramel-macchiato', sizeId: 's', sizeName: 'S', sizeVolume: '300 мл', price: 95, costPrice: 30.00, isDefault: true,
+  { productSlug: 'caramel-macchiato', variantId: 's', variantName: 'S', variantDescription: '300 мл', price: 95, costPrice: 30.00, isDefault: true,
     ingredients: [{ ingredientSlug: 'arabica-beans', amount: 18 }, { ingredientSlug: 'milk-2-5', amount: 250 }, { ingredientSlug: 'vanilla-syrup', amount: 15 }, { ingredientSlug: 'caramel-sauce', amount: 15 }, { ingredientSlug: 'cup-350', amount: 1 }, { ingredientSlug: 'cup-lid', amount: 1 }] },
 
   // Banana Raf
-  { productSlug: 'banana-raf', sizeId: 's', sizeName: 'S', sizeVolume: '350 мл', price: 95, costPrice: 38.00, isDefault: true,
+  { productSlug: 'banana-raf', variantId: 's', variantName: 'S', variantDescription: '350 мл', price: 95, costPrice: 38.00, isDefault: true,
     ingredients: [{ ingredientSlug: 'arabica-beans', amount: 18 }, { ingredientSlug: 'cream-33', amount: 200 }, { ingredientSlug: 'banana', amount: 80 }, { ingredientSlug: 'caramel-sauce', amount: 15 }, { ingredientSlug: 'cup-350', amount: 1 }, { ingredientSlug: 'cup-lid', amount: 1 }] },
 
   // Black Tea
-  { productSlug: 'black-tea', sizeId: 's', sizeName: 'S', sizeVolume: '300 мл', price: 40, costPrice: 4.85, isDefault: true,
+  { productSlug: 'black-tea', variantId: 's', variantName: 'S', variantDescription: '300 мл', price: 40, costPrice: 4.85, isDefault: true,
     ingredients: [{ ingredientSlug: 'black-tea', amount: 3 }, { ingredientSlug: 'cup-350', amount: 1 }, { ingredientSlug: 'cup-lid', amount: 1 }] },
-  { productSlug: 'black-tea', sizeId: 'l', sizeName: 'L', sizeVolume: '500 мл', price: 55, costPrice: 6.25, isDefault: false,
+  { productSlug: 'black-tea', variantId: 'l', variantName: 'L', variantDescription: '500 мл', price: 55, costPrice: 6.25, isDefault: false,
     ingredients: [{ ingredientSlug: 'black-tea', amount: 5 }, { ingredientSlug: 'cup-450', amount: 1 }, { ingredientSlug: 'cup-lid', amount: 1 }] },
 
   // Green Tea
-  { productSlug: 'green-tea', sizeId: 's', sizeName: 'S', sizeVolume: '300 мл', price: 45, costPrice: 5.15, isDefault: true,
+  { productSlug: 'green-tea', variantId: 's', variantName: 'S', variantDescription: '300 мл', price: 45, costPrice: 5.15, isDefault: true,
     ingredients: [{ ingredientSlug: 'green-tea', amount: 3 }, { ingredientSlug: 'cup-350', amount: 1 }, { ingredientSlug: 'cup-lid', amount: 1 }] },
 
   // Matcha Latte
-  { productSlug: 'matcha-latte', sizeId: 's', sizeName: 'S', sizeVolume: '300 мл', price: 85, costPrice: 18.50, isDefault: true,
+  { productSlug: 'matcha-latte', variantId: 's', variantName: 'S', variantDescription: '300 мл', price: 85, costPrice: 18.50, isDefault: true,
     ingredients: [{ ingredientSlug: 'matcha', amount: 3 }, { ingredientSlug: 'milk-2-5', amount: 250 }, { ingredientSlug: 'cup-350', amount: 1 }, { ingredientSlug: 'cup-lid', amount: 1 }] },
-  { productSlug: 'matcha-latte', sizeId: 'm', sizeName: 'M', sizeVolume: '400 мл', price: 100, costPrice: 24.70, isDefault: false,
+  { productSlug: 'matcha-latte', variantId: 'm', variantName: 'M', variantDescription: '400 мл', price: 100, costPrice: 24.70, isDefault: false,
     ingredients: [{ ingredientSlug: 'matcha', amount: 4 }, { ingredientSlug: 'milk-2-5', amount: 350 }, { ingredientSlug: 'cup-450', amount: 1 }, { ingredientSlug: 'cup-lid', amount: 1 }] },
 
   // Chai Latte
-  { productSlug: 'chai-latte', sizeId: 's', sizeName: 'S', sizeVolume: '300 мл', price: 80, costPrice: 16.00, isDefault: true,
+  { productSlug: 'chai-latte', variantId: 's', variantName: 'S', variantDescription: '300 мл', price: 80, costPrice: 16.00, isDefault: true,
     ingredients: [{ ingredientSlug: 'black-tea', amount: 4 }, { ingredientSlug: 'milk-2-5', amount: 200 }, { ingredientSlug: 'cup-350', amount: 1 }, { ingredientSlug: 'cup-lid', amount: 1 }] },
 
   // Lemonade
-  { productSlug: 'lemonade', sizeId: 's', sizeName: 'S', sizeVolume: '300 мл', price: 55, costPrice: 12.00, isDefault: true,
+  { productSlug: 'lemonade', variantId: 's', variantName: 'S', variantDescription: '300 мл', price: 55, costPrice: 12.00, isDefault: true,
     ingredients: [{ ingredientSlug: 'ice', amount: 100 }, { ingredientSlug: 'cup-350', amount: 1 }, { ingredientSlug: 'cup-lid', amount: 1 }, { ingredientSlug: 'paper-straw', amount: 1 }] },
-  { productSlug: 'lemonade', sizeId: 'l', sizeName: 'L', sizeVolume: '500 мл', price: 75, costPrice: 16.00, isDefault: false,
+  { productSlug: 'lemonade', variantId: 'l', variantName: 'L', variantDescription: '500 мл', price: 75, costPrice: 16.00, isDefault: false,
     ingredients: [{ ingredientSlug: 'ice', amount: 150 }, { ingredientSlug: 'cup-450', amount: 1 }, { ingredientSlug: 'cup-lid', amount: 1 }, { ingredientSlug: 'paper-straw', amount: 1 }] },
 
   // Berry Smoothie
-  { productSlug: 'berry-smoothie', sizeId: 'standard', sizeName: 'Стандарт', sizeVolume: '400 мл', price: 85, costPrice: 38.00, isDefault: true,
+  { productSlug: 'berry-smoothie', variantId: 'standard', variantName: 'Стандарт', variantDescription: '400 мл', price: 85, costPrice: 38.00, isDefault: true,
     ingredients: [{ ingredientSlug: 'berry-mix', amount: 100 }, { ingredientSlug: 'banana', amount: 60 }, { ingredientSlug: 'milk-2-5', amount: 150 }, { ingredientSlug: 'ice', amount: 80 }, { ingredientSlug: 'cup-450', amount: 1 }, { ingredientSlug: 'cup-lid', amount: 1 }, { ingredientSlug: 'paper-straw', amount: 1 }] },
 ];

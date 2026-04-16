@@ -186,11 +186,11 @@ function ProductModal({ product, ingredients, onClose }: ProductModalProps) {
             <div className={styles.sizeTabs}>
               {recipeSizes.map((recipe: ApiRecipe, idx: number) => (
                 <button
-                  key={recipe.sizeId}
+                  key={recipe.variantId}
                   className={`${styles.sizeTab} ${currentIdx === idx ? styles.active : ''}`}
                   onClick={() => setSelectedSizeIdx(idx)}
                 >
-                  {recipe.sizeName} {recipe.sizeVolume && `(${recipe.sizeVolume})`}
+                  {recipe.variantName} {recipe.variantDescription && `(${recipe.variantDescription})`}
                 </button>
               ))}
             </div>
@@ -258,7 +258,7 @@ function ProductModal({ product, ingredients, onClose }: ProductModalProps) {
           {recipeIngredients && (
             <div className={styles.modalSection}>
               <Text variant="labelMedium" weight="semibold" className={styles.sectionTitle}>
-                Рецепт {selectedRecipe?.sizeVolume && `(${selectedRecipe.sizeVolume})`}
+                Рецепт {selectedRecipe?.variantDescription && `(${selectedRecipe.variantDescription})`}
               </Text>
 
               <div className={styles.recipeTableWrapper}>
@@ -356,8 +356,8 @@ export default function ProductsAdminPage() {
   // Supplier filter for ingredients tab
   const [selectedSupplierFilter, setSelectedSupplierFilter] = useState<string | null>(null);
 
-  // API data
-  const { data: apiProducts, isLoading: productsLoading } = useProducts();
+  // API data — inventoryType: 'not_recipe' filters at the API level (server-side)
+  const { data: apiProducts, isLoading: productsLoading } = useProducts({ inventoryType: 'not_recipe' });
   const { data: apiCategories } = useCategories();
   const { data: apiIngredients, isLoading: ingredientsLoading } = useIngredients({ pageSize: 200 });
   const { data: apiIngredientCategories } = useIngredientCategories();
@@ -373,11 +373,7 @@ export default function ProductsAdminPage() {
     return apiProducts.map(productToUnified);
   }, [apiProducts]);
 
-  // Show only physical goods (Кондитерка + Гріль) — drinks (hot/cold) are managed via /admin/recipes
-  const PHYSICAL_CATEGORIES = ['pastry', 'grill'];
-  const products = allProducts.filter(
-    (p) => p.type !== 'recipe' && PHYSICAL_CATEGORIES.includes(p.category)
-  );
+  const products = allProducts;
 
   const ingredientsList = apiIngredients || [];
 
@@ -398,14 +394,14 @@ export default function ProductsAdminPage() {
     let list = ingredientsList;
     if (selectedSupplierFilter) {
       list = list.filter((ing) =>
-        ing.supplier?.toLowerCase().includes(selectedSupplierFilter.toLowerCase())
+        ing.suppliers?.some((s) => s.name === selectedSupplierFilter)
       );
     }
     if (!search.trim()) return list;
     const q = search.toLowerCase();
     return list.filter((ing) =>
       ing.name.toLowerCase().includes(q) ||
-      ing.supplier?.toLowerCase().includes(q)
+      ing.suppliers?.some((s) => s.name.toLowerCase().includes(q))
     );
   }, [ingredientsList, search, selectedSupplierFilter]);
 
@@ -578,7 +574,7 @@ export default function ProductsAdminPage() {
               </div>
               <Text variant="caption" color="tertiary">
                 {ingredient.category?.name || ''}
-                {ingredient.supplier ? ` · ${ingredient.supplier.split(',')[0].trim()}` : ''}
+                {ingredient.suppliers?.length ? ` · ${ingredient.suppliers[0].name}` : ''}
               </Text>
             </div>
           </div>
@@ -796,6 +792,7 @@ export default function ProductsAdminPage() {
         onClose={() => setIngredientModal({ isOpen: false, ingredient: null })}
         ingredient={ingredientModal.ingredient}
         categories={apiIngredientCategories || []}
+        suppliers={apiSuppliers}
         onSuccess={handleIngredientSuccess}
         onDelete={ingredientModal.ingredient
           ? () => handleDeleteIngredient(ingredientModal.ingredient!.documentId, ingredientModal.ingredient!.name)

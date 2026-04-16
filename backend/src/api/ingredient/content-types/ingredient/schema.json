@@ -40,9 +40,11 @@
       "default": 0,
       "min": 0
     },
-    "supplier": {
-      "type": "string",
-      "maxLength": 200
+    "suppliers": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::supplier.supplier",
+      "inversedBy": "ingredients"
     },
     "category": {
       "type": "relation",

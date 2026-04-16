@@ -109,7 +109,7 @@ export interface InventoryState {
   // Actions - Combined (for POS)
   processSale: (
     productId: string,
-    sizeId: string | undefined,
+    variantId: string | undefined,
     quantity: number,
     orderId: string,
     performedBy?: string
@@ -347,12 +347,12 @@ export const useInventoryStore = create<InventoryState>()(
 
       // ========== POS INTEGRATION ==========
 
-      processSale: (productId, sizeId, quantity, orderId, performedBy) => {
+      processSale: (productId, variantId, quantity, orderId, performedBy) => {
         const state = get();
         const errors: string[] = [];
 
         // Check if it's a recipe-based product
-        const recipe = getProductRecipe(productId, sizeId);
+        const recipe = getProductRecipe(productId, variantId);
 
         if (recipe) {
           // Recipe product - deduct ingredients

@@ -7,10 +7,11 @@
  * Supports both CREATE and EDIT modes.
  */
 
-import { useState, useEffect, useCallback, useRef, type FormEvent, type KeyboardEvent } from 'react';
+import { useState, useEffect, useCallback, useRef, type FormEvent } from 'react';
 import { Text, Button, Input, Modal, Icon } from '@/components/atoms';
 import { ingredientsApi, uploadFile } from '@/lib/api';
 import type { Ingredient, IngredientInput, IngredientCategory, IngredientUnit } from '@/lib/api';
+import type { Supplier } from '@/lib/api/suppliers';
 import styles from './IngredientFormModal.module.css';
 
 // ============================================
@@ -26,6 +27,8 @@ export interface IngredientFormModalProps {
   ingredient?: Ingredient | null;
   /** Available ingredient categories */
   categories: IngredientCategory[];
+  /** Available suppliers for multi-select */
+  suppliers?: Supplier[];
   /** Callback on successful create/update */
   onSuccess: () => void;
   /** Called when user clicks Delete (edit mode only) */
@@ -70,6 +73,7 @@ export function IngredientFormModal({
   onClose,
   ingredient,
   categories,
+  suppliers,
   onSuccess,
   onDelete,
 }: IngredientFormModalProps) {
@@ -85,10 +89,8 @@ export function IngredientFormModal({
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Suppliers tag state
-  const [suppliers, setSuppliers] = useState<string[]>([]);
-  const [supplierInput, setSupplierInput] = useState('');
-  const supplierInputRef = useRef<HTMLInputElement>(null);
+  // Suppliers multi-select state
+  const [selectedSupplierIds, setSelectedSupplierIds] = useState<number[]>([]);
 
   // Populate form when editing
   useEffect(() => {
@@ -102,20 +104,17 @@ export function IngredientFormModal({
         category: ingredient.category?.id ? String(ingredient.category.id) : '',
         isActive: ingredient.isActive ?? true,
       });
-      setSuppliers(
-        ingredient.supplier
-          ? ingredient.supplier.split(',').map((s) => s.trim()).filter(Boolean)
-          : []
+      setSelectedSupplierIds(
+        ingredient.suppliers?.map((s) => s.id) || []
       );
       setImageId(ingredient.image?.id ?? null);
       setImagePreview(ingredient.image?.url ?? null);
     } else {
       setForm(INITIAL_STATE);
-      setSuppliers([]);
+      setSelectedSupplierIds([]);
       setImageId(null);
       setImagePreview(null);
     }
-    setSupplierInput('');
     setErrors({});
     setSubmitError(null);
   }, [ingredient, isOpen]);
@@ -169,29 +168,13 @@ export function IngredientFormModal({
     setImagePreview(null);
   }, []);
 
-  const addSupplier = useCallback(() => {
-    const trimmed = supplierInput.trim();
-    if (!trimmed || suppliers.includes(trimmed)) return;
-    setSuppliers((prev) => [...prev, trimmed]);
-    setSupplierInput('');
-    supplierInputRef.current?.focus();
-  }, [supplierInput, suppliers]);
-
-  const removeSupplier = useCallback((name: string) => {
-    setSuppliers((prev) => prev.filter((s) => s !== name));
+  const toggleSupplier = useCallback((supplierId: number) => {
+    setSelectedSupplierIds((prev) =>
+      prev.includes(supplierId)
+        ? prev.filter((id) => id !== supplierId)
+        : [...prev, supplierId]
+    );
   }, []);
-
-  const handleSupplierKeyDown = useCallback(
-    (e: KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        addSupplier();
-      } else if (e.key === 'Backspace' && !supplierInput && suppliers.length > 0) {
-        setSuppliers((prev) => prev.slice(0, -1));
-      }
-    },
-    [addSupplier, supplierInput, suppliers]
-  );
 
   const validate = useCallback((): boolean => {
     const newErrors: Partial<Record<keyof IngredientFormState, string>> = {};
@@ -230,7 +213,9 @@ export function IngredientFormModal({
         quantity: form.quantity ? Number(form.quantity) : 0,
         minQuantity: form.minQuantity ? Number(form.minQuantity) : 0,
         costPerUnit: form.costPerUnit ? Number(form.costPerUnit) : 0,
-        supplier: suppliers.length > 0 ? suppliers.join(', ') : undefined,
+        suppliers: selectedSupplierIds.length > 0
+          ? { connect: selectedSupplierIds.map((id) => ({ id })) }
+          : undefined,
         category: form.category ? Number(form.category) : undefined,
         isActive: form.isActive,
         image: imageId ?? undefined,
@@ -252,7 +237,7 @@ export function IngredientFormModal({
         setIsSubmitting(false);
       }
     },
-    [form, isEditMode, ingredient, validate, onSuccess, onClose]
+    [form, isEditMode, ingredient, selectedSupplierIds, validate, onSuccess, onClose, imageId]
   );
 
   const footer = (
@@ -423,37 +408,30 @@ export function IngredientFormModal({
           fullWidth
         />
 
-        {/* Suppliers tag input */}
-        <div className={styles.field}>
-          <label className={styles.label}>Постачальники</label>
-          <div className={styles.tagInputWrapper}>
-            {suppliers.map((name) => (
-              <span key={name} className={styles.supplierTag}>
-                {name}
+        {/* Suppliers multi-select */}
+        {suppliers && suppliers.length > 0 && (
+          <div className={styles.field}>
+            <label className={styles.label}>Постачальники</label>
+            <div className={styles.tagInputWrapper}>
+              {suppliers.map((sup) => (
                 <button
+                  key={sup.id}
                   type="button"
-                  className={styles.tagRemove}
-                  onClick={() => removeSupplier(name)}
-                  aria-label={`Видалити ${name}`}
+                  className={`${styles.supplierTag} ${selectedSupplierIds.includes(sup.id) ? styles.supplierTagActive : ''}`}
+                  onClick={() => toggleSupplier(sup.id)}
                 >
-                  <Icon name="close" size="xs" />
+                  {sup.name}
+                  {selectedSupplierIds.includes(sup.id) && (
+                    <Icon name="check" size="xs" />
+                  )}
                 </button>
-              </span>
-            ))}
-            <input
-              ref={supplierInputRef}
-              type="text"
-              className={styles.tagInput}
-              value={supplierInput}
-              onChange={(e) => setSupplierInput(e.target.value)}
-              onKeyDown={handleSupplierKeyDown}
-              placeholder={suppliers.length === 0 ? 'Введіть назву та натисніть Enter' : 'Додати ще...'}
-            />
+              ))}
+            </div>
+            <Text variant="caption" color="tertiary">
+              Оберіть одного або кількох постачальників
+            </Text>
           </div>
-          <Text variant="caption" color="tertiary">
-            Enter — додати, Backspace — видалити останнього
-          </Text>
-        </div>
+        )}
 
         {/* Active toggle */}
         <div className={styles.toggleRow}>

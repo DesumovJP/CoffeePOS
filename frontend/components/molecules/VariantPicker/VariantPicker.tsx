@@ -1,35 +1,29 @@
 'use client';
 
 /**
- * CoffeePOS - SizePicker Component
+ * ParadisePOS - VariantPicker Component
  *
- * Simple size selection popup for products
+ * Simple variant selection popup for products
  */
 
 import { forwardRef, useEffect, useRef, type HTMLAttributes } from 'react';
 import { Text, Icon } from '@/components/atoms';
-import styles from './SizePicker.module.css';
+import type { ProductVariant } from '@/components/molecules/ProductCard';
+import styles from './VariantPicker.module.css';
 
 // ============================================
 // TYPES
 // ============================================
 
-export interface ProductSize {
-  id: string;
-  name: string;
-  price: number;
-  isDefault?: boolean;
-}
-
-export interface SizePickerProps extends Omit<HTMLAttributes<HTMLDivElement>, 'onSelect'> {
+export interface VariantPickerProps extends Omit<HTMLAttributes<HTMLDivElement>, 'onSelect'> {
   /** Product name */
   productName: string;
-  /** Available sizes */
-  sizes: ProductSize[];
+  /** Available variants */
+  variants: ProductVariant[];
   /** Currency symbol */
   currency?: string;
-  /** Callback when size is selected */
-  onSelect: (size: ProductSize) => void;
+  /** Callback when variant is selected */
+  onSelect: (variant: ProductVariant) => void;
   /** Callback to close picker */
   onClose: () => void;
 }
@@ -38,11 +32,11 @@ export interface SizePickerProps extends Omit<HTMLAttributes<HTMLDivElement>, 'o
 // COMPONENT
 // ============================================
 
-export const SizePicker = forwardRef<HTMLDivElement, SizePickerProps>(
+export const VariantPicker = forwardRef<HTMLDivElement, VariantPickerProps>(
   (
     {
       productName,
-      sizes,
+      variants,
       currency = '₴',
       onSelect,
       onClose,
@@ -95,18 +89,18 @@ export const SizePicker = forwardRef<HTMLDivElement, SizePickerProps>(
           </button>
         </div>
 
-        {/* Size options */}
-        <div className={styles.sizes}>
-          {sizes.map((size) => (
+        {/* Variant options */}
+        <div className={styles.variants}>
+          {variants.map((variant) => (
             <button
-              key={size.id}
+              key={variant.id}
               type="button"
-              className={`${styles.sizeBtn} ${size.isDefault ? styles.default : ''}`}
-              onClick={() => onSelect(size)}
+              className={`${styles.variantBtn} ${variant.isDefault ? styles.default : ''}`}
+              onClick={() => onSelect(variant)}
             >
-              <span className={styles.sizeName}>{size.name}</span>
-              <span className={styles.sizePrice}>
-                {currency}{size.price.toFixed(0)}
+              <span className={styles.variantName}>{variant.name}</span>
+              <span className={styles.variantPrice}>
+                {currency}{variant.price.toFixed(0)}
               </span>
             </button>
           ))}
@@ -116,4 +110,4 @@ export const SizePicker = forwardRef<HTMLDivElement, SizePickerProps>(
   }
 );
 
-SizePicker.displayName = 'SizePicker';
+VariantPicker.displayName = 'VariantPicker';

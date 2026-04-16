@@ -25,7 +25,7 @@ export interface OrderItem {
   id: string;
   productId: string;
   productDocumentId?: string;
-  sizeId?: string;
+  variantId?: string;
   name: string;
   price: number;
   quantity: number;
@@ -70,7 +70,7 @@ export interface OrderState {
   clearOrder: () => void;
 
   // Actions - Items
-  addItem: (item: Omit<OrderItem, 'id' | 'addedAt' | 'quantity'> & { sizeId?: string }) => void;
+  addItem: (item: Omit<OrderItem, 'id' | 'addedAt' | 'quantity'> & { variantId?: string }) => void;
   updateItemQuantity: (itemId: string, quantity: number) => void;
   removeItem: (itemId: string) => void;
   updateItemNotes: (itemId: string, notes: string) => void;
@@ -379,7 +379,7 @@ export const useOrderStore = create<OrderState>()(
             for (const item of currentOrder.items) {
               const result = inventoryStore.processSale(
                 item.productId,
-                item.sizeId,
+                item.variantId,
                 item.quantity,
                 currentOrder.id
               );

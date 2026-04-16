@@ -62,9 +62,9 @@ export function RecipeFormModal({
 
   // Form state
   const [productId, setProductId] = useState<number>(0);
-  const [sizeId, setSizeId] = useState('');
-  const [sizeName, setSizeName] = useState('');
-  const [sizeVolume, setSizeVolume] = useState('');
+  const [variantId, setVariantId] = useState('');
+  const [variantName, setVariantName] = useState('');
+  const [variantDescription, setVariantDescription] = useState('');
   const [price, setPrice] = useState<string>('');
   const [isDefault, setIsDefault] = useState(false);
   const [preparationNotes, setPreparationNotes] = useState('');
@@ -83,9 +83,9 @@ export function RecipeFormModal({
     if (isOpen) {
       if (recipe) {
         setProductId(recipe.product?.id || 0);
-        setSizeId(recipe.sizeId || '');
-        setSizeName(recipe.sizeName || '');
-        setSizeVolume(recipe.sizeVolume || '');
+        setVariantId(recipe.variantId || '');
+        setVariantName(recipe.variantName || '');
+        setVariantDescription(recipe.variantDescription || '');
         setPrice(String(recipe.price || ''));
         setIsDefault(recipe.isDefault || false);
         setPreparationNotes(recipe.preparationNotes || '');
@@ -100,9 +100,9 @@ export function RecipeFormModal({
         setImagePreview(recipe.image?.url ?? null);
       } else {
         setProductId(0);
-        setSizeId('');
-        setSizeName('');
-        setSizeVolume('');
+        setVariantId('');
+        setVariantName('');
+        setVariantDescription('');
         setPrice('');
         setIsDefault(false);
         setPreparationNotes('');
@@ -188,13 +188,13 @@ export function RecipeFormModal({
       return;
     }
 
-    if (!sizeId.trim()) {
-      setError('Вкажіть ID розміру');
+    if (!variantId.trim()) {
+      setError('Вкажіть ID варіанту');
       return;
     }
 
-    if (!sizeName.trim()) {
-      setError('Вкажіть назву розміру');
+    if (!variantName.trim()) {
+      setError('Вкажіть назву варіанту');
       return;
     }
 
@@ -204,9 +204,9 @@ export function RecipeFormModal({
 
     const payload = {
       product: productId || undefined,
-      sizeId: sizeId.trim(),
-      sizeName: sizeName.trim(),
-      sizeVolume: sizeVolume.trim() || undefined,
+      variantId: variantId.trim(),
+      variantName: variantName.trim(),
+      variantDescription: variantDescription.trim() || undefined,
       price: parseFloat(price),
       costPrice,
       isDefault,
@@ -261,7 +261,7 @@ export function RecipeFormModal({
       isOpen={isOpen}
       onClose={onClose}
       title={isEditing ? 'Редагувати рецепт' : 'Новий рецепт'}
-      subtitle="Налаштуйте розмір, ціну та інгредієнти"
+      subtitle="Налаштуйте варіант, ціну та інгредієнти"
       icon="menu"
       size="lg"
       footer={footer}
@@ -334,27 +334,27 @@ export function RecipeFormModal({
           />
         </div>
 
-        {/* Size fields */}
+        {/* Variant fields */}
         <div className={styles.row}>
           <Input
-            label="ID розміру"
-            placeholder="small"
-            value={sizeId}
-            onChange={(e) => setSizeId(e.target.value)}
+            label="ID варіанту"
+            placeholder="standard, s, m, spicy"
+            value={variantId}
+            onChange={(e) => setVariantId(e.target.value)}
             fullWidth
           />
           <Input
-            label="Назва розміру"
-            placeholder="Маленький"
-            value={sizeName}
-            onChange={(e) => setSizeName(e.target.value)}
+            label="Назва варіанту"
+            placeholder="Стандарт, S, Гостра"
+            value={variantName}
+            onChange={(e) => setVariantName(e.target.value)}
             fullWidth
           />
           <Input
-            label="Об'єм"
-            placeholder="200мл"
-            value={sizeVolume}
-            onChange={(e) => setSizeVolume(e.target.value)}
+            label="Опис варіанту"
+            placeholder="250 мл, 30 см"
+            value={variantDescription}
+            onChange={(e) => setVariantDescription(e.target.value)}
             fullWidth
           />
         </div>
@@ -389,7 +389,7 @@ export function RecipeFormModal({
                 onChange={(e) => setIsDefault(e.target.checked)}
                 className={styles.checkbox}
               />
-              <Text variant="bodyMedium">Основний розмір</Text>
+              <Text variant="bodyMedium">За замовчуванням</Text>
             </label>
           </div>
         </div>

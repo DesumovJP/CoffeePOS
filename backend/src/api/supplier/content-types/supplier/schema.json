@@ -64,6 +64,12 @@
       "type": "decimal",
       "min": 0
     },
+    "ingredients": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::ingredient.ingredient",
+      "mappedBy": "suppliers"
+    },
     "supplies": {
       "type": "relation",
       "relation": "oneToMany",

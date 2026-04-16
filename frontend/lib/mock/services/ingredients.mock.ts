@@ -77,7 +77,6 @@ export const mockIngredientsApi = {
       quantity: data.quantity ?? 0,
       minQuantity: data.minQuantity ?? 0,
       costPerUnit: data.costPerUnit ?? 0,
-      supplier: data.supplier,
       isActive: data.isActive ?? true,
       category: cat,
       createdAt: now,

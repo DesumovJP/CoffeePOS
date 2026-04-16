@@ -331,6 +331,12 @@ export interface CafeTableInput {
 
 export type IngredientUnit = 'g' | 'kg' | 'ml' | 'l' | 'pcs' | 'portion';
 
+export interface IngredientSupplier {
+  id: number;
+  documentId: string;
+  name: string;
+}
+
 export interface Ingredient extends StrapiEntity {
   name: string;
   slug: string;
@@ -339,7 +345,7 @@ export interface Ingredient extends StrapiEntity {
   quantity: number;
   minQuantity: number;
   costPerUnit: number;
-  supplier?: string;
+  suppliers?: IngredientSupplier[];
   isActive: boolean;
   image?: StrapiMedia;
   category?: IngredientCategory;
@@ -355,7 +361,7 @@ export interface IngredientInput {
   quantity?: number;
   minQuantity?: number;
   costPerUnit?: number;
-  supplier?: string;
+  suppliers?: number[] | { connect: { id: number }[] };
   isActive?: boolean;
   category?: number;
   image?: number;

@@ -12,9 +12,9 @@ export interface ApiRecipe {
   id: number;
   documentId: string;
   product?: { id: number; name: string; slug: string };
-  sizeId: string;
-  sizeName: string;
-  sizeVolume?: string;
+  variantId: string;
+  variantName: string;
+  variantDescription?: string;
   price: number;
   costPrice: number;
   isDefault: boolean;
@@ -27,9 +27,9 @@ export interface ApiRecipe {
 
 export interface ApiRecipeInput {
   product?: number;
-  sizeId: string;
-  sizeName: string;
-  sizeVolume?: string;
+  variantId: string;
+  variantName: string;
+  variantDescription?: string;
   price: number;
   costPrice?: number;
   isDefault?: boolean;
@@ -40,6 +40,29 @@ export interface ApiRecipeInput {
 
 export interface GetRecipesParams {
   product?: number;
+}
+
+// ============================================
+// HELPERS
+// ============================================
+
+/**
+ * Normalize recipe fields from the API response.
+ * Production backend may still use old field names (sizeId/sizeName/sizeVolume).
+ * This maps them to the new names (variantId/variantName/variantDescription)
+ * so the frontend works with both old and new backend schemas.
+ */
+function normalizeRecipe(raw: any): ApiRecipe {
+  return {
+    ...raw,
+    variantId: raw.variantId ?? raw.sizeId,
+    variantName: raw.variantName ?? raw.sizeName,
+    variantDescription: raw.variantDescription ?? raw.sizeVolume,
+  };
+}
+
+function normalizeRecipes(response: ApiResponse<ApiRecipe[]>): ApiResponse<ApiRecipe[]> {
+  return { ...response, data: response.data.map(normalizeRecipe) };
 }
 
 // ============================================
@@ -58,15 +81,17 @@ export const recipesApi = {
       queryParams['filters[product][id][$eq]'] = params.product;
     }
 
-    return apiClient.get<ApiRecipe[]>('/recipes', queryParams);
+    const response = await apiClient.get<ApiRecipe[]>('/recipes', queryParams);
+    return normalizeRecipes(response);
   },
 
   async getByProduct(productId: number): Promise<ApiResponse<ApiRecipe[]>> {
-    return apiClient.get<ApiRecipe[]>('/recipes', {
+    const response = await apiClient.get<ApiRecipe[]>('/recipes', {
       'filters[product][id][$eq]': productId,
       'populate[0]': 'product',
       'populate[1]': 'image',
     });
+    return normalizeRecipes(response);
   },
 
   async create(data: ApiRecipeInput): Promise<ApiResponse<ApiRecipe>> {

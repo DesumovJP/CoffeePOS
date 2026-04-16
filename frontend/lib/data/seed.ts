@@ -36,25 +36,25 @@ export const ingredients: Ingredient[] = [
   {
     id: 1, documentId: 'ing-1', name: 'Молоко 2.5%', slug: 'milk-2-5',
     unit: 'ml', quantity: 10000, minQuantity: 3000, costPerUnit: 0.032,
-    supplier: 'Молочар', isActive: true, createdAt: '', updatedAt: '',
+    isActive: true, createdAt: '', updatedAt: '',
     category: ingredientCategories[0],
   },
   {
     id: 2, documentId: 'ing-2', name: 'Вершки 33%', slug: 'cream-33',
     unit: 'ml', quantity: 2000, minQuantity: 1000, costPerUnit: 0.12,
-    supplier: 'Молочар', isActive: true, createdAt: '', updatedAt: '',
+    isActive: true, createdAt: '', updatedAt: '',
     category: ingredientCategories[0],
   },
   {
     id: 3, documentId: 'ing-3', name: 'Молоко вівсяне', slug: 'oat-milk',
     unit: 'ml', quantity: 2000, minQuantity: 1000, costPerUnit: 0.08,
-    supplier: 'Alpro', isActive: true, createdAt: '', updatedAt: '',
+    isActive: true, createdAt: '', updatedAt: '',
     category: ingredientCategories[0],
   },
   {
     id: 4, documentId: 'ing-4', name: 'Молоко мигдальне', slug: 'almond-milk',
     unit: 'ml', quantity: 1500, minQuantity: 800, costPerUnit: 0.10,
-    supplier: 'Alpro', isActive: true, createdAt: '', updatedAt: '',
+    isActive: true, createdAt: '', updatedAt: '',
     category: ingredientCategories[0],
   },
 
@@ -62,13 +62,13 @@ export const ingredients: Ingredient[] = [
   {
     id: 5, documentId: 'ing-5', name: 'Кава Арабіка (зерно)', slug: 'arabica-beans',
     unit: 'g', quantity: 5000, minQuantity: 2000, costPerUnit: 0.85,
-    supplier: 'CoffeePro', isActive: true, createdAt: '', updatedAt: '',
+    isActive: true, createdAt: '', updatedAt: '',
     category: ingredientCategories[1],
   },
   {
     id: 6, documentId: 'ing-6', name: 'Кава Декаф (зерно)', slug: 'decaf-beans',
     unit: 'g', quantity: 1000, minQuantity: 500, costPerUnit: 0.95,
-    supplier: 'CoffeePro', isActive: true, createdAt: '', updatedAt: '',
+    isActive: true, createdAt: '', updatedAt: '',
     category: ingredientCategories[1],
   },
 
@@ -76,19 +76,19 @@ export const ingredients: Ingredient[] = [
   {
     id: 7, documentId: 'ing-7', name: 'Чай чорний (листовий)', slug: 'black-tea',
     unit: 'g', quantity: 500, minQuantity: 200, costPerUnit: 0.45,
-    supplier: 'TeaTime', isActive: true, createdAt: '', updatedAt: '',
+    isActive: true, createdAt: '', updatedAt: '',
     category: ingredientCategories[2],
   },
   {
     id: 8, documentId: 'ing-8', name: 'Чай зелений (листовий)', slug: 'green-tea',
     unit: 'g', quantity: 400, minQuantity: 200, costPerUnit: 0.55,
-    supplier: 'TeaTime', isActive: true, createdAt: '', updatedAt: '',
+    isActive: true, createdAt: '', updatedAt: '',
     category: ingredientCategories[2],
   },
   {
     id: 9, documentId: 'ing-9', name: 'Матча преміум', slug: 'matcha',
     unit: 'g', quantity: 200, minQuantity: 100, costPerUnit: 2.50,
-    supplier: 'TeaTime', isActive: true, createdAt: '', updatedAt: '',
+    isActive: true, createdAt: '', updatedAt: '',
     category: ingredientCategories[2],
   },
 
@@ -96,25 +96,25 @@ export const ingredients: Ingredient[] = [
   {
     id: 10, documentId: 'ing-10', name: 'Сироп ваніль', slug: 'vanilla-syrup',
     unit: 'ml', quantity: 750, minQuantity: 300, costPerUnit: 0.08,
-    supplier: 'Monin', isActive: true, createdAt: '', updatedAt: '',
+    isActive: true, createdAt: '', updatedAt: '',
     category: ingredientCategories[3],
   },
   {
     id: 11, documentId: 'ing-11', name: 'Сироп карамель', slug: 'caramel-syrup',
     unit: 'ml', quantity: 750, minQuantity: 300, costPerUnit: 0.08,
-    supplier: 'Monin', isActive: true, createdAt: '', updatedAt: '',
+    isActive: true, createdAt: '', updatedAt: '',
     category: ingredientCategories[3],
   },
   {
     id: 12, documentId: 'ing-12', name: 'Сироп лісовий горіх', slug: 'hazelnut-syrup',
     unit: 'ml', quantity: 500, minQuantity: 300, costPerUnit: 0.08,
-    supplier: 'Monin', isActive: true, createdAt: '', updatedAt: '',
+    isActive: true, createdAt: '', updatedAt: '',
     category: ingredientCategories[3],
   },
   {
     id: 13, documentId: 'ing-13', name: 'Сироп кокос', slug: 'coconut-syrup',
     unit: 'ml', quantity: 500, minQuantity: 300, costPerUnit: 0.08,
-    supplier: 'Monin', isActive: true, createdAt: '', updatedAt: '',
+    isActive: true, createdAt: '', updatedAt: '',
     category: ingredientCategories[3],
   },
 
@@ -122,19 +122,19 @@ export const ingredients: Ingredient[] = [
   {
     id: 14, documentId: 'ing-14', name: 'Шоколад темний', slug: 'dark-chocolate',
     unit: 'g', quantity: 500, minQuantity: 200, costPerUnit: 0.15,
-    supplier: 'Callebaut', isActive: true, createdAt: '', updatedAt: '',
+    isActive: true, createdAt: '', updatedAt: '',
     category: ingredientCategories[4],
   },
   {
     id: 15, documentId: 'ing-15', name: 'Шоколад білий', slug: 'white-chocolate',
     unit: 'g', quantity: 300, minQuantity: 150, costPerUnit: 0.18,
-    supplier: 'Callebaut', isActive: true, createdAt: '', updatedAt: '',
+    isActive: true, createdAt: '', updatedAt: '',
     category: ingredientCategories[4],
   },
   {
     id: 16, documentId: 'ing-16', name: 'Вершки збиті (балон)', slug: 'whipped-cream',
     unit: 'ml', quantity: 500, minQuantity: 200, costPerUnit: 0.10,
-    supplier: 'Молочар', isActive: true, createdAt: '', updatedAt: '',
+    isActive: true, createdAt: '', updatedAt: '',
     category: ingredientCategories[4],
   },
 
@@ -142,31 +142,31 @@ export const ingredients: Ingredient[] = [
   {
     id: 17, documentId: 'ing-17', name: 'Стакан паперовий 250мл', slug: 'cup-250',
     unit: 'pcs', quantity: 200, minQuantity: 100, costPerUnit: 2.50,
-    supplier: 'Пакувальник', isActive: true, createdAt: '', updatedAt: '',
+    isActive: true, createdAt: '', updatedAt: '',
     category: ingredientCategories[5],
   },
   {
     id: 18, documentId: 'ing-18', name: 'Стакан паперовий 350мл', slug: 'cup-350',
     unit: 'pcs', quantity: 200, minQuantity: 100, costPerUnit: 3.00,
-    supplier: 'Пакувальник', isActive: true, createdAt: '', updatedAt: '',
+    isActive: true, createdAt: '', updatedAt: '',
     category: ingredientCategories[5],
   },
   {
     id: 19, documentId: 'ing-19', name: 'Стакан паперовий 450мл', slug: 'cup-450',
     unit: 'pcs', quantity: 150, minQuantity: 100, costPerUnit: 3.50,
-    supplier: 'Пакувальник', isActive: true, createdAt: '', updatedAt: '',
+    isActive: true, createdAt: '', updatedAt: '',
     category: ingredientCategories[5],
   },
   {
     id: 20, documentId: 'ing-20', name: 'Кришка для стакану', slug: 'cup-lid',
     unit: 'pcs', quantity: 500, minQuantity: 200, costPerUnit: 0.80,
-    supplier: 'Пакувальник', isActive: true, createdAt: '', updatedAt: '',
+    isActive: true, createdAt: '', updatedAt: '',
     category: ingredientCategories[5],
   },
   {
     id: 21, documentId: 'ing-21', name: 'Трубочка паперова', slug: 'paper-straw',
     unit: 'pcs', quantity: 300, minQuantity: 150, costPerUnit: 0.50,
-    supplier: 'Пакувальник', isActive: true, createdAt: '', updatedAt: '',
+    isActive: true, createdAt: '', updatedAt: '',
     category: ingredientCategories[5],
   },
 
@@ -666,13 +666,13 @@ export function getPOSProducts(): POSProduct[] {
 
 export function getProductRecipe(
   productId: string,
-  sizeId?: string
+  variantId?: string
 ): RecipeIngredientAmount[] | null {
   const recipe = productRecipes.find((r) => r.productId === productId);
   if (!recipe) return null;
 
-  const size = sizeId
-    ? recipe.sizes.find((s) => s.id === sizeId)
+  const size = variantId
+    ? recipe.sizes.find((s) => s.id === variantId)
     : recipe.sizes.find((s) => s.isDefault) || recipe.sizes[0];
 
   return size?.ingredients || null;
@@ -693,10 +693,10 @@ export interface IngredientDeduction {
 
 export function calculateDeductions(
   productId: string,
-  sizeId?: string,
+  variantId?: string,
   quantity: number = 1
 ): IngredientDeduction[] {
-  const recipe = getProductRecipe(productId, sizeId);
+  const recipe = getProductRecipe(productId, variantId);
   if (!recipe) return [];
 
   return recipe.map((item) => {

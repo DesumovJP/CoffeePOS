@@ -134,8 +134,11 @@ export default async function seed({ strapi }: StrapiContext) {
     strapi.log.info('Seeding ingredients...');
     const ingredientMap: Record<string, number> = {};
 
+    // Build supplier name → id map for ingredient linking
+    const supplierNameMap: Record<string, number> = {};
+
     for (const ing of ingredients) {
-      const { categorySlug, ...ingredientData } = ing;
+      const { categorySlug, supplierNames, ...ingredientData } = ing;
       const categoryId = ingredientCategoryMap[categorySlug];
 
       const created = await strapi.db.query('api::ingredient.ingredient').create({
@@ -145,6 +148,31 @@ export default async function seed({ strapi }: StrapiContext) {
         },
       });
       ingredientMap[ing.slug] = created.id;
+
+      // Link ingredient to suppliers via manyToMany
+      if (supplierNames && supplierNames.length > 0) {
+        const supplierIds: number[] = [];
+        for (const sName of supplierNames) {
+          if (!supplierNameMap[sName]) {
+            // Create or find supplier
+            let existing = await strapi.db.query('api::supplier.supplier').findOne({ where: { name: sName } });
+            if (!existing) {
+              existing = await strapi.db.query('api::supplier.supplier').create({
+                data: { name: sName, isActive: true, cafe: cafeId },
+              });
+              strapi.log.info(`  ✓ Created supplier: ${sName}`);
+            }
+            supplierNameMap[sName] = existing.id;
+          }
+          supplierIds.push(supplierNameMap[sName]);
+        }
+        // Connect manyToMany
+        await (strapi.db.query('api::ingredient.ingredient') as any).update({
+          where: { id: created.id },
+          data: { suppliers: { connect: supplierIds.map(id => ({ id })) } },
+        });
+      }
+
       strapi.log.info(`  ✓ Created ingredient: ${ing.name}`);
     }
 
@@ -201,9 +229,9 @@ export default async function seed({ strapi }: StrapiContext) {
       await strapi.db.query('api::recipe.recipe').create({
         data: {
           product: productId,
-          sizeId: recipe.sizeId,
-          sizeName: recipe.sizeName,
-          sizeVolume: recipe.sizeVolume || null,
+          variantId: recipe.variantId,
+          variantName: recipe.variantName,
+          variantDescription: recipe.variantDescription || null,
           price: recipe.price,
           costPrice: recipe.costPrice,
           isDefault: recipe.isDefault,

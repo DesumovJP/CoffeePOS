@@ -15,7 +15,7 @@ import styles from './ProductCard.module.css';
 // TYPES
 // ============================================
 
-export interface ProductSize {
+export interface ProductVariant {
   id: string;
   name: string;
   price: number;
@@ -29,7 +29,7 @@ export interface Product {
   price: number;
   image?: string;
   category?: string;
-  sizes?: ProductSize[];
+  variants?: ProductVariant[];
   hasModifiers?: boolean;
   inStock?: boolean;
   stockQuantity?: number;
@@ -172,9 +172,9 @@ export const ProductCard = memo(forwardRef<HTMLButtonElement, ProductCardProps>(
               {formatPrice(product.price, currency)}
             </Text>
 
-            {product.sizes && product.sizes.length > 1 ? (
+            {product.variants && product.variants.length > 1 ? (
               <Text variant="caption" color="tertiary" className={styles.sizesHint}>
-                {`${product.sizes.length} розм.`}
+                {`${product.variants.length} вар.`}
               </Text>
             ) : showStock && product.stockQuantity !== undefined && !isOutOfStock ? (
               <Text variant="caption" color="tertiary">

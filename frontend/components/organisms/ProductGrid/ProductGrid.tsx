@@ -8,7 +8,7 @@
 
 import { forwardRef, useMemo, useState, useCallback, useRef, type HTMLAttributes } from 'react';
 import { Text, GlassCard, Icon } from '@/components/atoms';
-import { ProductCard, SearchInput, CategoryTabs, SizePicker, type Product, type ProductSize, type Category } from '@/components/molecules';
+import { ProductCard, SearchInput, CategoryTabs, VariantPicker, type Product, type ProductVariant, type Category } from '@/components/molecules';
 import styles from './ProductGrid.module.css';
 
 // ============================================
@@ -17,7 +17,7 @@ import styles from './ProductGrid.module.css';
 
 export interface ProductAddEvent {
   product: Product;
-  size?: ProductSize;
+  size?: ProductVariant;
 }
 
 export interface ProductGridProps extends HTMLAttributes<HTMLDivElement> {
@@ -77,43 +77,43 @@ export const ProductGrid = forwardRef<HTMLDivElement, ProductGridProps>(
     },
     ref
   ) => {
-    // Size picker state
-    const [sizePickerProduct, setSizePickerProduct] = useState<Product | null>(null);
-    const [sizePickerPosition, setSizePickerPosition] = useState<{ top: number; left: number } | null>(null);
+    // Variant picker state
+    const [variantPickerProduct, setVariantPickerProduct] = useState<Product | null>(null);
+    const [variantPickerPosition, setVariantPickerPosition] = useState<{ top: number; left: number } | null>(null);
     const gridRef = useRef<HTMLDivElement>(null);
 
     // Handle product click
     const handleProductClick = useCallback((product: Product, element?: HTMLElement) => {
-      if (product.sizes && product.sizes.length > 0) {
-        // Show size picker
+      if (product.variants && product.variants.length > 0) {
+        // Show variant picker
         if (element && gridRef.current) {
           const gridRect = gridRef.current.getBoundingClientRect();
           const cardRect = element.getBoundingClientRect();
-          setSizePickerPosition({
+          setVariantPickerPosition({
             top: cardRect.bottom - gridRect.top + 8,
             left: cardRect.left - gridRect.left,
           });
         }
-        setSizePickerProduct(product);
+        setVariantPickerProduct(product);
       } else {
-        // No sizes, add directly
+        // No variants, add directly
         onProductAdd?.({ product });
       }
     }, [onProductAdd]);
 
-    // Handle size selection
-    const handleSizeSelect = useCallback((size: ProductSize) => {
-      if (sizePickerProduct) {
-        onProductAdd?.({ product: sizePickerProduct, size });
+    // Handle variant selection
+    const handleVariantSelect = useCallback((variant: ProductVariant) => {
+      if (variantPickerProduct) {
+        onProductAdd?.({ product: variantPickerProduct, size: variant });
       }
-      setSizePickerProduct(null);
-      setSizePickerPosition(null);
-    }, [sizePickerProduct, onProductAdd]);
+      setVariantPickerProduct(null);
+      setVariantPickerPosition(null);
+    }, [variantPickerProduct, onProductAdd]);
 
-    // Close size picker
-    const closeSizePicker = useCallback(() => {
-      setSizePickerProduct(null);
-      setSizePickerPosition(null);
+    // Close variant picker
+    const closeVariantPicker = useCallback(() => {
+      setVariantPickerProduct(null);
+      setVariantPickerPosition(null);
     }, []);
 
     // Filter products
@@ -220,26 +220,26 @@ export const ProductGrid = forwardRef<HTMLDivElement, ProductGridProps>(
                 />
               ))}
 
-              {/* Size Picker */}
-              {sizePickerProduct && sizePickerPosition && (
+              {/* Variant Picker */}
+              {variantPickerProduct && variantPickerPosition && (
                 <>
                   <div
                     className={styles.sizePickerBackdrop}
-                    onClick={closeSizePicker}
+                    onClick={closeVariantPicker}
                   />
                   <div
                     className={styles.sizePickerPositioner}
                     style={{
-                      top: sizePickerPosition.top,
-                      left: sizePickerPosition.left,
+                      top: variantPickerPosition.top,
+                      left: variantPickerPosition.left,
                     }}
                   >
-                    <SizePicker
-                      productName={sizePickerProduct.name}
-                      sizes={sizePickerProduct.sizes || []}
+                    <VariantPicker
+                      productName={variantPickerProduct.name}
+                      variants={variantPickerProduct.variants || []}
                       currency={currency}
-                      onSelect={handleSizeSelect}
-                      onClose={closeSizePicker}
+                      onSelect={handleVariantSelect}
+                      onClose={closeVariantPicker}
                     />
                   </div>
                 </>

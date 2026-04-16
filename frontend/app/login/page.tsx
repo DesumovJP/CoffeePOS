@@ -179,10 +179,6 @@ export default function LoginPage() {
           </form>
         </GlassCard>
 
-        {/* Footer */}
-        <Text variant="caption" color="tertiary" align="center" className={styles.footer}>
-          CoffeePOS &copy; {new Date().getFullYear()}
-        </Text>
       </div>
     </div>
   );

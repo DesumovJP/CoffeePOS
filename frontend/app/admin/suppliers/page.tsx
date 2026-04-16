@@ -237,13 +237,11 @@ function OrderTab() {
 
   const { data: ingredients = [], isLoading: loadingIng } = useIngredients({ pageSize: 200 });
   const { data: suppliers = [], isLoading: loadingSuppliers } = useSuppliers();
-  // Same params as POS/other pages → shared React Query cache → instant on revisit.
-  // Filter recipes client-side: undefined/null/'none'/'simple' all pass through safely.
-  const { data: allProducts = [], isLoading: loadingProducts } = useProducts({ pageSize: 200 });
-  const readyProducts = useMemo(
-    () => allProducts.filter((p) => p.inventoryType !== 'recipe'),
-    [allProducts],
-  );
+  // inventoryType: 'not_recipe' — server-side filter, only physical/purchasable goods
+  const { data: readyProducts = [], isLoading: loadingProducts } = useProducts({
+    pageSize: 200,
+    inventoryType: 'not_recipe',
+  });
 
   // Keep separate loading flags so chips and picker can appear independently
   const isPickerLoading = loadingIng || loadingProducts;
@@ -281,26 +279,19 @@ function OrderTab() {
     [lines],
   );
 
-  // Build unique supplier list from ingredient supplier strings
+  // Build unique supplier list from ingredient→supplier relations
   const availableSuppliers = useMemo(() => {
-    const map = new Map<string, number>(); // name (lower) → ingredient count
+    const map = new Map<string, number>(); // supplier name → ingredient count
     for (const ing of ingredients) {
-      if (!ing.supplier) continue;
-      ing.supplier.split(',').forEach((part) => {
-        const name = part.trim();
-        if (!name) return;
-        const key = name.toLowerCase();
-        map.set(key, (map.get(key) ?? 0) + 1);
-      });
+      if (!ing.suppliers?.length) continue;
+      for (const sup of ing.suppliers) {
+        map.set(sup.name, (map.get(sup.name) ?? 0) + 1);
+      }
     }
-    const entityByLower = new Map(suppliers.map((s) => [s.name.toLowerCase(), s.name]));
     return [...map.entries()]
-      .map(([lower, count]) => ({
-        name: entityByLower.get(lower) ?? lower.replace(/^\w/, (c) => c.toUpperCase()),
-        count,
-      }))
+      .map(([name, count]) => ({ name, count }))
       .sort((a, b) => a.name.localeCompare(b.name, 'uk'));
-  }, [ingredients, suppliers]);
+  }, [ingredients]);
 
   // How many lines in cart belong to each supplier
   const linesBySupplier = useMemo(() => {
@@ -320,7 +311,7 @@ function OrderTab() {
       name: ing.name,
       unit: ing.unit,
       category: ing.category?.name || 'Без категорії',
-      supplier: ing.supplier || '',
+      supplier: ing.suppliers?.map((s) => s.name).join(', ') || '',
       imageUrl: ing.image?.formats?.thumbnail?.url || ing.image?.url,
       costPerUnit: ing.costPerUnit,
       kind: 'ingredient' as const,
@@ -759,7 +750,7 @@ function SuppliersTab() {
     return profiles.map((p) => ({
       ...p,
       ingredientCount: ingredients.filter(
-        (i) => i.supplier?.toLowerCase().includes(p.name.toLowerCase()),
+        (i) => i.suppliers?.some((s) => s.name.toLowerCase() === p.name.toLowerCase()),
       ).length,
     }));
   }, [suppliers, supplies, ingredients]);

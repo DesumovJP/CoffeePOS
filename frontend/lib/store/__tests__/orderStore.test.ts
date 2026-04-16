@@ -24,7 +24,7 @@ function addTestItem(overrides: Partial<{
   productId: string;
   name: string;
   price: number;
-  sizeId: string;
+  variantId: string;
   modifiers: Array<{ id: string; name: string; price: number }>;
   notes: string;
 }> = {}) {
@@ -32,7 +32,7 @@ function addTestItem(overrides: Partial<{
     productId: overrides.productId ?? 'product-1',
     name: overrides.name ?? 'Espresso',
     price: overrides.price ?? 45,
-    sizeId: overrides.sizeId,
+    variantId: overrides.variantId,
     modifiers: overrides.modifiers,
     notes: overrides.notes,
   });

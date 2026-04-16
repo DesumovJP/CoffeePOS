@@ -10,7 +10,7 @@ export * from './OrderItem';
 export * from './SearchInput';
 export * from './CategoryTabs';
 export * from './PriceTag';
-export * from './SizePicker';
+export * from './VariantPicker';
 export * from './PageHeader';
 export * from './FilterTabs';
 export * from './StatsGrid';

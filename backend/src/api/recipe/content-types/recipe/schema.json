@@ -5,7 +5,7 @@
     "singularName": "recipe",
     "pluralName": "recipes",
     "displayName": "Recipe",
-    "description": "Product recipes linking products to ingredients by size"
+    "description": "Product recipes — variant-based ingredient compositions"
   },
   "options": {
     "draftAndPublish": false
@@ -16,17 +16,17 @@
       "relation": "manyToOne",
       "target": "api::product.product"
     },
-    "sizeId": {
+    "variantId": {
       "type": "string",
       "required": true,
       "maxLength": 50
     },
-    "sizeName": {
+    "variantName": {
       "type": "string",
       "required": true,
       "maxLength": 100
     },
-    "sizeVolume": {
+    "variantDescription": {
       "type": "string",
       "maxLength": 50
     },

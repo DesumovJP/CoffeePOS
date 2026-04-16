@@ -57,14 +57,29 @@ export const productsApi = {
       queryParams['filters[isFeatured][$eq]'] = params.isFeatured;
     }
 
-    // inventoryType filter — 'not_recipe' excludes recipe-based products at the API level
-    if (params.inventoryType === 'not_recipe') {
-      queryParams['filters[inventoryType][$ne]'] = 'recipe';
-    } else if (params.inventoryType) {
-      queryParams['filters[inventoryType][$eq]'] = params.inventoryType;
+    // inventoryType filter — 'not_recipe' excludes recipe-based products at the API level.
+    // Uses $or to also include products where inventoryType is null (not yet migrated).
+    // If backend doesn't support the field yet (400), retries without the filter.
+    const inventoryFilter = params.inventoryType;
+    if (inventoryFilter === 'not_recipe') {
+      queryParams['filters[$or][0][inventoryType][$ne]'] = 'recipe';
+      queryParams['filters[$or][1][inventoryType][$null]'] = true;
+    } else if (inventoryFilter) {
+      queryParams['filters[inventoryType][$eq]'] = inventoryFilter;
     }
 
-    return apiClient.get<Product[]>('/products', queryParams);
+    try {
+      return await apiClient.get<Product[]>('/products', queryParams);
+    } catch (err: any) {
+      // Backend doesn't support inventoryType yet — retry without filter
+      if (inventoryFilter && err?.status === 400) {
+        delete queryParams['filters[$or][0][inventoryType][$ne]'];
+        delete queryParams['filters[$or][1][inventoryType][$null]'];
+        delete queryParams['filters[inventoryType][$eq]'];
+        return apiClient.get<Product[]>('/products', queryParams);
+      }
+      throw err;
+    }
   },
 
   /**

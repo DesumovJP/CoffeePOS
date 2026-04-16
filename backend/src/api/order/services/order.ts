@@ -25,11 +25,12 @@ export default factories.createCoreService('api::order.order', ({ strapi }) => (
 
       if (!recipes || recipes.length === 0) continue;
 
-      // Match recipe by sizeId, fall back to isDefault, then first
+      // Match recipe by variantId (legacy: sizeId), fall back to isDefault, then first
       let recipe = recipes.find((r: any) => r.isDefault);
-      if (item.sizeId) {
-        const sized = recipes.find((r: any) => r.sizeId === item.sizeId);
-        if (sized) recipe = sized;
+      const vid = item.variantId || item.sizeId;
+      if (vid) {
+        const matched = recipes.find((r: any) => r.variantId === vid || r.sizeId === vid);
+        if (matched) recipe = matched;
       }
       if (!recipe) recipe = recipes[0];
 

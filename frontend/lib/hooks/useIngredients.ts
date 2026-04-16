@@ -119,9 +119,13 @@ export function useUpdateIngredient() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<IngredientInput> }) =>
       ingredientsApi.update(id, data),
-    onSuccess: (_, { id }) => {
+    onSuccess: (_, { id, data }) => {
       queryClient.invalidateQueries({ queryKey: ingredientKeys.detail(id) });
       queryClient.invalidateQueries({ queryKey: ingredientKeys.lists() });
+      // Cascade: if costPerUnit changed, recipes need recalculation
+      if (data.costPerUnit !== undefined) {
+        queryClient.invalidateQueries({ queryKey: ['recipes'] });
+      }
     },
   });
 }

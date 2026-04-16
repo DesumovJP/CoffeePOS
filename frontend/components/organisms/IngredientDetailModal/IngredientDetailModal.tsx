@@ -70,11 +70,10 @@ export function IngredientDetailModal({ ingredient, onClose, onEdit }: Ingredien
   const totalValue = ingredient.quantity * ingredient.costPerUnit;
   const minStockValue = ingredient.minQuantity * ingredient.costPerUnit;
 
-  // Parse comma-separated suppliers
+  // Get supplier names from relation
   const suppliers = useMemo(() => {
-    if (!ingredient.supplier?.trim()) return [];
-    return ingredient.supplier.split(',').map((s) => s.trim()).filter(Boolean);
-  }, [ingredient.supplier]);
+    return ingredient.suppliers?.map((s) => s.name) || [];
+  }, [ingredient.suppliers]);
 
   const footer = (
     <Button
