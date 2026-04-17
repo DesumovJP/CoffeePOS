@@ -3,7 +3,8 @@
 /**
  * DataTable - Unified data table component
  *
- * Replaces custom tables in Products, Inventory, Reports pages
+ * Desktop: traditional sortable table
+ * Mobile: automatic card list view — each row becomes a card
  */
 
 import { type ReactNode, type CSSProperties } from 'react';
@@ -35,6 +36,8 @@ export interface Column<T> {
    * - 'numeric'  : prices, counts — tabular-nums, semibold, right-aligned
    */
   type?: 'primary' | 'action' | 'meta' | 'numeric';
+  /** Show this column in mobile card view (default: true for primary/numeric, false for action/meta) */
+  showInCard?: boolean;
 }
 
 export interface DataTableProps<T> {
@@ -56,6 +59,8 @@ export interface DataTableProps<T> {
   loading?: boolean;
   /** Row class getter for conditional styling */
   getRowClassName?: (item: T) => string;
+  /** Custom mobile card renderer (overrides auto-generated cards) */
+  renderMobileCard?: (item: T, index: number) => ReactNode;
   /** Additional className */
   className?: string;
 }
@@ -72,6 +77,14 @@ function colClass(col: Column<unknown>): string {
   ].filter(Boolean).join(' ');
 }
 
+/** Determine if a column should show in mobile card view */
+function showInCardView(col: Column<unknown>): boolean {
+  if (col.showInCard !== undefined) return col.showInCard;
+  // Default: show primary and numeric, hide action and meta
+  if (col.type === 'action') return false;
+  return true;
+}
+
 export function DataTable<T>({
   columns,
   data,
@@ -80,6 +93,7 @@ export function DataTable<T>({
   emptyState,
   loading,
   getRowClassName,
+  renderMobileCard,
   className,
 }: DataTableProps<T>) {
   if (loading) {
@@ -113,54 +127,108 @@ export function DataTable<T>({
     );
   }
 
+  // Columns visible in card mode
+  const cardColumns = columns.filter((c) => showInCardView(c as Column<unknown>));
+  const primaryCol = columns.find((c) => c.type === 'primary');
+  const secondaryCardCols = cardColumns.filter((c) => c.key !== primaryCol?.key);
+
   return (
-    <GlassCard padding="none" className={className} elevated>
-      <div className={styles.tableWrapper}>
-        <table className={styles.table}>
-          <colgroup>
-            {columns.map((col) => (
-              <col key={col.key} style={col.width ? { width: col.width } : undefined} />
-            ))}
-          </colgroup>
-          <thead>
-            <tr>
+    <>
+      {/* Desktop/Tablet: Table view */}
+      <GlassCard padding="none" className={`${styles.desktopTable} ${className || ''}`} elevated>
+        <div className={styles.tableWrapper}>
+          <table className={styles.table}>
+            <colgroup>
               {columns.map((col) => (
-                <th
-                  key={col.key}
-                  className={colClass(col as Column<unknown>)}
-                >
-                  {col.header}
-                </th>
+                <col key={col.key} style={col.width ? { width: col.width } : undefined} />
               ))}
-            </tr>
-          </thead>
-          <tbody>
-            {data.map((item, index) => (
-              <tr
-                key={getRowKey(item, index)}
-                className={[
-                  onRowClick ? styles.clickable : '',
-                  getRowClassName ? getRowClassName(item) : '',
-                ].filter(Boolean).join(' ')}
-                onClick={onRowClick ? () => onRowClick(item) : undefined}
-              >
+            </colgroup>
+            <thead>
+              <tr>
                 {columns.map((col) => (
-                  <td
+                  <th
                     key={col.key}
                     className={colClass(col as Column<unknown>)}
-                    style={col.cellStyle}
                   >
-                    {col.render
-                      ? col.render(item, index)
-                      : String((item as Record<string, unknown>)[col.key] ?? '')}
-                  </td>
+                    {col.header}
+                  </th>
                 ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {data.map((item, index) => (
+                <tr
+                  key={getRowKey(item, index)}
+                  className={[
+                    onRowClick ? styles.clickable : '',
+                    getRowClassName ? getRowClassName(item) : '',
+                  ].filter(Boolean).join(' ')}
+                  onClick={onRowClick ? () => onRowClick(item) : undefined}
+                >
+                  {columns.map((col) => (
+                    <td
+                      key={col.key}
+                      className={colClass(col as Column<unknown>)}
+                      style={col.cellStyle}
+                    >
+                      {col.render
+                        ? col.render(item, index)
+                        : String((item as Record<string, unknown>)[col.key] ?? '')}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </GlassCard>
+
+      {/* Mobile: Card list view */}
+      <div className={`${styles.mobileCards} ${className || ''}`}>
+        {data.map((item, index) => (
+          <div
+            key={getRowKey(item, index)}
+            className={`${styles.mobileCard} ${onRowClick ? styles.clickable : ''} ${getRowClassName ? getRowClassName(item) : ''}`}
+            onClick={onRowClick ? () => onRowClick(item) : undefined}
+          >
+            {renderMobileCard ? (
+              renderMobileCard(item, index)
+            ) : (
+              <>
+                {/* Primary field — rendered as-is (includes thumbnail + name) */}
+                {primaryCol && (
+                  <div className={styles.cardTitle}>
+                    {primaryCol.render
+                      ? primaryCol.render(item, index)
+                      : String((item as Record<string, unknown>)[primaryCol.key] ?? '')}
+                  </div>
+                )}
+                {/* Secondary fields as inline row */}
+                {secondaryCardCols.length > 0 && (
+                  <div className={styles.cardFields}>
+                    {secondaryCardCols.map((col) => (
+                      <div key={col.key} className={`${styles.cardField} ${col.type === 'numeric' ? styles.cardFieldNumeric : ''}`}>
+                        <span className={styles.cardFieldValue}>
+                          {col.render
+                            ? col.render(item, index)
+                            : String((item as Record<string, unknown>)[col.key] ?? '')}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+            {/* Chevron indicator for clickable cards */}
+            {onRowClick && (
+              <div className={styles.cardChevron}>
+                <Icon name="chevron-right" size="sm" color="tertiary" />
+              </div>
+            )}
+          </div>
+        ))}
       </div>
-    </GlassCard>
+    </>
   );
 }
 

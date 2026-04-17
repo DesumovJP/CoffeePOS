@@ -19,15 +19,11 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Legend,
 } from 'recharts';
 import { Text, Icon, GlassCard, Spinner, Button, Modal } from '@/components/atoms';
 import { SegmentedControl, ActivityInline, OrderCard } from '@/components/molecules';
 import type { OrderData, SupplyAccordionData, WriteoffAccordionData } from '@/components/molecules';
-import { useDailyReport, useMonthlyReport, useCurrentShift, useShifts } from '@/lib/hooks';
+import { useDailyReport, useMonthlyReport, useShifts } from '@/lib/hooks';
 import type { MonthlyDayData, ShiftActivity } from '@/lib/api';
 import styles from './page.module.css';
 
@@ -75,13 +71,6 @@ function formatNumber(num: number): string {
   return num.toString();
 }
 
-const PAYMENT_COLORS_FALLBACK = ['#30B350', '#007AFF', '#FF9500', '#A0A0A0'];
-const PAYMENT_LABELS: Record<string, string> = {
-  cash: 'Готівка',
-  card: 'Картка',
-  qr: 'QR',
-  other: 'Інше',
-};
 
 const WEEKDAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд'];
 const MONTHS = [
@@ -164,7 +153,6 @@ export default function AnalyticsPage() {
     textSecondary: '#787880',
     gridStroke: 'rgba(0,0,0,0.06)',
     white: '#ffffff',
-    paymentColors: PAYMENT_COLORS_FALLBACK,
   });
 
   useEffect(() => {
@@ -179,12 +167,6 @@ export default function AnalyticsPage() {
       textSecondary: get('--text-secondary') || '#787880',
       gridStroke: get('--glass-border') || 'rgba(0,0,0,0.06)',
       white: get('--color-neutral-0') || '#ffffff',
-      paymentColors: [
-        get('--color-success') || '#30B350',
-        get('--color-info') || '#007AFF',
-        get('--color-warning') || '#FF9500',
-        get('--color-neutral-400') || '#A0A0A0',
-      ],
     });
   }, []);
 
@@ -214,15 +196,10 @@ export default function AnalyticsPage() {
     currentYear,
     currentMonth + 1
   );
-  const { data: currentShift } = useCurrentShift();
-
-  const activeShifts = currentShift && currentShift.status === 'open' ? 1 : 0;
-
   // Monthly KPIs
   const monthRevenue = monthlyReport?.summary?.totalRevenue || 0;
   const monthOrders = monthlyReport?.summary?.totalOrders || 0;
   const monthAvgOrder = monthlyReport?.summary?.avgOrder || 0;
-  const monthRevenueChange = monthlyReport?.summary?.revenueChange || 0;
 
   // Revenue chart — 7d: last 7 days ending today (or end of month), 30d: all days of month
   const revenueChartData = useMemo(() => {
@@ -245,43 +222,10 @@ export default function AnalyticsPage() {
     return days;
   }, [monthlyReport, chartPeriod, currentMonth, currentYear, isCurrentMonthSelected]);
 
-  // Payment pie — aggregated from monthly days (cashSales + cardSales)
-  const paymentPieData = useMemo(() => {
-    if (monthlyReport?.days && monthlyReport.days.length > 0) {
-      const cash = monthlyReport.days.reduce((s, d) => s + (d.cashSales || 0), 0);
-      const card = monthlyReport.days.reduce((s, d) => s + (d.cardSales || 0), 0);
-      const data = [];
-      if (cash > 0) data.push({ name: PAYMENT_LABELS.cash, value: Math.round(cash), key: 'cash' });
-      if (card > 0) data.push({ name: PAYMENT_LABELS.card, value: Math.round(card), key: 'card' });
-      if (data.length > 0) return data;
-    }
-    if (!todayReport?.paymentBreakdown) {
-      return [{ name: 'Немає даних', value: 1, key: 'none' }];
-    }
-    const { cash, card, qr, other } = todayReport.paymentBreakdown;
-    const data = [];
-    if (cash > 0) data.push({ name: PAYMENT_LABELS.cash, value: cash, key: 'cash' });
-    if (card > 0) data.push({ name: PAYMENT_LABELS.card, value: card, key: 'card' });
-    if (qr > 0) data.push({ name: PAYMENT_LABELS.qr, value: qr, key: 'qr' });
-    if (other > 0) data.push({ name: PAYMENT_LABELS.other, value: other, key: 'other' });
-    return data.length > 0 ? data : [{ name: 'Немає даних', value: 1, key: 'none' }];
-  }, [monthlyReport, todayReport]);
-
   // Top products — today's report (monthly topProducts not available from API)
   const topProducts = useMemo(() => {
     return (todayReport?.topProducts || []).slice(0, 5);
   }, [todayReport]);
-
-  // Monthly stats for the "Місяць у цифрах" card
-  const monthlyBestDay = useMemo(() => {
-    if (!monthlyReport?.days || monthlyReport.days.length === 0) return null;
-    return monthlyReport.days.reduce(
-      (best, d) => (d.revenue > (best?.revenue || 0) ? d : best),
-      null as MonthlyDayData | null
-    );
-  }, [monthlyReport]);
-
-  const overviewLoading = isTodayLoading || isMonthlyLoading;
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -536,283 +480,131 @@ export default function AnalyticsPage() {
       {/* =========== OVERVIEW TAB =========== */}
       {activeTab === 'overview' && (
         <>
-          {/* Stats Row — monthly KPIs */}
-          <div className={styles.statsRow}>
-            <GlassCard className={styles.statCard} elevated>
-              <div className={styles.statHeader}>
-                <div className={`${styles.statIconWrap} ${styles.statIconSuccess}`}>
-                  <Icon name="cash" size="sm" color="success" />
+          {/* Summary row: stats (left) + top products (right) */}
+          <div className={styles.summaryRow}>
+            {/* Stats block */}
+            <GlassCard className={styles.summaryStats} elevated>
+              <div className={styles.summaryStatsRow}>
+                <div className={styles.summaryStatsCell}>
+                  <Text variant="caption" color="tertiary">Виручка</Text>
+                  {isMonthlyLoading ? <Spinner size="sm" /> : (
+                    <Text variant="labelLarge" weight="bold" color="success">{'\u20B4'}{formatCurrency(monthRevenue)}</Text>
+                  )}
                 </div>
-                <Text variant="labelSmall" color="tertiary">Виторг за місяць</Text>
-              </div>
-              {isMonthlyLoading ? <Spinner size="sm" /> : (
-                <div className={styles.statValue}>{'\u20B4'}{formatCurrency(monthRevenue)}</div>
-              )}
-            </GlassCard>
-
-            <GlassCard className={styles.statCard} elevated>
-              <div className={styles.statHeader}>
-                <div className={`${styles.statIconWrap} ${styles.statIconAccent}`}>
-                  <Icon name="receipt" size="sm" color="accent" />
-                </div>
-                <Text variant="labelSmall" color="tertiary">Замовлень за місяць</Text>
-              </div>
-              {isMonthlyLoading ? <Spinner size="sm" /> : (
-                <div className={styles.statValue}>{monthOrders}</div>
-              )}
-            </GlassCard>
-
-            <GlassCard className={styles.statCard} elevated>
-              <div className={styles.statHeader}>
-                <div className={`${styles.statIconWrap} ${styles.statIconInfo}`}>
-                  <Icon name="chart" size="sm" color="info" />
-                </div>
-                <Text variant="labelSmall" color="tertiary">Середній чек</Text>
-              </div>
-              {isMonthlyLoading ? <Spinner size="sm" /> : (
-                <div className={styles.statValue}>{'\u20B4'}{formatCurrency(Math.round(monthAvgOrder))}</div>
-              )}
-            </GlassCard>
-
-            <GlassCard className={styles.statCard} elevated>
-              <div className={styles.statHeader}>
-                <div className={`${styles.statIconWrap} ${styles.statIconWarning}`}>
-                  <Icon name="clock" size="sm" color="warning" />
-                </div>
-                <Text variant="labelSmall" color="tertiary">Активних змін</Text>
-              </div>
-              <div className={styles.statValue}>{activeShifts}</div>
-            </GlassCard>
-          </div>
-
-          {/* Charts Row */}
-          <div className={styles.chartsRow}>
-            {/* Revenue chart with 7д/30д toggle */}
-            <GlassCard className={styles.chartSection} elevated>
-              <div className={styles.chartTitleRow}>
-                <div className={styles.chartTitle}>
-                  <Icon name="chart" size="sm" color="accent" />
-                  <Text variant="h5" weight="semibold">Виторг</Text>
-                </div>
-                <div className={styles.periodToggle}>
-                  <button
-                    className={`${styles.periodBtn} ${chartPeriod === '7d' ? styles.periodBtnActive : ''}`}
-                    onClick={() => setChartPeriod('7d')}
-                  >
-                    7д
-                  </button>
-                  <button
-                    className={`${styles.periodBtn} ${chartPeriod === '30d' ? styles.periodBtnActive : ''}`}
-                    onClick={() => setChartPeriod('30d')}
-                  >
-                    30д
-                  </button>
+                <div className={styles.summaryStatsCell}>
+                  <Text variant="caption" color="tertiary">Замовлень</Text>
+                  {isMonthlyLoading ? <Spinner size="sm" /> : (
+                    <Text variant="labelLarge" weight="bold">{monthOrders}</Text>
+                  )}
                 </div>
               </div>
-              <div className={styles.chartContainer}>
-                {isMonthlyLoading ? (
-                  <div className={styles.loadingState}><Spinner size="md" /></div>
-                ) : (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={revenueChartData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
-                      <defs>
-                        <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor={chartColors.brand} stopOpacity={0.25} />
-                          <stop offset="95%" stopColor={chartColors.brand} stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke={chartColors.gridStroke} vertical={false} />
-                      <XAxis dataKey="date" tick={{ fontSize: 12, fill: chartColors.textSecondary }} axisLine={{ stroke: chartColors.gridStroke }} tickLine={false} />
-                      <YAxis width={40} tick={{ fontSize: 11, fill: chartColors.textSecondary }} axisLine={false} tickLine={false} tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v.toString()} />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Area
-                        type="monotone"
-                        dataKey="revenue"
-                        stroke={chartColors.brand}
-                        strokeWidth={2.5}
-                        fill="url(#revenueGrad)"
-                        dot={{ fill: chartColors.brand, strokeWidth: 0, r: 3 }}
-                        activeDot={{ r: 5, fill: chartColors.brand, strokeWidth: 2, stroke: chartColors.white }}
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                )}
+              <div className={styles.summaryStatsRow}>
+                <div className={styles.summaryStatsCell}>
+                  <Text variant="caption" color="tertiary">Сер. чек</Text>
+                  {isMonthlyLoading ? <Spinner size="sm" /> : (
+                    <Text variant="labelLarge" weight="bold">{'\u20B4'}{formatCurrency(Math.round(monthAvgOrder))}</Text>
+                  )}
+                </div>
               </div>
             </GlassCard>
 
-            {/* Payment pie — monthly aggregated */}
-            <GlassCard className={styles.chartSection} elevated>
-              <div className={styles.chartTitle}>
-                <Icon name="card" size="sm" color="info" />
-                <Text variant="h5" weight="semibold">Оплата за місяць</Text>
-              </div>
-              <div className={styles.pieChartContainer}>
-                {isMonthlyLoading ? <Spinner size="md" /> : (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie data={paymentPieData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={3} dataKey="value">
-                        {paymentPieData.map((_entry, index) => (
-                          <Cell key={`cell-${index}`} fill={chartColors.paymentColors[index % chartColors.paymentColors.length]} />
-                        ))}
-                      </Pie>
-                      <Legend formatter={(value: string) => <span className={styles.legendText}>{value}</span>} />
-                      <Tooltip formatter={(value: number | undefined) => [`\u20B4${formatCurrency(value || 0)}`, '']} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                )}
-              </div>
-            </GlassCard>
-          </div>
-
-          {/* Bottom Row: Top Products + Monthly Stats */}
-          <div className={styles.bottomRow}>
-            {/* Top products — today's data (best available without products report API) */}
-            <GlassCard className={styles.tableSection} elevated>
-              <div className={styles.tableTitle}>
-                <Icon name="star" size="sm" color="warning" />
-                <Text variant="h5" weight="semibold">Топ продукти сьогодні</Text>
-              </div>
-              {isTodayLoading ? (
-                <div className={styles.loadingState}><Spinner size="md" /></div>
-              ) : topProducts.length === 0 ? (
-                <div className={styles.emptyState}>
-                  <Icon name="package" size="xl" color="tertiary" />
-                  <Text variant="bodySmall" color="tertiary">Немає даних за сьогодні</Text>
-                </div>
-              ) : (
+            {/* Top products */}
+            {topProducts.length > 0 && (
+              <GlassCard className={styles.topProductsCard} elevated>
                 <table className={styles.productsTable}>
                   <thead>
-                    <tr><th>Назва</th><th>Кількість</th><th>Виторг</th></tr>
+                    <tr>
+                      <th>Топ продукти</th>
+                      <th>Продано</th>
+                      <th>Виторг</th>
+                    </tr>
                   </thead>
                   <tbody>
                     {topProducts.map((product, idx) => (
                       <tr key={product.name}>
                         <td><span className={styles.productRank}>{idx + 1}</span>{product.name}</td>
-                        <td>{product.quantity} шт.</td>
+                        <td>{product.quantity} шт</td>
                         <td>{'\u20B4'}{formatCurrency(product.revenue)}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
-              )}
-            </GlassCard>
+              </GlassCard>
+            )}
+          </div>
 
-            {/* Monthly stats */}
-            <GlassCard className={styles.tableSection} elevated>
-              <div className={styles.tableTitle}>
+          {/* Revenue chart */}
+          <GlassCard className={styles.chartSection} elevated>
+            <div className={styles.chartTitleRow}>
+              <div className={styles.chartTitle}>
                 <Icon name="chart" size="sm" color="accent" />
-                <Text variant="h5" weight="semibold">Місяць у цифрах</Text>
+                <Text variant="h5" weight="semibold">Виторг</Text>
               </div>
+              <div className={styles.periodToggle}>
+                <button
+                  className={`${styles.periodBtn} ${chartPeriod === '7d' ? styles.periodBtnActive : ''}`}
+                  onClick={() => setChartPeriod('7d')}
+                >
+                  7д
+                </button>
+                <button
+                  className={`${styles.periodBtn} ${chartPeriod === '30d' ? styles.periodBtnActive : ''}`}
+                  onClick={() => setChartPeriod('30d')}
+                >
+                  30д
+                </button>
+              </div>
+            </div>
+            <div className={styles.chartContainer}>
               {isMonthlyLoading ? (
                 <div className={styles.loadingState}><Spinner size="md" /></div>
-              ) : !monthlyReport ? (
-                <div className={styles.emptyState}>
-                  <Icon name="chart" size="xl" color="tertiary" />
-                  <Text variant="bodySmall" color="tertiary">Немає даних за обраний місяць</Text>
-                </div>
               ) : (
-                <div className={styles.monthStatsList}>
-                  {/* Best day */}
-                  {monthlyBestDay && (
-                    <div className={styles.monthStatRow}>
-                      <div className={styles.monthStatLeft}>
-                        <span className={`${styles.monthStatDot} ${styles.dotSuccess}`} />
-                        <Text variant="bodySmall" color="secondary">Найкращий день</Text>
-                      </div>
-                      <div className={styles.monthStatRight}>
-                        <Text variant="labelMedium" weight="semibold">
-                          {getShortDate(monthlyBestDay.date)}
-                        </Text>
-                        <Text variant="labelMedium" weight="bold" color="success">
-                          ₴{formatCurrency(monthlyBestDay.revenue)}
-                        </Text>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Avg per day */}
-                  <div className={styles.monthStatRow}>
-                    <div className={styles.monthStatLeft}>
-                      <span className={`${styles.monthStatDot} ${styles.dotInfo}`} />
-                      <Text variant="bodySmall" color="secondary">Середній виторг / день</Text>
-                    </div>
-                    <div className={styles.monthStatRight}>
-                      <Text variant="labelMedium" weight="bold">
-                        ₴{formatCurrency(Math.round(monthRevenue / Math.max(1, (monthlyReport.days || []).filter(d => d.revenue > 0).length)))}
-                      </Text>
-                    </div>
-                  </div>
-
-                  {/* Revenue change vs prev month */}
-                  {monthlyReport.summary?.previousMonthRevenue > 0 && (
-                    <div className={styles.monthStatRow}>
-                      <div className={styles.monthStatLeft}>
-                        <span className={`${styles.monthStatDot} ${monthRevenueChange >= 0 ? styles.dotSuccess : styles.dotError}`} />
-                        <Text variant="bodySmall" color="secondary">До минулого місяця</Text>
-                      </div>
-                      <div className={styles.monthStatRight}>
-                        <Text
-                          variant="labelMedium"
-                          weight="bold"
-                          color={monthRevenueChange >= 0 ? 'success' : 'error'}
-                        >
-                          {monthRevenueChange >= 0 ? '+' : ''}{monthRevenueChange.toFixed(1)}%
-                        </Text>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Total write-offs */}
-                  {(monthlyReport.summary?.totalWriteOffs || 0) > 0 && (
-                    <div className={styles.monthStatRow}>
-                      <div className={styles.monthStatLeft}>
-                        <span className={`${styles.monthStatDot} ${styles.dotWarning}`} />
-                        <Text variant="bodySmall" color="secondary">Списань за місяць</Text>
-                      </div>
-                      <div className={styles.monthStatRight}>
-                        <Text variant="labelMedium" weight="bold" color="warning">
-                          ₴{formatCurrency(monthlyReport.summary.totalWriteOffs)}
-                        </Text>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Total shifts */}
-                  <div className={styles.monthStatRow}>
-                    <div className={styles.monthStatLeft}>
-                      <span className={`${styles.monthStatDot} ${styles.dotNeutral}`} />
-                      <Text variant="bodySmall" color="secondary">Змін відкрито</Text>
-                    </div>
-                    <div className={styles.monthStatRight}>
-                      <Text variant="labelMedium" weight="bold">
-                        {monthlyReport.summary?.totalShifts || 0}
-                      </Text>
-                    </div>
-                  </div>
-                </div>
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={revenueChartData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+                    <defs>
+                      <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={chartColors.brand} stopOpacity={0.25} />
+                        <stop offset="95%" stopColor={chartColors.brand} stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke={chartColors.gridStroke} vertical={false} />
+                    <XAxis dataKey="date" tick={{ fontSize: 12, fill: chartColors.textSecondary }} axisLine={{ stroke: chartColors.gridStroke }} tickLine={false} />
+                    <YAxis width={40} tick={{ fontSize: 11, fill: chartColors.textSecondary }} axisLine={false} tickLine={false} tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v.toString()} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Area
+                      type="monotone"
+                      dataKey="revenue"
+                      stroke={chartColors.brand}
+                      strokeWidth={2.5}
+                      fill="url(#revenueGrad)"
+                      dot={{ fill: chartColors.brand, strokeWidth: 0, r: 3 }}
+                      activeDot={{ r: 5, fill: chartColors.brand, strokeWidth: 2, stroke: chartColors.white }}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
               )}
-            </GlassCard>
-          </div>
+            </div>
+          </GlassCard>
         </>
       )}
 
       {/* =========== CALENDAR TAB =========== */}
       {activeTab === 'calendar' && (
         <>
-          {/* Calendar Header — stats strip like History page */}
-          <div className={styles.calendarHeader}>
-            <div className={styles.calendarStatsStrip}>
-              <div className={styles.calStripItem}>
+          {/* Calendar Header — stats card matching sidebar 2×2 pattern */}
+          <div className={styles.calendarStatsCard}>
+            <div className={styles.statsSidebarGrid}>
+              <div className={styles.statsSidebarCell}>
                 <Text variant="caption" color="tertiary">Виручка</Text>
                 <Text variant="labelLarge" weight="bold" color="success">₴{formatCurrency(Math.round(monthSummary.totalRevenue))}</Text>
               </div>
-              <div className={styles.calStripDivider} />
-              <div className={styles.calStripItem}>
+              <div className={styles.statsSidebarCell}>
                 <Text variant="caption" color="tertiary">Замовлень</Text>
                 <Text variant="labelLarge" weight="bold">{monthSummary.totalOrders}</Text>
               </div>
-              <div className={styles.calStripDivider} />
-              <div className={styles.calStripItem}>
+            </div>
+            <div className={styles.statsSidebarGrid}>
+              <div className={styles.statsSidebarCell}>
                 <Text variant="caption" color="tertiary">Сер. чек</Text>
                 <Text variant="labelLarge" weight="bold">₴{formatCurrency(Math.round(monthSummary.avgOrder))}</Text>
               </div>
@@ -849,13 +641,12 @@ export default function AnalyticsPage() {
                     </div>
                     {hasData && day.isCurrentMonth && (
                       <div className={styles.dayData}>
-                        {/* Primary: revenue + orders count on same line */}
-                        <div className={styles.dayIndicator}>
-                          <span className={`${styles.dayIndicatorDot} ${styles.dotSuccess}`} />
-                          <Text variant="labelSmall" weight="semibold" color="accent" className={styles.dayRevenue}>₴{formatNumber(day.revenue)}</Text>
-                          <Text variant="caption" color="tertiary">{day.ordersCount} зам.</Text>
+                        {/* Revenue + orders — 2-col mini grid */}
+                        <div className={styles.dayStats}>
+                          <Text variant="labelSmall" weight="bold" className={styles.dayRevenue}>₴{formatNumber(day.revenue)}</Text>
+                          <Text variant="caption" color="tertiary" className={styles.dayOrders}>{day.ordersCount} зам.</Text>
                         </div>
-                        {/* Employee initials chips */}
+                        {/* Employee initials */}
                         {day.shiftEmployees.length > 0 && (
                           <div className={styles.dayEmployees}>
                             {day.shiftEmployees.map((name) => (
@@ -865,18 +656,15 @@ export default function AnalyticsPage() {
                             ))}
                           </div>
                         )}
-                        {/* Secondary: supplies only if present */}
-                        {day.suppliesTotal > 0 && (
-                          <div className={styles.dayIndicator}>
-                            <span className={`${styles.dayIndicatorDot} ${styles.dotInfo}`} />
-                            <Text variant="caption" color="tertiary">+₴{formatNumber(day.suppliesTotal)}</Text>
-                          </div>
-                        )}
-                        {/* Tertiary: write-offs only if present */}
-                        {day.writeOffsTotal > 0 && (
-                          <div className={styles.dayIndicator}>
-                            <span className={`${styles.dayIndicatorDot} ${styles.dotError}`} />
-                            <Text variant="labelSmall" weight="semibold" color="error">-₴{formatNumber(day.writeOffsTotal)}</Text>
+                        {/* Secondary indicators */}
+                        {(day.suppliesTotal > 0 || day.writeOffsTotal > 0) && (
+                          <div className={styles.daySecondary}>
+                            {day.suppliesTotal > 0 && (
+                              <Text variant="caption" color="info" className={styles.daySecondaryItem}>+₴{formatNumber(day.suppliesTotal)}</Text>
+                            )}
+                            {day.writeOffsTotal > 0 && (
+                              <Text variant="caption" color="error" className={styles.daySecondaryItem}>-₴{formatNumber(day.writeOffsTotal)}</Text>
+                            )}
                           </div>
                         )}
                       </div>
@@ -951,38 +739,41 @@ export default function AnalyticsPage() {
                             );
                           }
                           const time = new Date(item.createdAt).toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
-                          let iconName: 'truck' | 'delete' = 'truck';
-                          let desc = '';
-                          let amountStr = '';
-                          let amountColor: 'primary' | 'error' = 'primary';
                           if (item.type === 'supply') {
                             const supply = item.data as SupplyAccordionData;
-                            desc = supply.supplierName;
-                            amountStr = `₴${supply.totalCost.toFixed(0)}`;
-                            iconName = 'truck';
-                          } else {
-                            const wo = item.data as WriteoffAccordionData;
-                            const typeLabel: Record<string, string> = { expired: 'Прострочено', damaged: 'Пошкоджено', other: 'Інше' };
-                            desc = typeLabel[wo.type] || wo.type;
-                            amountStr = `-₴${wo.totalCost.toFixed(0)}`;
-                            iconName = 'delete';
-                            amountColor = 'error';
+                            const preview = supply.items.map((i) => i.name).join(', ');
+                            return (
+                              <button key={item.id} className={styles.activityRow} onClick={() => setSelectedDetail(item)}>
+                                <span className={styles.activityRowIcon}>
+                                  <Icon name="truck" size="sm" color="secondary" />
+                                </span>
+                                <div className={styles.activityRowBody}>
+                                  <div className={styles.activityRowMeta}>
+                                    <Text variant="labelSmall" weight="semibold">{time}</Text>
+                                    <Text variant="caption" color="tertiary">{supply.supplierName}</Text>
+                                  </div>
+                                  <Text variant="bodySmall" color="secondary" className={styles.activityRowPreview}>{preview || '—'}</Text>
+                                </div>
+                                <Text variant="labelMedium" weight="bold">₴{formatCurrency(Math.round(supply.totalCost))}</Text>
+                              </button>
+                            );
                           }
+                          const wo = item.data as WriteoffAccordionData;
+                          const typeLabel: Record<string, string> = { expired: 'Прострочено', damaged: 'Пошкоджено', other: 'Інше' };
+                          const woPreview = wo.items.map((i) => i.name).join(', ');
                           return (
-                            <button
-                              key={item.id}
-                              className={styles.activityRow}
-                              onClick={() => setSelectedDetail(item)}
-                            >
-                              <span className={`${styles.activityRowIcon} ${styles[`activityIcon_${item.type}`]}`}>
-                                <Icon name={iconName} size="sm" />
+                            <button key={item.id} className={styles.activityRow} onClick={() => setSelectedDetail(item)}>
+                              <span className={styles.activityRowIcon}>
+                                <Icon name="delete" size="sm" color="error" />
                               </span>
-                              <span className={styles.activityRowBody}>
-                                <Text variant="labelSmall" weight="semibold" className={styles.activityRowTime}>{time}</Text>
-                                <Text variant="caption" color="tertiary" className={styles.activityRowPreview}>{desc}</Text>
-                              </span>
-                              <Text variant="labelMedium" weight="bold" color={amountColor} className={styles.activityRowAmount}>{amountStr}</Text>
-                              <Icon name="chevron-right" size="sm" color="tertiary" />
+                              <div className={styles.activityRowBody}>
+                                <div className={styles.activityRowMeta}>
+                                  <Text variant="labelSmall" weight="semibold">{time}</Text>
+                                  <Text variant="caption" color="tertiary">{typeLabel[wo.type] || wo.type}</Text>
+                                </div>
+                                <Text variant="bodySmall" color="secondary" className={styles.activityRowPreview}>{woPreview || '—'}</Text>
+                              </div>
+                              <Text variant="labelMedium" weight="bold" color="error">-₴{formatCurrency(Math.round(wo.totalCost))}</Text>
                             </button>
                           );
                         })}
@@ -1016,34 +807,26 @@ export default function AnalyticsPage() {
                       </div>
                     )}
 
-                    {/* Stats rows */}
-                    <div className={styles.statsSidebarRow}>
-                      <Text variant="caption" color="tertiary">Виручка</Text>
-                      <Text variant="labelLarge" weight="bold">₴{formatCurrency(Math.round(selectedDayCell.revenue))}</Text>
+                    {/* Stats rows — 2×2 grid pairs */}
+                    <div className={styles.statsSidebarGrid}>
+                      <div className={styles.statsSidebarCell}>
+                        <Text variant="caption" color="tertiary">Виручка</Text>
+                        <Text variant="labelLarge" weight="bold">₴{formatCurrency(Math.round(selectedDayCell.revenue))}</Text>
+                      </div>
+                      <div className={styles.statsSidebarCell}>
+                        <Text variant="caption" color="tertiary">Замовлень</Text>
+                        <Text variant="labelLarge" weight="bold">{dailyOrders.length}</Text>
+                      </div>
                     </div>
-                    <div className={styles.statsSidebarRow}>
-                      <Text variant="caption" color="tertiary">Замовлень</Text>
-                      <Text variant="labelLarge" weight="bold">{dailyOrders.length}</Text>
-                    </div>
-                    <div className={styles.statsSidebarRow}>
-                      <Text variant="caption" color="tertiary">Сер. чек</Text>
-                      <Text variant="labelMedium" weight="semibold">
-                        ₴{dailyOrders.length > 0 ? formatCurrency(Math.round(selectedDayCell.revenue / dailyOrders.length)) : 0}
-                      </Text>
-                    </div>
-                    <div className={styles.statsSidebarRow}>
-                      <div className={styles.statsSidebarRowIcon}>
-                        <Icon name="cash" size="sm" color="tertiary" />
+                    <div className={styles.statsSidebarGrid}>
+                      <div className={styles.statsSidebarCell}>
                         <Text variant="caption" color="tertiary">Готівка</Text>
+                        <Text variant="labelMedium" weight="semibold">₴{formatCurrency(Math.round(selectedDayCell.cashSales))}</Text>
                       </div>
-                      <Text variant="labelMedium" weight="semibold">₴{formatCurrency(Math.round(selectedDayCell.cashSales))}</Text>
-                    </div>
-                    <div className={styles.statsSidebarRow}>
-                      <div className={styles.statsSidebarRowIcon}>
-                        <Icon name="card" size="sm" color="tertiary" />
+                      <div className={styles.statsSidebarCell}>
                         <Text variant="caption" color="tertiary">Картка</Text>
+                        <Text variant="labelMedium" weight="semibold">₴{formatCurrency(Math.round(selectedDayCell.cardSales))}</Text>
                       </div>
-                      <Text variant="labelMedium" weight="semibold">₴{formatCurrency(Math.round(selectedDayCell.cardSales))}</Text>
                     </div>
                     {selectedDayCell.writeOffsTotal > 0 && (
                       <div className={styles.statsSidebarRow}>

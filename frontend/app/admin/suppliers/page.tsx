@@ -8,7 +8,7 @@
  *  - "Постачальники" — manage supplier entities
  */
 
-import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Text, Button, Icon, Badge, Spinner } from '@/components/atoms';
 import { SearchInput, SegmentedControl, QuantityControl } from '@/components/molecules';
 import {
@@ -21,7 +21,6 @@ import {
 import {
   useSupplies,
   useSuppliers,
-  useDeleteSupplier,
   useIngredients,
   useProducts,
 } from '@/lib/hooks';
@@ -233,7 +232,7 @@ function OrderTab() {
   const [activeSupplier, setActiveSupplier] = useState<string | null>(null); // null = all
   const [search, setSearch] = useState('');
   const [invoiceCreatedAt, setInvoiceCreatedAt] = useState<Date | null>(null);
-  const chipsRef = useRef<HTMLDivElement>(null);
+
 
   const { data: ingredients = [], isLoading: loadingIng } = useIngredients({ pageSize: 200 });
   const { data: suppliers = [], isLoading: loadingSuppliers } = useSuppliers();
@@ -455,39 +454,10 @@ function OrderTab() {
 
   return (
     <div className={styles.orderTab}>
-      {/* ── Top bar: supplier chips only ── */}
-      <div className={styles.supplierChipsWrap} ref={chipsRef}>
-        {loadingSuppliers ? (
-          <div className={styles.chipsLoading}><Spinner size="sm" /></div>
-        ) : (
-          <>
-            <button
-              className={`${styles.supplierChip} ${activeSupplier === null ? styles.supplierChipActive : ''}`}
-              onClick={() => setActiveSupplier(null)}
-            >
-              Всі
-            </button>
-            {availableSuppliers.map((s) => {
-              const cartCount = linesBySupplier.get(s.name.toLowerCase()) ?? 0;
-              const isActive = activeSupplier?.toLowerCase() === s.name.toLowerCase();
-              return (
-                <button
-                  key={s.name}
-                  className={`${styles.supplierChip} ${isActive ? styles.supplierChipActive : ''} ${cartCount > 0 ? styles.supplierChipHasItems : ''}`}
-                  onClick={() => setActiveSupplier(isActive ? null : s.name)}
-                >
-                  {s.name}
-                </button>
-              );
-            })}
-          </>
-        )}
-      </div>
-
       {/* ── Split layout ── */}
       <div className={styles.orderLayout}>
 
-        {/* Left: ingredient picker with inline search */}
+        {/* Left: ingredient picker with search + supplier filter */}
         <div className={styles.pickerPanel}>
           <div className={styles.pickerSearchWrap}>
             <SearchInput
@@ -496,6 +466,24 @@ function OrderTab() {
               placeholder="Пошук товару..."
             />
           </div>
+          {availableSuppliers.length > 0 && (
+            <div className={styles.pickerFilterRow}>
+              <div className={styles.selectWrap}>
+                <Icon name="truck" size="xs" className={styles.selectIconLeft} />
+                <select
+                  className={styles.filterSelect}
+                  value={activeSupplier || ''}
+                  onChange={(e) => setActiveSupplier(e.target.value || null)}
+                >
+                  <option value="">Всі постачальники</option>
+                  {availableSuppliers.map((s) => (
+                    <option key={s.name} value={s.name}>{s.name} ({s.count})</option>
+                  ))}
+                </select>
+                <Icon name="chevron-down" size="xs" className={styles.selectIconRight} />
+              </div>
+            </div>
+          )}
           <div className={styles.pickerList}>
             {isPickerLoading ? (
               <div className={styles.pickerLoading}><Spinner size="sm" /></div>
@@ -741,8 +729,6 @@ function SuppliersTab() {
     sort: 'createdAt:desc',
   });
   const { data: ingredients = [] } = useIngredients({ pageSize: 200 });
-  const deleteSupplier = useDeleteSupplier();
-
   const isLoading = loadingSuppliers || loadingSupplies;
 
   const allProfiles = useMemo(() => {
@@ -792,33 +778,22 @@ function SuppliersTab() {
     return () => window.removeEventListener('appshell:action', handleCreate);
   }, [handleCreate]);
 
-  const handleDelete = useCallback(
-    async (supplier: Supplier, e: React.MouseEvent) => {
-      e.stopPropagation();
-      if (!confirm(`Видалити постачальника «${supplier.name}»?`)) return;
-      await deleteSupplier.mutateAsync(supplier.documentId);
-    },
-    [deleteSupplier],
-  );
-
   const columns: Column<SupplierProfile>[] = useMemo(
     () => [
       {
         key: 'name',
-        header: 'Постачальник',
+        header: 'Назва',
+        type: 'primary' as const,
         render: (p) => (
           <div className={styles.nameCell}>
             <div className={styles.supplierAvatar}>
               <Icon name="truck" size="sm" color="secondary" />
             </div>
             <div className={styles.nameInfo}>
-              <Text variant="labelMedium" weight="semibold">{p.name}</Text>
-              {p.supplier?.contactPerson && (
-                <Text variant="bodySmall" color="tertiary">{p.supplier.contactPerson}</Text>
-              )}
-              {p.supplier?.category && !p.supplier?.contactPerson && (
-                <Text variant="bodySmall" color="tertiary">{p.supplier.category}</Text>
-              )}
+              <Text variant="bodyMedium" weight="medium">{p.name}</Text>
+              <Text variant="caption" color="tertiary">
+                {p.supplier?.contactPerson || p.supplier?.category || '—'}
+              </Text>
             </div>
           </div>
         ),
@@ -826,111 +801,47 @@ function SuppliersTab() {
       {
         key: 'contact',
         header: 'Контакт',
-        width: '160px',
+        width: '100px',
         hideOnMobile: true,
+        showInCard: false,
         render: (p) => {
           if (!p.supplier) return <Text variant="bodySmall" color="tertiary">—</Text>;
           const s = p.supplier;
-          if (s.phone)
-            return (
-              <a
-                href={`tel:${s.phone}`}
-                className={styles.contactLink}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <Icon name="phone" size="sm" color="tertiary" />
-                <Text variant="bodySmall">{s.phone}</Text>
-              </a>
-            );
-          if (s.telegram)
-            return (
-              <a
-                href={
-                  s.telegram.startsWith('+') || /^\d/.test(s.telegram)
-                    ? `https://t.me/${s.telegram}`
-                    : `https://t.me/${s.telegram.replace(/^@/, '')}`
-                }
-                target="_blank"
-                rel="noopener noreferrer"
-                className={styles.contactLink}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <Icon name="message-circle" size="sm" color="tertiary" />
-                <Text variant="bodySmall">{s.telegram}</Text>
-              </a>
-            );
-          return <Text variant="bodySmall" color="tertiary">—</Text>;
+          const contact = s.phone || s.telegram || '—';
+          return <Text variant="bodySmall" color="secondary">{contact}</Text>;
         },
       },
       {
         key: 'status',
         header: 'Статус',
-        width: '140px',
+        width: '80px',
         hideOnMobile: true,
+        showInCard: false,
         render: (p) => {
           const active = getActiveStatus(p);
           if (!active) return <Text variant="bodySmall" color="tertiary">—</Text>;
           return (
-            <div className={styles.statusCell}>
-              <Badge variant={STATUS_VARIANTS[active.status]} size="sm">
-                {STATUS_LABELS[active.status]}
-              </Badge>
-              {active.expectedAt && (
-                <Text variant="caption" color="tertiary">{formatDate(active.expectedAt)}</Text>
-              )}
-            </div>
+            <Badge variant={STATUS_VARIANTS[active.status]} size="sm">
+              {STATUS_LABELS[active.status]}
+            </Badge>
           );
         },
       },
       {
         key: 'ingredientCount',
         header: 'Товарів',
-        width: '80px',
         align: 'right',
+        width: '120px',
         hideOnMobile: true,
+        showInCard: false,
         render: (p) => (
           <Text variant="bodySmall" color="secondary">
             {p.ingredientCount ?? 0}
           </Text>
         ),
       },
-      {
-        key: 'actions',
-        header: '',
-        width: '80px',
-        align: 'right',
-        render: (p) => {
-          if (!p.supplier) return null;
-          return (
-            <div className={styles.rowActions}>
-              <Button
-                variant="ghost"
-                size="sm"
-                iconOnly
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setEditSupplier(p.supplier!);
-                }}
-                aria-label="Редагувати"
-              >
-                <Icon name="edit" size="sm" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                iconOnly
-                onClick={(e) => handleDelete(p.supplier!, e)}
-                aria-label="Видалити"
-                className={styles.deleteBtn}
-              >
-                <Icon name="trash" size="sm" />
-              </Button>
-            </div>
-          );
-        },
-      },
     ],
-    [handleDelete],
+    [],
   );
 
   return (

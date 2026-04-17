@@ -11,6 +11,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useRef,
   useState,
   useCallback,
   useMemo,
@@ -59,6 +60,8 @@ export function ThemeProvider({
   const [reduceMotion, setReduceMotionState] = useState<boolean>(false);
   const [highContrast, setHighContrastState] = useState<boolean>(false);
   const [mounted, setMounted] = useState(false);
+  const modeRef = useRef(mode);
+  modeRef.current = mode;
 
   // Resolve actual theme mode (light/dark) from mode setting
   const resolvedMode = useMemo((): 'light' | 'dark' => {
@@ -104,7 +107,7 @@ export function ThemeProvider({
     // Listen for system color scheme changes
     const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleChange = () => {
-      if (mode === 'system') {
+      if (modeRef.current === 'system') {
         // Trigger re-render to update resolvedMode
         setModeState('system');
       }
@@ -114,7 +117,8 @@ export function ThemeProvider({
     return () => {
       darkQuery.removeEventListener('change', handleChange);
     };
-  }, [storageKey, tenantTheme, mode]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storageKey, tenantTheme]);
 
   // Save preferences to localStorage
   useEffect(() => {

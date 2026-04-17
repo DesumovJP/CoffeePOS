@@ -469,32 +469,35 @@ export function SupplierDetailModal({
 
           </div>
 
-          {/* Right: stats sidebar */}
+          {/* Right: stats sidebar — 2×2 grid pattern */}
           <div className={styles.sidebar}>
-            <div className={styles.sidebarSection}>
-              <Text variant="labelSmall" weight="semibold" color="secondary">Статистика</Text>
-              <div className={styles.sidebarRow}>
-                <Text variant="caption" color="tertiary">Всього поставок</Text>
-                <Text variant="labelSmall" weight="semibold">{supplier.totalDeliveries}</Text>
-              </div>
-              <div className={styles.sidebarRow}>
-                <Text variant="caption" color="tertiary">Отримано</Text>
-                <Text variant="labelSmall" weight="semibold" color="success">{supplier.receivedDeliveries}</Text>
-              </div>
-              <div className={styles.sidebarRow}>
-                <Text variant="caption" color="tertiary">Витрачено</Text>
-                <Text variant="labelSmall" weight="semibold">₴{formatCurrency(supplier.totalSpent)}</Text>
-              </div>
-              <div className={styles.sidebarRow}>
-                <Text variant="caption" color="tertiary">Остання поставка</Text>
-                <Text variant="labelSmall" weight="semibold">{formatDate(supplier.lastDeliveryDate)}</Text>
-              </div>
-              {supplier.ingredientCount !== undefined && (
-                <div className={styles.sidebarRow}>
-                  <Text variant="caption" color="tertiary">Товарів</Text>
-                  <Text variant="labelSmall" weight="semibold">{supplier.ingredientCount}</Text>
+            <div className={styles.sidebarCard}>
+              <div className={styles.sidebarGrid}>
+                <div className={styles.sidebarCell}>
+                  <Text variant="caption" color="tertiary">Поставок</Text>
+                  <Text variant="labelLarge" weight="bold">{supplier.totalDeliveries}</Text>
                 </div>
-              )}
+                <div className={styles.sidebarCell}>
+                  <Text variant="caption" color="tertiary">Отримано</Text>
+                  <Text variant="labelLarge" weight="bold" color="success">{supplier.receivedDeliveries}</Text>
+                </div>
+              </div>
+              <div className={styles.sidebarGrid}>
+                <div className={styles.sidebarCell}>
+                  <Text variant="caption" color="tertiary">Витрачено</Text>
+                  <Text variant="labelMedium" weight="semibold">₴{formatCurrency(supplier.totalSpent)}</Text>
+                </div>
+                {supplier.ingredientCount !== undefined && (
+                  <div className={styles.sidebarCell}>
+                    <Text variant="caption" color="tertiary">Товарів</Text>
+                    <Text variant="labelMedium" weight="semibold">{supplier.ingredientCount}</Text>
+                  </div>
+                )}
+              </div>
+              <div className={styles.sidebarSingleRow}>
+                <Text variant="caption" color="tertiary">Остання поставка</Text>
+                <Text variant="labelMedium" weight="semibold">{formatDate(supplier.lastDeliveryDate)}</Text>
+              </div>
             </div>
           </div>
 

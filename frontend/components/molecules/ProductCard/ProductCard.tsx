@@ -3,12 +3,12 @@
 /**
  * CoffeePOS - ProductCard Component
  *
- * Displays a product in the POS grid
- * Supports quick add, out of stock state, and modifiers indicator
+ * Displays a product in the POS grid.
+ * Colorful placeholder when no image, clean layout, tap = add.
  */
 
 import { forwardRef, memo, type HTMLAttributes } from 'react';
-import { Text, Badge, Icon, GlassCard } from '@/components/atoms';
+import { Text, Badge, Icon } from '@/components/atoms';
 import styles from './ProductCard.module.css';
 
 // ============================================
@@ -56,7 +56,7 @@ export interface ProductCardProps extends Omit<HTMLAttributes<HTMLButtonElement>
 // ============================================
 
 function formatPrice(price: number, currency: string): string {
-  return `${currency}${price.toFixed(2)}`;
+  return `${currency}${Math.floor(price)}`;
 }
 
 // ============================================
@@ -100,6 +100,8 @@ export const ProductCard = memo(forwardRef<HTMLButtonElement, ProductCardProps>(
       .filter(Boolean)
       .join(' ');
 
+    const hasImage = !!product.image;
+
     return (
       <button
         ref={ref}
@@ -110,9 +112,9 @@ export const ProductCard = memo(forwardRef<HTMLButtonElement, ProductCardProps>(
         aria-label={`${product.name}, ${formatPrice(product.price, currency)}${isOutOfStock ? ', немає в наявності' : ''}`}
         {...props}
       >
-        {/* Image */}
+        {/* Image or light placeholder */}
         <div className={styles.imageContainer}>
-          {product.image ? (
+          {hasImage ? (
             <img
               src={product.image}
               alt={product.name}
@@ -121,67 +123,28 @@ export const ProductCard = memo(forwardRef<HTMLButtonElement, ProductCardProps>(
             />
           ) : (
             <div className={styles.placeholder}>
-              <Icon name="package" size="xl" color="tertiary" />
+              <span className={styles.initial}>{product.name.charAt(0).toUpperCase()}</span>
             </div>
           )}
 
           {/* Badges */}
-          <div className={styles.badges}>
-            {isOutOfStock && (
-              <Badge variant="error" size="sm">
-                Немає
-              </Badge>
-            )}
-            {isLowStock && !isOutOfStock && (
-              <Badge variant="warning" size="sm">
-                Мало
-              </Badge>
-            )}
-            {product.hasModifiers && !isOutOfStock && (
-              <Badge variant="primary" size="sm" pill>
-                <Icon name="settings" size="xs" />
-              </Badge>
-            )}
-          </div>
-
-          {/* Quick add indicator - inside image */}
-          {!isOutOfStock && (
-            <div className={styles.addIndicator}>
-              <Icon name="plus" size="sm" />
+          {(isOutOfStock || isLowStock) && (
+            <div className={styles.badges}>
+              {isOutOfStock && <Badge variant="error" size="sm">Немає</Badge>}
+              {isLowStock && !isOutOfStock && <Badge variant="warning" size="sm">Мало</Badge>}
             </div>
           )}
         </div>
 
-        {/* Content */}
+        {/* Content — name + price only */}
         <div className={styles.content}>
-          <Text
-            variant="bodyMedium"
-            color="primary"
-            className={styles.name}
-            lineClamp={2}
-          >
-            {product.name}
-          </Text>
-
-          <div className={styles.footer}>
-            <Text
-              variant="labelMedium"
-              color="primary"
-              weight="semibold"
-            >
-              {formatPrice(product.price, currency)}
-            </Text>
-
-            {product.variants && product.variants.length > 1 ? (
-              <Text variant="caption" color="tertiary" className={styles.sizesHint}>
-                {`${product.variants.length} вар.`}
-              </Text>
-            ) : showStock && product.stockQuantity !== undefined && !isOutOfStock ? (
-              <Text variant="caption" color="tertiary">
-                {product.stockQuantity} шт
-              </Text>
-            ) : null}
-          </div>
+          <span className={styles.name}>{product.name}</span>
+          <span className={styles.price}>
+            {formatPrice(product.price, currency)}
+            {product.variants && product.variants.length > 1 && (
+              <span className={styles.hint}> · {product.variants.length} вар.</span>
+            )}
+          </span>
         </div>
       </button>
     );

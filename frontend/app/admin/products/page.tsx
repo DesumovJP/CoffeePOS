@@ -556,10 +556,10 @@ export default function ProductsAdminPage() {
     },
     {
       key: 'price',
-      header: 'Ціна / Собів.',
+      header: 'Ціна',
       type: 'numeric' as const,
       align: 'right',
-      width: '120px',
+      width: '100px',
       render: (product) => (
         <div className={styles.priceCell}>
           <Text variant="labelMedium" weight="semibold">₴{product.price.toFixed(0)}</Text>
@@ -574,8 +574,9 @@ export default function ProductsAdminPage() {
       header: 'Маржа',
       type: 'numeric' as const,
       align: 'right',
-      width: '70px',
+      width: '80px',
       hideOnMobile: true,
+      showInCard: false,
       render: (product) => {
         if (!product.costPrice || product.price <= 0) return <Text variant="caption" color="tertiary">—</Text>;
         const margin = ((product.price - product.costPrice) / product.price) * 100;
@@ -587,8 +588,9 @@ export default function ProductsAdminPage() {
       key: 'stock',
       header: 'Залишок',
       align: 'right',
-      width: '100px',
+      width: '120px',
       hideOnMobile: true,
+      showInCard: false,
       render: (product) => {
         if (!product.trackInventory) return <Text variant="caption" color="tertiary">—</Text>;
         const qty = product.quantity ?? 0;
@@ -606,77 +608,33 @@ export default function ProductsAdminPage() {
       key: 'name',
       header: 'Назва',
       type: 'primary' as const,
-      render: (ingredient) => {
-        const isLowStock = ingredient.quantity <= ingredient.minQuantity;
-        const isOutOfStock = ingredient.quantity <= 0;
-        return (
-          <div className={styles.nameCell}>
-            {ingredient.image?.url ? (
-              <img src={ingredient.image.url} alt={ingredient.name} className={styles.thumbnail} />
-            ) : (
-              <div className={styles.thumbnailPlaceholder}>
-                <Icon name="package" size="sm" color="tertiary" />
-              </div>
-            )}
-            <div className={styles.itemName}>
-              <div className={styles.itemNameRow}>
-                <Text variant="bodyMedium" weight="medium">{ingredient.name}</Text>
-                {isOutOfStock
-                  ? <Badge variant="error" size="sm">Немає</Badge>
-                  : isLowStock
-                  ? <Badge variant="warning" size="sm">Мало</Badge>
-                  : null}
-              </div>
-              <Text variant="caption" color="tertiary">
-                {ingredient.category?.name || ''}
-                {ingredient.suppliers?.length ? ` · ${ingredient.suppliers[0].name}` : ''}
-              </Text>
+      render: (ingredient) => (
+        <div className={styles.nameCell}>
+          {ingredient.image?.url ? (
+            <img src={ingredient.image.url} alt={ingredient.name} className={styles.thumbnail} />
+          ) : (
+            <div className={styles.thumbnailPlaceholder}>
+              <Icon name="package" size="sm" color="tertiary" />
             </div>
+          )}
+          <div className={styles.itemName}>
+            <Text variant="bodyMedium" weight="medium">{ingredient.name}</Text>
+            <Text variant="caption" color="tertiary">
+              {ingredient.category?.name || '—'}
+            </Text>
           </div>
-        );
-      },
-    },
-    {
-      key: 'quantity',
-      header: 'Залишок',
-      width: '160px',
-      render: (ingredient) => {
-        const isLowStock = ingredient.quantity <= ingredient.minQuantity;
-        const isOutOfStock = ingredient.quantity <= 0;
-        const max = (ingredient.minQuantity || 1) * 2;
-        const pct = Math.min(100, (ingredient.quantity / max) * 100);
-        const fillClass = isOutOfStock
-          ? styles.stockBarFillCritical
-          : isLowStock
-          ? styles.stockBarFillLow
-          : styles.stockBarFill;
-        return (
-          <div className={styles.stockCell}>
-            <div className={styles.stockQtyRow}>
-              <Text variant="bodySmall" weight="semibold" color={isOutOfStock ? 'error' : isLowStock ? 'warning' : 'primary'}>
-                {formatQuantity(ingredient.quantity, ingredient.unit)}
-              </Text>
-              <Text variant="caption" color="tertiary">
-                мін {formatQuantity(ingredient.minQuantity, ingredient.unit)}
-              </Text>
-            </div>
-            <div className={styles.stockBar}>
-              <div className={`${styles.stockBarFillBase} ${fillClass}`} style={{ width: `${pct}%` }} />
-            </div>
-          </div>
-        );
-      },
+        </div>
+      ),
     },
     {
       key: 'costPerUnit',
-      header: 'Ціна/од. · Вартість',
+      header: 'Ціна',
       type: 'numeric' as const,
       align: 'right',
-      width: '140px',
-      hideOnMobile: true,
+      width: '100px',
       render: (ingredient) => (
         <div className={styles.priceCell}>
-          <Text variant="labelSmall" weight="semibold">
+          <Text variant="labelMedium" weight="semibold">
             {formatSmartCost(ingredient.costPerUnit, ingredient.unit)}
           </Text>
           <Text variant="caption" color="tertiary">
@@ -684,6 +642,29 @@ export default function ProductsAdminPage() {
           </Text>
         </div>
       ),
+    },
+    {
+      key: 'margin',
+      header: '',
+      width: '80px',
+      hideOnMobile: true,
+      showInCard: false,
+      render: () => null,
+    },
+    {
+      key: 'quantity',
+      header: 'Залишок',
+      align: 'right',
+      width: '120px',
+      hideOnMobile: true,
+      showInCard: false,
+      render: (ingredient) => {
+        const isLowStock = ingredient.quantity <= ingredient.minQuantity;
+        const isOutOfStock = ingredient.quantity <= 0;
+        if (isOutOfStock) return <Badge variant="error" size="sm">Немає</Badge>;
+        if (isLowStock) return <Badge variant="warning" size="sm">{formatQuantity(ingredient.quantity, ingredient.unit)}</Badge>;
+        return <Text variant="bodySmall" color="secondary">{formatQuantity(ingredient.quantity, ingredient.unit)}</Text>;
+      },
     },
   ], []);
 
@@ -782,92 +763,57 @@ export default function ProductsAdminPage() {
         </div>
       )}
 
-      {/* Product category filter chips — products tab only */}
-      {viewMode === 'products' && (
-        <div className={styles.supplierFilter}>
-          {apiCategories && apiCategories.length > 0 && (
-            <>
-              <button
-                className={`${styles.supplierChip} ${!selectedProductCategory ? styles.supplierChipActive : ''}`}
-                onClick={() => setSelectedProductCategory(null)}
-              >
-                Всі
-              </button>
+      {/* Product category filter — dropdown */}
+      {viewMode === 'products' && apiCategories && apiCategories.length > 0 && (
+        <div className={styles.filterRow}>
+          <div className={styles.selectWrap}>
+            <Icon name="filter" size="xs" className={styles.selectIconLeft} />
+            <select
+              className={styles.filterSelect}
+              value={selectedProductCategory || ''}
+              onChange={(e) => setSelectedProductCategory(e.target.value || null)}
+            >
+              <option value="">Всі категорії</option>
               {apiCategories.map((cat) => (
-                <button
-                  key={cat.slug}
-                  className={`${styles.supplierChip} ${selectedProductCategory === cat.slug ? styles.supplierChipActive : ''}`}
-                  onClick={() => setSelectedProductCategory(selectedProductCategory === cat.slug ? null : cat.slug)}
-                  onDoubleClick={() => handleEditCategory(cat)}
-                  title="Подвійний клік — редагувати"
-                >
-                  {cat.name}
-                </button>
+                <option key={cat.slug} value={cat.slug}>{cat.name}</option>
               ))}
-            </>
-          )}
-          <button
-            className={styles.addChip}
-            onClick={() => setCategoryModal({ isOpen: true, category: null })}
-            title="Додати категорію"
-          >
-            <Icon name="plus" size="xs" />
-          </button>
+            </select>
+            <Icon name="chevron-down" size="xs" className={styles.selectIconRight} />
+          </div>
         </div>
       )}
 
-      {/* Ingredient filters — category + supplier */}
+      {/* Ingredient filters — compact dropdown row */}
       {viewMode === 'ingredients' && (
-        <div className={styles.filterGroup}>
-          {/* Category filter */}
-          <div className={styles.supplierFilter}>
-            {apiIngredientCategories && apiIngredientCategories.length > 0 && (
-              <>
-                <button
-                  className={`${styles.supplierChip} ${!selectedIngCategoryFilter ? styles.supplierChipActive : ''}`}
-                  onClick={() => setSelectedIngCategoryFilter(null)}
-                >
-                  Всі категорії
-                </button>
-                {apiIngredientCategories.map((cat) => (
-                  <button
-                    key={cat.slug}
-                    className={`${styles.supplierChip} ${selectedIngCategoryFilter === cat.slug ? styles.supplierChipActive : ''}`}
-                    onClick={() => setSelectedIngCategoryFilter(selectedIngCategoryFilter === cat.slug ? null : cat.slug)}
-                    onDoubleClick={() => handleEditIngCategory(cat)}
-                    title="Подвійний клік — редагувати"
-                  >
-                    {cat.name}
-                  </button>
-                ))}
-              </>
-            )}
-            <button
-              className={styles.addChip}
-              onClick={() => setIngCategoryModal({ isOpen: true, category: null })}
-              title="Додати категорію інгредієнтів"
+        <div className={styles.filterRow}>
+          <div className={styles.selectWrap}>
+            <Icon name="filter" size="xs" className={styles.selectIconLeft} />
+            <select
+              className={styles.filterSelect}
+              value={selectedIngCategoryFilter || ''}
+              onChange={(e) => setSelectedIngCategoryFilter(e.target.value || null)}
             >
-              <Icon name="plus" size="xs" />
-            </button>
-          </div>
-          {/* Supplier filter */}
-          {apiSuppliers.length > 0 && (
-            <div className={styles.supplierFilter}>
-              <button
-                className={`${styles.supplierChip} ${!selectedSupplierFilter ? styles.supplierChipActive : ''}`}
-                onClick={() => setSelectedSupplierFilter(null)}
-              >
-                Всі постачальники
-              </button>
-              {apiSuppliers.map((s) => (
-                <button
-                  key={s.documentId}
-                  className={`${styles.supplierChip} ${selectedSupplierFilter === s.name ? styles.supplierChipActive : ''}`}
-                  onClick={() => setSelectedSupplierFilter(selectedSupplierFilter === s.name ? null : s.name)}
-                >
-                  {s.name}
-                </button>
+              <option value="">Всі категорії</option>
+              {apiIngredientCategories?.map((cat) => (
+                <option key={cat.slug} value={cat.slug}>{cat.name}</option>
               ))}
+            </select>
+            <Icon name="chevron-down" size="xs" className={styles.selectIconRight} />
+          </div>
+          {apiSuppliers.length > 0 && (
+            <div className={styles.selectWrap}>
+              <Icon name="truck" size="xs" className={styles.selectIconLeft} />
+              <select
+                className={styles.filterSelect}
+                value={selectedSupplierFilter || ''}
+                onChange={(e) => setSelectedSupplierFilter(e.target.value || null)}
+              >
+                <option value="">Всі постачальники</option>
+                {apiSuppliers.map((s) => (
+                  <option key={s.documentId} value={s.name}>{s.name}</option>
+                ))}
+              </select>
+              <Icon name="chevron-down" size="xs" className={styles.selectIconRight} />
             </div>
           )}
         </div>

@@ -378,7 +378,7 @@
   align-items: center;
   justify-content: center;
   background: rgba(0, 0, 0, 0.28);
-  color: #fff;
+  color: var(--text-inverse);
   opacity: 0;
   transition: opacity var(--duration-fast);
 }

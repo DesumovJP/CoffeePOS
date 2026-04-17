@@ -252,7 +252,7 @@
 
 /* Gold */
 .rank1 {
-  color: #7a5800;
+  color: var(--color-warning-dark);
   background: linear-gradient(135deg, rgba(255, 215, 0, 0.22) 0%, rgba(212, 175, 55, 0.18) 100%);
   border: 1px solid rgba(212, 175, 55, 0.45);
 }
@@ -266,7 +266,7 @@
 
 /* Bronze */
 .rank3 {
-  color: #7a3f22;
+  color: var(--color-warning);
   background: linear-gradient(135deg, rgba(205, 127, 50, 0.2) 0%, rgba(180, 100, 60, 0.14) 100%);
   border: 1px solid rgba(196, 120, 80, 0.38);
 }

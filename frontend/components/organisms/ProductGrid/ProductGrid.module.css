@@ -1,7 +1,7 @@
 /**
  * ProductGrid Component Styles
  *
- * Pinterest-style responsive product grid
+ * Clean responsive product grid with polished spacing
  */
 
 .container {
@@ -85,43 +85,67 @@
   overflow-y: auto;
   overflow-x: hidden;
   padding: var(--space-4);
+
+  /* Smooth scrolling */
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+
+  /* Custom scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: var(--glass-border) transparent;
+}
+
+.gridWrapper::-webkit-scrollbar {
+  width: 6px;
+}
+
+.gridWrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.gridWrapper::-webkit-scrollbar-thumb {
+  background: var(--glass-border);
+  border-radius: 3px;
+}
+
+.gridWrapper::-webkit-scrollbar-thumb:hover {
+  background: var(--text-disabled);
 }
 
 .grid {
   position: relative;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fill, minmax(var(--pos-card-min-width, 160px), 1fr));
+  gap: var(--pos-gap, var(--space-4));
 }
 
 .compact {
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  --pos-card-min-width: 120px;
   gap: var(--space-2);
 }
 
 /* ============================================
-   LOADING STATE
+   LOADING STATE — skeleton shimmer
    ============================================ */
 
 .loading {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fill, minmax(var(--pos-card-min-width, 160px), 1fr));
+  gap: var(--pos-gap, var(--space-4));
 }
 
 .skeleton {
   aspect-ratio: 3/4;
   background: linear-gradient(
-    90deg,
-    var(--bg-tertiary) 25%,
+    110deg,
+    var(--bg-tertiary) 30%,
     var(--bg-secondary) 50%,
-    var(--bg-tertiary) 75%
+    var(--bg-tertiary) 70%
   );
-  background-size: 200% 100%;
-  border-radius: var(--radius-xl);
-  animation: skeleton 1.5s ease-in-out infinite;
+  background-size: 300% 100%;
+  border-radius: var(--radius-2xl, 1.25rem);
+  animation: skeleton 1.8s ease-in-out infinite;
 }
-
 
 @keyframes skeleton {
   0% { background-position: 200% 0; }
@@ -137,13 +161,13 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--space-3);
-  padding: var(--space-12);
+  gap: var(--space-4);
+  padding: var(--space-16);
   text-align: center;
 }
 
 .empty svg {
-  opacity: 0.2;
+  opacity: 0.15;
 }
 
 /* ============================================
@@ -171,20 +195,20 @@
     padding: var(--space-3);
   }
 
-  .grid {
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  }
-
-  .loading {
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  }
-
   .inlineSearch {
     max-width: none;
   }
 }
 
 @media (max-width: 480px) {
+  .gridWrapper {
+    padding: var(--space-2);
+  }
+
+  .header {
+    padding: var(--space-2);
+  }
+
   .grid {
     grid-template-columns: repeat(2, 1fr);
     gap: var(--space-2);
@@ -208,7 +232,7 @@
     display: block;
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.3);
+    background: rgba(0, 0, 0, 0.4);
     z-index: var(--z-modal);
     animation: fadeIn var(--duration-fast) var(--ease-default);
   }

@@ -5,8 +5,24 @@
 .tableWrapper {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-  /* Clip the row hover accent so it doesn't escape the card border-radius */
   border-radius: inherit;
+
+  /* Thin scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: var(--glass-border) transparent;
+}
+
+.tableWrapper::-webkit-scrollbar {
+  height: 6px;
+}
+
+.tableWrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tableWrapper::-webkit-scrollbar-thumb {
+  background: var(--glass-border);
+  border-radius: 3px;
 }
 
 /* ============================================
@@ -35,11 +51,11 @@
   background: var(--bg-tertiary);
   padding: var(--space-3) var(--space-4);
   text-align: left;
-  font-size: var(--text-xs);
+  font-size: 0.6875rem;
   font-weight: var(--font-semibold);
   color: var(--text-tertiary);
   text-transform: uppercase;
-  letter-spacing: 0.07em;
+  letter-spacing: 0.08em;
   white-space: nowrap;
   user-select: none;
 }
@@ -51,27 +67,30 @@
 .table tbody tr {
   border-bottom: 1px solid var(--glass-border);
   transition:
-    background var(--duration-fast) var(--ease-out),
-    box-shadow var(--duration-fast) var(--ease-out);
+    background 120ms var(--ease-out),
+    box-shadow 120ms var(--ease-out);
 }
 
 .table tbody tr:last-child {
   border-bottom: none;
 }
 
-/* Subtle zebra — barely perceptible, just breaks monotony */
-.table tbody tr:nth-child(even) {
-  background: rgba(0, 0, 0, 0.016);
+/* Row hover — left accent bar + subtle highlight */
+.table tbody tr:hover {
+  background: color-mix(in srgb, var(--color-accent) 4%, transparent);
+  box-shadow: inset 3px 0 0 var(--color-accent);
 }
 
-/* Row hover — left accent bar + elevated glass */
-.table tbody tr:hover {
-  background: var(--glass-bg-elevated);
-  box-shadow: inset 3px 0 0 var(--color-accent);
+:root.dark .table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .table tbody tr.clickable {
   cursor: pointer;
+}
+
+.table tbody tr.clickable:active {
+  background: color-mix(in srgb, var(--color-accent) 8%, transparent);
 }
 
 /* ============================================
@@ -93,12 +112,13 @@
 .table th.primaryCell,
 .table td.primaryCell {
   font-size: var(--text-sm);
+  font-weight: var(--font-medium);
 }
 
 /* Action — edit/delete buttons, revealed on row hover */
 .table td.actionCell {
   opacity: 0;
-  transition: opacity var(--duration-fast) var(--ease-out);
+  transition: opacity 120ms var(--ease-out);
 }
 
 .table tr:hover td.actionCell {
@@ -187,10 +207,103 @@
 }
 
 /* ============================================
+   MOBILE CARD VIEW
+   ============================================ */
+
+.mobileCards {
+  display: none;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3);
+}
+
+.mobileCard {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: var(--glass-bg-elevated);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  position: relative;
+  transition:
+    background 120ms var(--ease-default),
+    transform 80ms var(--ease-default);
+}
+
+.mobileCard.clickable {
+  cursor: pointer;
+}
+
+.mobileCard.clickable:active {
+  background: var(--bg-tertiary);
+  transform: scale(0.98);
+}
+
+.cardTitle {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  line-height: var(--leading-tight);
+  letter-spacing: -0.01em;
+}
+
+.cardFields {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.cardField {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.cardFieldNumeric {
+  font-variant-numeric: tabular-nums;
+}
+
+.cardFieldLabel {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+.cardFieldValue {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  font-weight: var(--font-medium);
+}
+
+.cardFieldNumeric .cardFieldValue {
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+}
+
+.cardChevron {
+  flex-shrink: 0;
+  color: var(--text-disabled);
+}
+
+/* ============================================
    RESPONSIVE VISIBILITY
    ============================================ */
 
+.desktopTable {
+  display: block;
+}
+
 @media (max-width: 768px) {
+  .desktopTable { display: none; }
+  .mobileCards { display: flex; }
+
   .hideOnMobile { display: none; }
 
   .table th,
@@ -198,7 +311,6 @@
     padding: var(--space-2-5) var(--space-3);
   }
 
-  /* Always show action cells on touch devices */
   .table td.actionCell {
     opacity: 1;
   }
@@ -211,6 +323,7 @@
 /* Touch — no hover reveal, always show actions */
 @media (hover: none) and (pointer: coarse) {
   .table td.actionCell { opacity: 1; }
-  .table tbody tr:hover { box-shadow: none; }
+  .table tbody tr:hover { box-shadow: none; background: transparent; }
+  .table tbody tr.clickable:active { background: color-mix(in srgb, var(--color-accent) 6%, transparent); }
   .table td { padding: var(--space-2-5) var(--space-3); }
 }

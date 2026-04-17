@@ -113,6 +113,65 @@
   padding: var(--space-2) var(--space-2) 0;
 }
 
+/* Supplier filter dropdown inside picker */
+.pickerFilterRow {
+  flex-shrink: 0;
+  padding: var(--space-1) var(--space-2) 0;
+}
+
+.selectWrap {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.filterSelect {
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  padding: var(--space-1-5) var(--space-7) var(--space-1-5) calc(var(--space-3) + 1.25rem);
+  background: var(--bg-primary);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-default);
+  -webkit-tap-highlight-color: transparent;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.filterSelect:hover {
+  border-color: var(--glass-border-strong);
+}
+
+.filterSelect:focus {
+  outline: none;
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-brand) 20%, transparent);
+}
+
+.selectIconLeft {
+  position: absolute;
+  left: var(--space-2-5);
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--text-tertiary);
+}
+
+.selectIconRight {
+  position: absolute;
+  right: var(--space-2);
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--text-tertiary);
+}
+
 .pickerList {
   flex: 1;
   overflow-y: auto;
@@ -215,7 +274,7 @@
 .addBtn:hover {
   background: var(--color-brand, var(--color-accent));
   border-color: var(--color-brand, var(--color-accent));
-  color: #fff;
+  color: var(--text-inverse);
 }
 
 .addBtn:active {
@@ -320,7 +379,7 @@
   justify-content: center;
   font-size: var(--text-sm);
   font-weight: var(--font-bold);
-  color: #fff;
+  color: var(--text-inverse);
   flex-shrink: 0;
   letter-spacing: 0.02em;
 }

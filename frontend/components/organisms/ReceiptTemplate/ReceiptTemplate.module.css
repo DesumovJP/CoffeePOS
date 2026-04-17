@@ -184,8 +184,8 @@
     border: none;
     border-radius: 0;
     box-shadow: none;
-    background: white;
-    color: black;
+    background: #fff;
+    color: #000;
     max-width: 80mm;
     padding: 4mm;
     font-size: 11px;

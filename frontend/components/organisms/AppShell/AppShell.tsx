@@ -89,9 +89,9 @@ const pageMeta: Record<string, PageMeta> = {
   '/orders': { title: 'Історія', icon: 'clock', search: true },
   '/admin/dashboard': { title: 'Аналітика', icon: 'chart' },
   '/admin/products': { title: 'Продукція', icon: 'package', search: true, action: { label: 'Додати', icon: 'plus' } },
-  '/admin/recipes': { title: 'Рецепти', icon: 'receipt', search: true, action: { label: 'Додати рецепт', icon: 'plus' } },
+  '/admin/recipes': { title: 'Рецепти', icon: 'receipt', search: true, action: { label: 'Додати', icon: 'plus' } },
   '/admin/employees': { title: 'Працівники', icon: 'user', search: true, action: { label: 'Додати', icon: 'plus' } },
-  '/admin/suppliers': { title: 'Поставки', icon: 'truck', action: { label: 'Додати постачальника', icon: 'plus' } },
+  '/admin/suppliers': { title: 'Поставки', icon: 'truck', action: { label: 'Додати', icon: 'plus' } },
   '/tasks': { title: 'Завдання', icon: 'check', search: true, action: { label: 'Додати', icon: 'plus' } },
   '/profile': { title: 'Профіль', icon: 'user' },
 };
@@ -235,27 +235,15 @@ export function AppShell({ children }: AppShellProps) {
                 </Button>
               )}
               {meta.action && (
-                isDesktop ? (
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    onClick={meta.action.onClick ?? (() => window.dispatchEvent(new CustomEvent('appshell:action')))}
-                    aria-label={meta.action.label}
-                  >
-                    <Icon name={meta.action.icon} size="sm" />
-                    {meta.action.label}
-                  </Button>
-                ) : (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    iconOnly
-                    onClick={meta.action.onClick ?? (() => window.dispatchEvent(new CustomEvent('appshell:action')))}
-                    aria-label={meta.action.label}
-                  >
-                    <Icon name={meta.action.icon} size="md" />
-                  </Button>
-                )
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  iconOnly
+                  onClick={meta.action.onClick ?? (() => window.dispatchEvent(new CustomEvent('appshell:action')))}
+                  aria-label={meta.action.label}
+                >
+                  <Icon name={meta.action.icon} size="md" />
+                </Button>
               )}
               {IS_MOCK && <MockBanner />}
               <NotificationCenter position="right" />
@@ -271,12 +259,17 @@ export function AppShell({ children }: AppShellProps) {
     );
   }
 
-  // Bottom nav items — top 4 most-used pages for quick access
+  // Bottom nav items — role-based, max 5 for iOS tab bar pattern
+  const isAdmin = effectiveRole === 'owner' || effectiveRole === 'manager';
   const bottomNavItems = [
-    { id: 'pos',     label: 'Каса',     icon: 'cart'  as IconName, href: '/pos' },
-    { id: 'orders',  label: 'Історія',  icon: 'clock' as IconName, href: '/orders' },
-    { id: 'tasks',   label: 'Завдання', icon: 'check' as IconName, href: null },
-    { id: 'more',    label: 'Ще',       icon: 'menu'  as IconName, href: null },
+    { id: 'pos',     label: 'Каса',       icon: 'cart'    as IconName, href: '/pos' },
+    { id: 'orders',  label: 'Історія',    icon: 'clock'   as IconName, href: '/orders' },
+    ...(isAdmin ? [
+      { id: 'products', label: 'Продукція', icon: 'package' as IconName, href: '/admin/products' },
+    ] : [
+      { id: 'tasks',  label: 'Завдання',   icon: 'check'   as IconName, href: null as string | null },
+    ]),
+    { id: 'more',    label: 'Ще',         icon: 'menu'    as IconName, href: null as string | null },
   ];
 
   // Mobile: Navbar + Bottom nav + Drawer layout
@@ -334,9 +327,9 @@ export function AppShell({ children }: AppShellProps) {
               type="button"
               className={`${styles.bottomNavItem} ${isActive ? styles.bottomNavActive : ''}`}
               onClick={() => {
-                if (item.id === 'tasks') { setMobileTasksOpen(true); }
-                else if (item.href) { handleNavigation(item.id, item.href); }
-                else { setDrawerOpen(true); }
+                if (item.id === 'tasks') { setMobileTasksOpen(true); return; }
+                if (item.id === 'more') { setDrawerOpen(true); return; }
+                if (item.href) { handleNavigation(item.id, item.href); }
               }}
               aria-label={item.label}
               aria-current={isActive ? 'page' : undefined}

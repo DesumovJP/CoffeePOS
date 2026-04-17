@@ -116,7 +116,7 @@
   align-items: center;
   justify-content: center;
   background: rgba(0, 0, 0, 0.55);
-  color: #fff;
+  color: var(--color-neutral-0);
   border: none;
   border-radius: var(--radius-full);
   font-size: var(--text-sm);

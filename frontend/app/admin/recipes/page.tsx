@@ -138,9 +138,8 @@ export default function RecipesAdminPage() {
   const columns: Column<ApiRecipe>[] = useMemo(() => [
     {
       key: 'name',
-      header: 'Продукт',
+      header: 'Назва',
       type: 'primary' as const,
-      width: '45%',
       render: (recipe) => {
         const imageUrl = productImageMap.get(recipe.product?.id ?? -1);
         return (
@@ -152,32 +151,29 @@ export default function RecipesAdminPage() {
                 <Icon name="receipt" size="sm" color="tertiary" />
               </div>
             )}
-            <Text variant="bodyMedium" weight="medium">{recipe.product?.name || '—'}</Text>
+            <div className={styles.nameInfo}>
+              <Text variant="bodyMedium" weight="medium">{recipe.product?.name || '—'}</Text>
+              <Text variant="caption" color="tertiary">
+                {recipe.variantName}{recipe.variantDescription ? ` · ${recipe.variantDescription}` : ''}
+              </Text>
+            </div>
           </div>
         );
       },
-    },
-    {
-      key: 'size',
-      header: 'Варіант',
-      width: '130px',
-      render: (recipe) => (
-        <div className={styles.sizeCell}>
-          <Text variant="bodySmall" weight="medium">{recipe.variantName}</Text>
-          {recipe.variantDescription && (
-            <Text variant="caption" color="tertiary">{recipe.variantDescription}</Text>
-          )}
-        </div>
-      ),
     },
     {
       key: 'price',
       header: 'Ціна',
       type: 'numeric' as const,
       align: 'right',
-      width: '80px',
+      width: '100px',
       render: (recipe) => (
-        <Text variant="labelMedium" weight="semibold">₴{recipe.price.toFixed(0)}</Text>
+        <div className={styles.priceCell}>
+          <Text variant="labelMedium" weight="semibold">₴{recipe.price.toFixed(0)}</Text>
+          {recipe.costPrice > 0 && (
+            <Text variant="caption" color="tertiary">₴{recipe.costPrice.toFixed(0)}</Text>
+          )}
+        </div>
       ),
     },
     {
@@ -187,6 +183,7 @@ export default function RecipesAdminPage() {
       align: 'right',
       width: '80px',
       hideOnMobile: true,
+      showInCard: false,
       render: (recipe) => {
         if (!recipe.costPrice || recipe.price <= 0) {
           return <Text variant="bodySmall" color="tertiary">—</Text>;
@@ -206,10 +203,12 @@ export default function RecipesAdminPage() {
     {
       key: 'ingredients',
       header: 'Склад',
-      width: '80px',
+      align: 'right',
+      width: '120px',
       hideOnMobile: true,
+      showInCard: false,
       render: (recipe) => (
-        <Badge variant="default" size="sm">{recipe.ingredients.length} інгр.</Badge>
+        <Text variant="bodySmall" color="secondary">{recipe.ingredients.length} інгр.</Text>
       ),
     },
   ], [handleEdit, productImageMap]);
@@ -243,24 +242,23 @@ export default function RecipesAdminPage() {
         </div>
       )}
 
-      {/* Category filter chips */}
+      {/* Category filter — dropdown */}
       {recipeCategories.length > 0 && (
-        <div className={styles.filterChips}>
-          <button
-            className={`${styles.chip} ${!selectedCategory ? styles.chipActive : ''}`}
-            onClick={() => setSelectedCategory(null)}
-          >
-            Всі
-          </button>
-          {recipeCategories.map((cat) => (
-            <button
-              key={cat.slug}
-              className={`${styles.chip} ${selectedCategory === cat.slug ? styles.chipActive : ''}`}
-              onClick={() => setSelectedCategory(selectedCategory === cat.slug ? null : cat.slug)}
+        <div className={styles.filterRow}>
+          <div className={styles.selectWrap}>
+            <Icon name="filter" size="xs" className={styles.selectIconLeft} />
+            <select
+              className={styles.filterSelect}
+              value={selectedCategory || ''}
+              onChange={(e) => setSelectedCategory(e.target.value || null)}
             >
-              {cat.name}
-            </button>
-          ))}
+              <option value="">Всі категорії</option>
+              {recipeCategories.map((cat) => (
+                <option key={cat.slug} value={cat.slug}>{cat.name}</option>
+              ))}
+            </select>
+            <Icon name="chevron-down" size="xs" className={styles.selectIconRight} />
+          </div>
         </div>
       )}
 

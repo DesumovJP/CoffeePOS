@@ -31,7 +31,8 @@
 }
 
 .button:active:not(:disabled) {
-  transform: scale(0.97);
+  transform: scale(0.96);
+  transition-duration: 60ms;
 }
 
 .button:disabled {
@@ -119,6 +120,16 @@
   transform: translateY(-1px);
 }
 
+/* Dark mode overrides for secondary */
+:root.dark .variant-secondary {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+:root.dark .variant-secondary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+}
+
 /* Ghost — Transparent, glass on hover */
 .variant-ghost {
   background-color: transparent;
@@ -128,6 +139,10 @@
 .variant-ghost:hover:not(:disabled) {
   background: rgba(0, 0, 0, 0.04);
   color: var(--text-primary);
+}
+
+:root.dark .variant-ghost:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.06);
 }
 
 /* Danger */

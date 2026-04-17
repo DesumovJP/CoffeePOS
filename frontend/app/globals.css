@@ -269,24 +269,58 @@
   --grid-gutter: 12px;
   --grid-margin: var(--page-padding-mobile);
   --grid-max-width: 1440px;
+
+  /* ----------------------------------------
+     Density Tokens (controlled by preferences)
+     ---------------------------------------- */
+  --density-spacing: var(--space-4);
+  --density-padding: var(--space-3);
+  --density-gap: var(--space-3);
+  --density-card-padding: var(--space-4);
+  --density-row-height: 3rem;
+  --density-font-adjust: 0rem;
+  --density-icon-size: 1.25rem;
+  --density-touch-target: 44px;
+
+  /* ----------------------------------------
+     POS Grid Tokens (controlled by preferences)
+     ---------------------------------------- */
+  --pos-columns: 2;
+  --pos-card-min-width: 140px;
+  --pos-card-aspect: 1.1;
+  --pos-card-image-height: 60%;
+  --pos-gap: var(--density-gap);
+
+  /* ----------------------------------------
+     Font Size Adjustment (controlled by preferences)
+     ---------------------------------------- */
+  --font-size-adjust: 0px;
 }
 
 @media (min-width: 768px) {
   :root {
     --grid-gutter: 16px;
     --grid-margin: var(--page-padding-tablet);
+    --pos-columns: 4;
   }
 }
 @media (min-width: 1024px) {
   :root {
     --grid-gutter: 24px;
     --grid-margin: var(--page-padding-desktop);
+    --pos-columns: 4;
+  }
+}
+@media (min-width: 1280px) {
+  :root {
+    --pos-columns: 5;
   }
 }
 @media (min-width: 1920px) {
   :root {
     --grid-max-width: 1680px;
     --grid-gutter: 28px;
+    --pos-columns: 6;
   }
 }
 @media (min-width: 2560px) {
@@ -294,6 +328,34 @@
     --grid-max-width: 1920px;
     --grid-gutter: 32px;
   }
+}
+
+/* ============================================
+   DENSITY MODES
+   ============================================ */
+
+.density-compact {
+  --density-spacing: var(--space-2);
+  --density-padding: var(--space-2);
+  --density-gap: var(--space-2);
+  --density-card-padding: var(--space-2);
+  --density-row-height: 2.25rem;
+  --density-font-adjust: -0.0625rem;
+  --density-icon-size: 1rem;
+  --density-touch-target: 36px;
+  --pos-gap: var(--space-2);
+}
+
+.density-comfortable {
+  --density-spacing: var(--space-5);
+  --density-padding: var(--space-4);
+  --density-gap: var(--space-4);
+  --density-card-padding: var(--space-5);
+  --density-row-height: 3.5rem;
+  --density-font-adjust: 0.0625rem;
+  --density-icon-size: 1.5rem;
+  --density-touch-target: 52px;
+  --pos-gap: var(--space-4);
 }
 
 /* ============================================
@@ -305,30 +367,80 @@
   color-scheme: dark;
 
   /* Glass Surfaces */
-  --glass-bg: rgba(0, 0, 0, 0.65);
-  --glass-bg-subtle: rgba(0, 0, 0, 0.45);
-  --glass-bg-elevated: rgba(0, 0, 0, 0.78);
-  --glass-border: rgba(255, 255, 255, 0.12);
-  --glass-border-strong: rgba(255, 255, 255, 0.24);
+  --glass-bg: rgba(30, 30, 30, 0.72);
+  --glass-bg-subtle: rgba(30, 30, 30, 0.45);
+  --glass-bg-elevated: rgba(40, 40, 40, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-border-strong: rgba(255, 255, 255, 0.2);
+  --glass-border-inner: rgba(255, 255, 255, 0.06);
+  --glass-border-inner-strong: rgba(255, 255, 255, 0.12);
   --overlay-bg: rgba(0, 0, 0, 0.7);
 
   /* Background */
   --bg-primary: #0A0A0A;
-  --bg-secondary: #171717;
-  --bg-tertiary: #262626;
-  --bg-inverse: #FFFFFF;
+  --bg-secondary: #141414;
+  --bg-tertiary: #1E1E1E;
+  --bg-inverse: #FAFAFA;
 
   /* Text */
-  --text-primary: #FAFAFA;
-  --text-secondary: #D4D4D4;
-  --text-tertiary: #A3A3A3;
-  --text-disabled: #525252;
-  --text-inverse: #171717;
+  --text-primary: #F5F5F5;
+  --text-secondary: #A8A8A8;
+  --text-tertiary: #737373;
+  --text-disabled: #404040;
+  --text-inverse: #0A0A0A;
+
+  /* Accent — lighter for dark bg */
+  --color-accent: #E5E5E5;
+  --color-accent-hover: #FFFFFF;
+  --color-accent-active: #D4D4D4;
+  --color-accent-subtle: rgba(255, 255, 255, 0.08);
+
+  /* Brand — lighter for dark bg */
+  --color-brand: #E5E5E5;
+  --color-brand-hover: #FFFFFF;
+  --color-brand-active: #D4D4D4;
+  --color-brand-subtle: rgba(255, 255, 255, 0.06);
+  --color-brand-bg: rgba(255, 255, 255, 0.04);
+
+  /* Semantic — darker bgs for dark mode */
+  --color-success-bg: rgba(52, 199, 89, 0.15);
+  --color-warning-bg: rgba(255, 149, 0, 0.15);
+  --color-error-bg: rgba(255, 59, 48, 0.15);
+  --color-info-bg: rgba(0, 122, 255, 0.12);
+
+  /* Neutrals flip for dark context */
+  --color-neutral-0: #0A0A0A;
+  --color-neutral-50: #141414;
+  --color-neutral-100: #1E1E1E;
+  --color-neutral-200: #2E2E2E;
+  --color-neutral-300: #404040;
+  --color-neutral-400: #525252;
+  --color-neutral-500: #737373;
+  --color-neutral-600: #A8A8A8;
+  --color-neutral-700: #D4D4D4;
+  --color-neutral-800: #E5E5E5;
+  --color-neutral-900: #F5F5F5;
+  --color-neutral-950: #FAFAFA;
 
   /* Adjusted shadows for dark mode */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.35);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.4);
+  --shadow-2xl: 0 24px 64px rgba(0, 0, 0, 0.5);
   --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.4);
   --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.3);
   --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --shadow-modal: 0 24px 48px rgba(0, 0, 0, 0.5), 0 4px 16px rgba(0, 0, 0, 0.3);
+  --shadow-focus: 0 0 0 3px rgba(255, 255, 255, 0.2);
+
+  /* Selection */
+  --selection-bg: rgba(255, 255, 255, 0.15);
+}
+
+.dark ::selection {
+  background: rgba(255, 255, 255, 0.15);
 }
 
 /* ============================================

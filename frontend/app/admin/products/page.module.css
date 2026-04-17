@@ -119,7 +119,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 /* Category icon in table */
@@ -347,9 +347,17 @@
 /* Size tabs in modal */
 .sizeTabs {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: var(--space-2);
   margin-bottom: var(--space-4);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+
+.sizeTabs::-webkit-scrollbar {
+  display: none;
 }
 
 .sizeTab {
@@ -405,11 +413,80 @@
   flex-shrink: 0;
 }
 
-.supplierFilter {
+/* Compact filter row with dropdowns */
+.filterRow {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
   gap: var(--space-2);
   flex-shrink: 0;
+}
+
+.selectWrap {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.filterSelect {
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  padding: var(--space-2) var(--space-7) var(--space-2) calc(var(--space-3) + 1.25rem);
+  background: var(--bg-primary);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-default);
+  -webkit-tap-highlight-color: transparent;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.filterSelect:hover {
+  border-color: var(--glass-border-strong);
+}
+
+.filterSelect:focus {
+  outline: none;
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-brand) 20%, transparent);
+}
+
+.selectIconLeft {
+  position: absolute;
+  left: var(--space-2-5);
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--text-tertiary);
+}
+
+.selectIconRight {
+  position: absolute;
+  right: var(--space-2);
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--text-tertiary);
+}
+
+.supplierFilter {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: var(--space-2);
+  flex-shrink: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+
+.supplierFilter::-webkit-scrollbar {
+  display: none;
 }
 
 .supplierChip {
@@ -434,13 +511,13 @@
 .supplierChipActive {
   background: var(--color-brand);
   border-color: var(--color-brand);
-  color: #fff;
+  color: var(--text-inverse);
 }
 
 .supplierChipActive:hover {
   background: var(--color-brand);
   opacity: 0.9;
-  color: #fff;
+  color: var(--text-inverse);
 }
 
 .addChip {
@@ -492,6 +569,18 @@
   .page {
     padding: var(--space-4);
     gap: var(--space-4);
+  }
+
+  .thumbnail {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-md);
+  }
+
+  .thumbnailPlaceholder {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-md);
   }
 
   .deleteFooter {

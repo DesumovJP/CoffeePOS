@@ -278,87 +278,86 @@ export default function HistoryPage() {
         </div>
       )}
 
-      {/* Shift context banner */}
-      <div className={`${styles.shiftBanner} ${isStaleShift ? styles.shiftBannerWarn : ''}`}>
-        <Icon
-          name={isStaleShift ? 'warning' : currentShift ? 'check' : 'clock'}
-          size="sm"
-        />
-        <Text variant="bodySmall" weight="medium">
-          {currentShift
-            ? `${isStaleShift ? '⚠ ' : ''}Зміна · ${currentShift.openedBy} · ${formatDateTime(currentShift.openedAt)} · ${formatDuration(shiftDuration)}`
-            : 'Зміна не відкрита — замовлення за сьогодні'}
-        </Text>
-        {isFetching && !isLoading && <span className={styles.fetchingDot} aria-hidden />}
-      </div>
-
-      {/* Stats strip */}
-      <div className={styles.statsStrip}>
-        <div className={styles.statItem}>
-          <Text variant="caption" color="tertiary">Замовлень</Text>
-          <Text variant="labelLarge" weight="bold">{stats.count}</Text>
-        </div>
-        <div className={styles.statDivider} />
-        <div className={styles.statItem}>
-          <Text variant="caption" color="tertiary">Виручка</Text>
-          <Text variant="labelLarge" weight="bold" color="success">
-            ₴{formatCurrency(stats.revenue)}
-          </Text>
-        </div>
-        <div className={styles.statDivider} />
-        <div className={styles.statItem}>
-          <Icon name="cash" size="sm" color="tertiary" />
-          <Text variant="labelMedium" weight="semibold">₴{formatCurrency(stats.cash)}</Text>
-        </div>
-        <div className={styles.statDivider} />
-        <div className={styles.statItem}>
-          <Icon name="card" size="sm" color="tertiary" />
-          <Text variant="labelMedium" weight="semibold">₴{formatCurrency(stats.card)}</Text>
-        </div>
-        {stats.count > 0 && (
-          <>
-            <div className={styles.statDivider} />
-            <div className={styles.statItem}>
-              <Text variant="caption" color="tertiary">Сер. чек</Text>
-              <Text variant="labelMedium" weight="semibold">₴{formatCurrency(stats.avg)}</Text>
-            </div>
-          </>
-        )}
-      </div>
-
-      {/* Orders */}
-      <div className={styles.ordersList}>
-        {isLoading ? (
-          <div className={styles.emptyState}>
-            <Spinner size="md" />
-            <Text variant="bodyMedium" color="secondary">Завантаження...</Text>
+      {/* Two-column body: orders (left) + stats sidebar (right) */}
+      <div className={styles.body}>
+        {/* Order list — left column */}
+        <div className={styles.activityList}>
+          <div className={styles.activityListHeader}>
+            <Text variant="labelMedium" weight="semibold">Замовлення ({filtered.length})</Text>
+            {isFetching && !isLoading && <span className={styles.fetchingDot} aria-hidden />}
           </div>
-        ) : filtered.length === 0 ? (
-          <div className={styles.emptyState}>
-            <Icon name={search ? 'search' : 'clock'} size="2xl" color="tertiary" />
-            <Text variant="bodyLarge" color="secondary">
-              {search ? 'Нічого не знайдено' : 'Замовлень поки немає'}
-            </Text>
-            {!search && (
-              <Text variant="caption" color="tertiary">
-                Замовлення з'являться тут після оплати
+          {isLoading ? (
+            <div className={styles.emptyState}>
+              <Spinner size="md" />
+              <Text variant="bodyMedium" color="secondary">Завантаження...</Text>
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className={styles.emptyState}>
+              <Icon name={search ? 'search' : 'clock'} size="xl" color="tertiary" />
+              <Text variant="bodySmall" color="tertiary">
+                {search ? 'Нічого не знайдено' : 'Замовлення з\'являться тут після оплати'}
               </Text>
+            </div>
+          ) : (
+            <div className={styles.activityItems}>
+              {filtered.map((order, idx) => (
+                <OrderCard
+                  key={order.id}
+                  index={idx + 1}
+                  createdAt={order.createdAt}
+                  orderId={order.id}
+                  items={order.items}
+                  total={calcTotal(order)}
+                  paymentMethod={order.paymentMethod}
+                  onClick={() => setSelected({ order, index: idx + 1 })}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Stats sidebar — right column */}
+        <div className={styles.statsSidebar}>
+          {/* Shift info */}
+          <div className={styles.sidebarShift}>
+            <Text variant="caption" color="tertiary" className={styles.sidebarLabel}>Зміна</Text>
+            {currentShift ? (
+              <div className={styles.sidebarShiftRow}>
+                <Icon name="user" size="sm" color="tertiary" />
+                <div>
+                  <Text variant="bodySmall" weight="semibold">{currentShift.openedBy || '—'}</Text>
+                  <Text variant="caption" color="tertiary">
+                    {formatDateTime(currentShift.openedAt)} · {formatDuration(shiftDuration)}
+                  </Text>
+                </div>
+              </div>
+            ) : (
+              <Text variant="caption" color="tertiary">Не відкрита</Text>
             )}
           </div>
-        ) : (
-          filtered.map((order, idx) => (
-            <OrderCard
-              key={order.id}
-              index={idx + 1}
-              createdAt={order.createdAt}
-              orderId={order.id}
-              items={order.items}
-              total={calcTotal(order)}
-              paymentMethod={order.paymentMethod}
-              onClick={() => setSelected({ order, index: idx + 1 })}
-            />
-          ))
-        )}
+
+          {/* Stats rows — 2×2 grid pairs */}
+          <div className={styles.sidebarGrid}>
+            <div className={styles.sidebarCell}>
+              <Text variant="caption" color="tertiary">Виручка</Text>
+              <Text variant="labelLarge" weight="bold">₴{formatCurrency(stats.revenue)}</Text>
+            </div>
+            <div className={styles.sidebarCell}>
+              <Text variant="caption" color="tertiary">Замовлень</Text>
+              <Text variant="labelLarge" weight="bold">{stats.count}</Text>
+            </div>
+          </div>
+          <div className={styles.sidebarGrid}>
+            <div className={styles.sidebarCell}>
+              <Text variant="caption" color="tertiary">Готівка</Text>
+              <Text variant="labelMedium" weight="semibold">₴{formatCurrency(stats.cash)}</Text>
+            </div>
+            <div className={styles.sidebarCell}>
+              <Text variant="caption" color="tertiary">Картка</Text>
+              <Text variant="labelMedium" weight="semibold">₴{formatCurrency(stats.card)}</Text>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Detail modal */}

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Manrope } from 'next/font/google';
 import { ThemeProvider } from '@/design-system/providers';
+import { PreferencesSync } from '@/design-system/providers/PreferencesSync';
 import { QueryProvider, AuthProvider } from '@/lib/providers';
 import { AppShell, ErrorBoundary } from '@/components';
 import { ToastProvider } from '@/components/atoms/Toast';
@@ -61,25 +62,28 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="uk" className={`light ${manrope.variable}`} suppressHydrationWarning>
+    <html lang="uk" className={manrope.variable} suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
                 try {
-                  var saved = localStorage.getItem('paradise-pos-theme');
-                  if (saved) {
-                    var parsed = JSON.parse(saved);
-                    if (parsed.mode === 'dark' || parsed.mode === 'system') {
-                      parsed.mode = 'light';
-                      localStorage.setItem('paradise-pos-theme', JSON.stringify(parsed));
-                    }
+                  var prefs = localStorage.getItem('paradise-pos-preferences');
+                  var theme = 'system';
+                  var density = 'default';
+                  if (prefs) {
+                    var p = JSON.parse(prefs);
+                    if (p.state) { theme = p.state.theme || 'system'; density = p.state.uiDensity || 'default'; }
                   }
-                  document.documentElement.classList.remove('dark');
-                  document.documentElement.classList.add('light');
-                  document.documentElement.style.colorScheme = 'light';
-                } catch (e) {}
+                  var dark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                  var cl = document.documentElement.classList;
+                  cl.add(dark ? 'dark' : 'light');
+                  cl.add('density-' + density);
+                  document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+                } catch (e) {
+                  document.documentElement.classList.add('light', 'density-default');
+                }
               })();
             `,
           }}
@@ -88,7 +92,8 @@ export default function RootLayout({
       <body>
         <QueryProvider>
           <AuthProvider>
-            <ThemeProvider defaultMode="light">
+            <ThemeProvider defaultMode="system">
+              <PreferencesSync />
               <ToastProvider>
                 <ErrorBoundary>
                   <AppShell>

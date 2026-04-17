@@ -67,11 +67,27 @@
   min-width: 0;
 }
 
+.nameInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
 /* Size cell — stacked sizeName + sizeVolume */
 .sizeCell {
   display: flex;
   flex-direction: column;
   gap: 2px;
+}
+
+/* Price cell: price + cost stacked */
+.priceCell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  font-variant-numeric: tabular-nums;
 }
 
 /* Margin color classes */
@@ -87,43 +103,65 @@
   color: var(--color-error);
 }
 
-/* Category filter chips */
-.filterChips {
+/* Filter row with dropdown */
+.filterRow {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
   gap: var(--space-2);
   flex-shrink: 0;
 }
 
-.chip {
-  padding: var(--space-1-5) var(--space-3);
-  background: var(--glass-bg);
+.selectWrap {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.filterSelect {
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  padding: var(--space-2) var(--space-7) var(--space-2) calc(var(--space-3) + 1.25rem);
+  background: var(--bg-primary);
   border: 1px solid var(--glass-border);
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-lg);
   font-size: var(--text-sm);
   font-weight: var(--font-medium);
-  color: var(--text-secondary);
+  color: var(--text-primary);
   cursor: pointer;
   transition: all var(--duration-fast) var(--ease-default);
-  white-space: nowrap;
   -webkit-tap-highlight-color: transparent;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
-.chip:hover {
-  background: var(--glass-bg-elevated);
-  color: var(--text-primary);
+.filterSelect:hover {
+  border-color: var(--glass-border-strong);
 }
 
-.chipActive {
-  background: var(--color-brand);
+.filterSelect:focus {
+  outline: none;
   border-color: var(--color-brand);
-  color: #fff;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-brand) 20%, transparent);
 }
 
-.chipActive:hover {
-  background: var(--color-brand);
-  opacity: 0.9;
-  color: #fff;
+.selectIconLeft {
+  position: absolute;
+  left: var(--space-2-5);
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--text-tertiary);
+}
+
+.selectIconRight {
+  position: absolute;
+  right: var(--space-2);
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--text-tertiary);
 }
 
 /* Actions cell */
@@ -132,4 +170,22 @@
   align-items: center;
   justify-content: flex-end;
   gap: var(--space-1);
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 768px) {
+  .thumbnail {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-md);
+  }
+
+  .thumbnailPlaceholder {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-md);
+  }
 }
