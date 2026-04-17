@@ -2,7 +2,7 @@
  * AppShell Component Styles
  *
  * Desktop/Tablet: horizontal layout (sidebar + content)
- * Mobile: vertical layout (navbar + content)
+ * Mobile: vertical layout (navbar + content + bottom nav)
  */
 
 /* ============================================
@@ -73,7 +73,6 @@
   height: 100dvh;
   overflow: hidden;
   background: var(--bg-secondary);
-  /* Expose bottom nav height as a CSS variable for child pages */
   --bottom-nav-height: 3.5rem;
 }
 
@@ -89,7 +88,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-2-5) var(--space-3);
   width: 100%;
 }
 
@@ -140,7 +139,6 @@
   backdrop-filter: blur(var(--blur-2xl));
   -webkit-backdrop-filter: blur(var(--blur-2xl));
   border-top: 1px solid var(--glass-border);
-  /* Safe area for iPhone home indicator */
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
@@ -150,30 +148,28 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
-  padding: var(--space-2) var(--space-1);
-  min-height: 3.5rem;
+  gap: 2px;
+  padding: var(--space-1-5) var(--space-1);
+  min-height: 3rem;
   background: none;
   border: none;
   cursor: pointer;
   color: var(--text-tertiary);
-  transition: color var(--duration-fast) var(--ease-default),
-              background var(--duration-fast) var(--ease-default);
+  transition: color 150ms var(--ease-default);
   -webkit-tap-highlight-color: transparent;
 }
 
 .bottomNavItem:active {
-  background: var(--glass-bg-hover, rgba(0,0,0,0.04));
+  opacity: 0.6;
 }
 
 .bottomNavActive {
-  color: var(--color-brand);
+  color: var(--color-accent);
 }
 
 .bottomNavLabel {
-  font-size: 0.6875rem; /* 11px */
+  font-size: 0.625rem;
   font-weight: var(--font-medium);
   line-height: 1;
   white-space: nowrap;
 }
-

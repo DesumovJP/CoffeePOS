@@ -197,23 +197,18 @@ export const NotificationCenter = forwardRef<HTMLDivElement, NotificationCenterP
                       />
                     </div>
                     <div className={styles.itemContent}>
-                      <Text variant="labelSmall" weight="medium" className={styles.itemTitle}>
-                        {notification.title}
-                      </Text>
+                      <div className={styles.itemTop}>
+                        <Text variant="labelSmall" weight="medium" className={styles.itemTitle}>
+                          {notification.title}
+                        </Text>
+                        <Text variant="caption" color="tertiary" className={styles.itemTime}>
+                          {formatTimeAgo(notification.createdAt)}
+                        </Text>
+                      </div>
                       <Text variant="caption" color="secondary" className={styles.itemMessage}>
                         {notification.message}
                       </Text>
-                      <Text variant="caption" color="tertiary" className={styles.itemTime}>
-                        {formatTimeAgo(notification.createdAt)}
-                      </Text>
                     </div>
-                    <button
-                      className={styles.itemClose}
-                      onClick={(e) => handleRemove(e, notification.id)}
-                      aria-label="Видалити"
-                    >
-                      <Icon name="close" size="xs" />
-                    </button>
                   </div>
                 ))
               )}

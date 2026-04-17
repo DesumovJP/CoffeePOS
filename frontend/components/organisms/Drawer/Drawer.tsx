@@ -8,7 +8,7 @@
 
 import { useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Text, Icon, Button, Avatar } from '@/components/atoms';
+import { Text, Icon, Button, Avatar, ThemeToggle } from '@/components/atoms';
 import type { NavGroup, UserInfo } from '@/components/organisms/Sidebar';
 import styles from './Drawer.module.css';
 
@@ -178,38 +178,45 @@ export function Drawer({
           ))}
         </nav>
 
-        {/* Footer — User profile + logout */}
+        {/* Footer — User profile + actions (theme toggle, logout) */}
         {user && (
           <div className={styles.footer}>
-            <button
-              type="button"
-              className={`${styles.userButton} ${activeItemId === 'profile' ? styles.active : ''}`}
-              onClick={() => handleItemClick('profile', '/profile')}
-            >
-              <Avatar
-                fallback={user.name}
-                size="sm"
-                status="online"
-              />
-              <div className={styles.userInfo}>
-                <Text variant="labelMedium" color="primary" truncate>
-                  {user.name}
-                </Text>
-                <Text variant="caption" color="tertiary" truncate>
-                  {user.role}
-                </Text>
-              </div>
-            </button>
-            {onLogout && (
+            <div className={styles.userSection}>
               <button
                 type="button"
-                className={styles.logoutButton}
-                onClick={() => { onClose(); onLogout(); }}
+                className={`${styles.userButton} ${activeItemId === 'profile' ? styles.active : ''}`}
+                onClick={() => handleItemClick('profile', '/profile')}
               >
-                <Icon name="logout" size="sm" color="secondary" />
-                <Text variant="labelSmall" color="secondary">Вийти</Text>
+                <Avatar
+                  fallback={user.name}
+                  size="sm"
+                  status="online"
+                />
+                <div className={styles.userInfo}>
+                  <Text variant="labelMedium" color="primary" truncate>
+                    {user.name}
+                  </Text>
+                  <Text variant="caption" color="tertiary" truncate>
+                    {user.role}
+                  </Text>
+                </div>
               </button>
-            )}
+              <div className={styles.footerActions}>
+                <ThemeToggle variant="compact" />
+                {onLogout && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    iconOnly
+                    onClick={() => { onClose(); onLogout(); }}
+                    aria-label="Вийти"
+                    title="Вийти"
+                  >
+                    <Icon name="logout" size="sm" />
+                  </Button>
+                )}
+              </div>
+            </div>
           </div>
         )}
       </div>

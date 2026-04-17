@@ -7,7 +7,7 @@
  */
 
 import { forwardRef, type ReactNode, type HTMLAttributes } from 'react';
-import { Text, Icon, Avatar, Button, type IconName } from '@/components/atoms';
+import { Text, Icon, Avatar, Button, ThemeToggle, type IconName } from '@/components/atoms';
 import styles from './Sidebar.module.css';
 
 // ============================================
@@ -76,7 +76,7 @@ export const Sidebar = forwardRef<HTMLElement, SidebarProps>(
       collapsed = false,
       activeItemId,
       showBrand = true,
-      brandName = 'CoffeePOS',
+      brandName = 'Меню',
       onNavigate,
       onToggleCollapse,
       onLogout,
@@ -201,7 +201,7 @@ export const Sidebar = forwardRef<HTMLElement, SidebarProps>(
                 <Avatar
                   src={user.avatar}
                   fallback={user.name}
-                  size={collapsed ? 'sm' : 'md'}
+                  size="sm"
                   status="online"
                 />
                 {!collapsed && (
@@ -215,18 +215,30 @@ export const Sidebar = forwardRef<HTMLElement, SidebarProps>(
                   </div>
                 )}
               </button>
-              {onLogout && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  iconOnly
-                  onClick={onLogout}
-                  aria-label="Вийти"
-                  title="Вийти"
-                >
-                  <Icon name="logout" size="sm" />
-                </Button>
+              {!collapsed && (
+                <div className={styles.footerActions}>
+                  <ThemeToggle variant="compact" />
+                  {onLogout && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      iconOnly
+                      onClick={onLogout}
+                      aria-label="Вийти"
+                      title="Вийти"
+                    >
+                      <Icon name="logout" size="sm" />
+                    </Button>
+                  )}
+                </div>
               )}
+            </div>
+          )}
+
+          {/* Theme toggle — collapsed only */}
+          {collapsed && (
+            <div className={styles.themeRow}>
+              <ThemeToggle variant="compact" />
             </div>
           )}
         </div>

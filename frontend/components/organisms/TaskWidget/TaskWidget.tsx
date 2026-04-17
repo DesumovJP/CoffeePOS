@@ -451,38 +451,8 @@ export function TaskWidget({ collapsed = false, defaultOpen = false, onModalClos
           )}
         </button>
 
-        {/* Preview tasks */}
+        {/* Preview tasks or subtle create button */}
         {previewTasks.length === 0 ? (
-          <div className={styles.cardEmptyState}>
-            <Icon name="check" size="md" color="tertiary" />
-            <span className={styles.cardEmptyText}>Немає активних завдань</span>
-          </div>
-        ) : (
-          <div className={styles.cardPreviews}>
-            {previewTasks.map(task => (
-              <button
-                key={task.documentId}
-                type="button"
-                className={`${styles.previewRow} ${styles[`row_${task.priority}`]}`}
-                onClick={() => setModalOpen(true)}
-              >
-                <span className={`${styles.previewDot} ${styles[`dot_${task.priority}`]}`} />
-                <span className={styles.previewTitle}>{task.title}</span>
-                {task.assignedTo && (
-                  <span className={styles.previewAssignee}>
-                    {task.assignedTo.trim().split(/\s+/).slice(0, 2).map((w: string) => w[0]?.toUpperCase() ?? '').join('')}
-                  </span>
-                )}
-                {task.status === 'in_progress' && (
-                  <span className={styles.previewRunning}>●</span>
-                )}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Card footer */}
-        {isAdmin && (
           <div className={styles.cardFooter}>
             <button
               type="button"
@@ -492,6 +462,39 @@ export function TaskWidget({ collapsed = false, defaultOpen = false, onModalClos
               + Нове завдання
             </button>
           </div>
+        ) : (
+          <>
+            <div className={styles.cardPreviews}>
+              {previewTasks.map(task => (
+                <button
+                  key={task.documentId}
+                  type="button"
+                  className={`${styles.previewRow} ${styles[`row_${task.priority}`]}`}
+                  onClick={() => setModalOpen(true)}
+                >
+                  <span className={`${styles.previewDot} ${styles[`dot_${task.priority}`]}`} />
+                  <span className={styles.previewTitle}>{task.title}</span>
+                  {task.assignedTo && (
+                    <span className={styles.previewAssignee}>
+                      {task.assignedTo.trim().split(/\s+/).slice(0, 2).map((w: string) => w[0]?.toUpperCase() ?? '').join('')}
+                    </span>
+                  )}
+                  {task.status === 'in_progress' && (
+                    <span className={styles.previewRunning}>●</span>
+                  )}
+                </button>
+              ))}
+            </div>
+            <div className={styles.cardFooter}>
+              <button
+                type="button"
+                className={styles.footerNewBtn}
+                onClick={openCreate}
+              >
+                + Нове завдання
+              </button>
+            </div>
+          </>
         )}
       </div>
 

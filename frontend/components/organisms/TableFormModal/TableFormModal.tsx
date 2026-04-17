@@ -126,7 +126,6 @@ export function TableFormModal({
       isOpen={isOpen}
       onClose={onClose}
       title={isEditing ? `Редагувати стіл #${table?.number}` : 'Новий стіл'}
-      subtitle="Налаштуйте параметри столу"
       icon="store"
       size="sm"
       footer={footer}

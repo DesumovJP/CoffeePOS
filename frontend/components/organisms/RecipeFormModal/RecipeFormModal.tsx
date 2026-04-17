@@ -261,7 +261,6 @@ export function RecipeFormModal({
       isOpen={isOpen}
       onClose={onClose}
       title={isEditing ? 'Редагувати рецепт' : 'Новий рецепт'}
-      subtitle="Налаштуйте варіант, ціну та інгредієнти"
       icon="menu"
       size="lg"
       footer={footer}

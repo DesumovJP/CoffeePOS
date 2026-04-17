@@ -3,8 +3,7 @@
 /**
  * CoffeePOS - Profile Page
  *
- * Single-scroll employee dashboard: hero + charts + shift history.
- * No tabs — all data visible at once.
+ * Compact employee dashboard: hero (2-col) + preferences + shift history.
  */
 
 import { useState, useMemo, useEffect } from 'react';
@@ -17,12 +16,12 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
-import { Text, Avatar, Badge, GlassCard, Spinner, Icon, Button } from '@/components/atoms';
+import { Text, Avatar, Badge, GlassCard, Spinner, Icon, Button, ThemeToggle } from '@/components/atoms';
 import { DataTable, type Column } from '@/components/organisms';
 import { ShiftCloseModal } from '@/components/organisms/ShiftCloseModal';
 import { useEmployees, useEmployeeStats, useShifts } from '@/lib/hooks';
 import { useAuth } from '@/lib/providers/AuthProvider';
-import { useShiftStore, selectCurrentShift } from '@/lib/store';
+import { useShiftStore, selectCurrentShift, usePreferencesStore, type UIDensity, type FontSizePreference } from '@/lib/store';
 import type { Shift } from '@/lib/api';
 import styles from './page.module.css';
 
@@ -70,6 +69,106 @@ function ChartTooltip({ active, payload, label, valuePrefix = '' }: any) {
       <Text variant="labelSmall" color="tertiary">{label}</Text>
       <Text variant="labelMedium" weight="bold">{valuePrefix}{payload[0].value}</Text>
     </div>
+  );
+}
+
+// ============================================
+// UI PREFERENCES SECTION
+// ============================================
+
+function UIPreferencesSection() {
+  const uiDensity = usePreferencesStore((s) => s.uiDensity);
+  const setUIDensity = usePreferencesStore((s) => s.setUIDensity);
+  const fontSize = usePreferencesStore((s) => s.fontSize);
+  const setFontSize = usePreferencesStore((s) => s.setFontSize);
+  const animationsEnabled = usePreferencesStore((s) => s.animationsEnabled);
+  const setAnimationsEnabled = usePreferencesStore((s) => s.setAnimationsEnabled);
+
+  const densityOptions: { value: UIDensity; label: string }[] = [
+    { value: 'compact', label: 'Компактний' },
+    { value: 'default', label: 'Стандартний' },
+    { value: 'comfortable', label: 'Вільний' },
+  ];
+
+  const fontOptions: { value: FontSizePreference; label: string }[] = [
+    { value: 'small', label: 'Малий' },
+    { value: 'default', label: 'Стандартний' },
+    { value: 'large', label: 'Великий' },
+  ];
+
+  return (
+    <GlassCard className={styles.tableCard}>
+      <div className={styles.tableHeader}>
+        <Text variant="labelLarge" weight="semibold">Налаштування</Text>
+      </div>
+      <div className={styles.prefsGrid}>
+        {/* Theme */}
+        <div className={styles.prefRow}>
+          <div className={styles.prefLabel}>
+            <Icon name="moon" size="sm" color="secondary" />
+            <Text variant="bodyMedium">Тема</Text>
+          </div>
+          <ThemeToggle variant="expanded" />
+        </div>
+
+        {/* Density */}
+        <div className={styles.prefRow}>
+          <div className={styles.prefLabel}>
+            <Icon name="grip" size="sm" color="secondary" />
+            <Text variant="bodyMedium">Щільність</Text>
+          </div>
+          <div className={styles.prefButtons}>
+            {densityOptions.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                className={`${styles.prefBtn} ${uiDensity === opt.value ? styles.prefBtnActive : ''}`}
+                onClick={() => setUIDensity(opt.value)}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Font size */}
+        <div className={styles.prefRow}>
+          <div className={styles.prefLabel}>
+            <Icon name="eye" size="sm" color="secondary" />
+            <Text variant="bodyMedium">Текст</Text>
+          </div>
+          <div className={styles.prefButtons}>
+            {fontOptions.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                className={`${styles.prefBtn} ${fontSize === opt.value ? styles.prefBtnActive : ''}`}
+                onClick={() => setFontSize(opt.value)}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Animations */}
+        <div className={styles.prefRow}>
+          <div className={styles.prefLabel}>
+            <Icon name="sparkle" size="sm" color="secondary" />
+            <Text variant="bodyMedium">Анімації</Text>
+          </div>
+          <button
+            type="button"
+            className={`${styles.toggle} ${animationsEnabled ? styles.toggleOn : ''}`}
+            onClick={() => setAnimationsEnabled(!animationsEnabled)}
+            role="switch"
+            aria-checked={animationsEnabled}
+          >
+            <span className={styles.toggleThumb} />
+          </button>
+        </div>
+      </div>
+    </GlassCard>
   );
 }
 
@@ -225,28 +324,26 @@ export default function ProfilePage() {
     <div className={styles.page}>
 
       {/* ══════════════════════════════════════════════
-          HERO CARD — avatar + identity + key metrics
+          HERO — 2-column: identity left, stats right
           ══════════════════════════════════════════════ */}
-      <GlassCard className={styles.heroCard}>
-
-        {/* Active shift close button */}
-        {currentShift?.status === 'open' && (
-          <div className={styles.heroShiftBar}>
-            <div className={styles.heroShiftInfo}>
-              <Icon name="clock" size="sm" color="success" />
-              <Text variant="labelSmall" weight="semibold" color="success">
-                Зміна відкрита · {currentShift.openedBy}
-              </Text>
+      <div className={styles.heroRow}>
+        {/* Left: identity card */}
+        <GlassCard className={styles.heroCard}>
+          {/* Active shift close button */}
+          {currentShift?.status === 'open' && (
+            <div className={styles.heroShiftBar}>
+              <div className={styles.heroShiftInfo}>
+                <Icon name="clock" size="sm" color="success" />
+                <Text variant="labelSmall" weight="semibold" color="success">
+                  Зміна відкрита
+                </Text>
+              </div>
+              <Button variant="secondary" size="sm" onClick={() => setCloseShiftOpen(true)}>
+                Закрити
+              </Button>
             </div>
-            <Button variant="secondary" size="sm" onClick={() => setCloseShiftOpen(true)}>
-              <Icon name="close" size="sm" />
-              Закрити зміну
-            </Button>
-          </div>
-        )}
+          )}
 
-        {/* Top row: avatar + name | hire info */}
-        <div className={styles.heroTop}>
           <div className={styles.heroIdentity}>
             <Avatar
               src={myEmployee.avatar?.url}
@@ -255,72 +352,65 @@ export default function ProfilePage() {
               status={myEmployee.isActive ? 'online' : 'offline'}
             />
             <div className={styles.heroInfo}>
-              <Text variant="h3" weight="bold">{myEmployee.name}</Text>
+              <Text variant="h4" weight="bold">{myEmployee.name}</Text>
               <div className={styles.heroMeta}>
                 <Badge variant="info" size="sm">{roleLabel}</Badge>
                 {myEmployee.email && (
-                  <Text variant="bodySmall" color="secondary">{myEmployee.email}</Text>
-                )}
-                {myEmployee.phone && (
-                  <Text variant="bodySmall" color="secondary">{myEmployee.phone}</Text>
+                  <Text variant="caption" color="secondary">{myEmployee.email}</Text>
                 )}
               </div>
               {myEmployee.hireDate && (
-                <div className={styles.hireBadge}>
-                  <Icon name="calendar" size="sm" color="tertiary" />
-                  <Text variant="caption" color="tertiary">
-                    {daysSince(myEmployee.hireDate)} днів в команді · з {new Date(myEmployee.hireDate).toLocaleDateString('uk-UA')}
-                  </Text>
-                </div>
+                <Text variant="caption" color="tertiary">
+                  {daysSince(myEmployee.hireDate)} днів в команді
+                </Text>
               )}
             </div>
           </div>
-        </div>
+        </GlassCard>
 
-        {/* Stats strip */}
-        <div className={styles.heroStats}>
-          <div className={styles.heroStat}>
-            <Text variant="h4" weight="bold">{myShifts.length}</Text>
-            <Text variant="caption" color="tertiary">Всього змін</Text>
+        {/* Right: stats sidebar card (2×2 grid) */}
+        <div className={styles.statsCard}>
+          <div className={styles.statsGrid}>
+            <div className={styles.statsCell}>
+              <Text variant="caption" color="tertiary">Змін</Text>
+              <Text variant="labelLarge" weight="bold">{myShifts.length}</Text>
+            </div>
+            <div className={styles.statsCell}>
+              <Text variant="caption" color="tertiary">Годин</Text>
+              <Text variant="labelLarge" weight="bold">{totalHours.toFixed(0)}</Text>
+            </div>
           </div>
-
-          <div className={styles.heroStatDivider} aria-hidden />
-
-          <div className={styles.heroStat}>
-            <Text variant="h4" weight="bold">{totalHours.toFixed(0)}</Text>
-            <Text variant="caption" color="tertiary">Годин роботи</Text>
-          </div>
-
           {empStats && (
             <>
-              <div className={styles.heroStatDivider} aria-hidden />
-              <div className={styles.heroStat}>
-                <Text variant="h4" weight="bold">{empStats.totalOrders}</Text>
-                <Text variant="caption" color="tertiary">Замовлень / міс</Text>
+              <div className={styles.statsGrid}>
+                <div className={styles.statsCell}>
+                  <Text variant="caption" color="tertiary">Замовлень</Text>
+                  <Text variant="labelMedium" weight="semibold">{empStats.totalOrders}</Text>
+                </div>
+                <div className={styles.statsCell}>
+                  <Text variant="caption" color="tertiary">Сер. чек</Text>
+                  <Text variant="labelMedium" weight="semibold">₴{empStats.avgOrderValue}</Text>
+                </div>
               </div>
-
-              <div className={styles.heroStatDivider} aria-hidden />
-              <div className={styles.heroStat}>
-                <Text variant="h4" weight="bold">
-                  ₴{empStats.totalSales.toLocaleString('uk-UA')}
-                </Text>
-                <Text variant="caption" color="tertiary">Продажі / міс</Text>
-              </div>
-
-              <div className={styles.heroStatDivider} aria-hidden />
-              <div className={styles.heroStat}>
-                <Text variant="h4" weight="bold">₴{empStats.avgOrderValue}</Text>
-                <Text variant="caption" color="tertiary">Сер. чек</Text>
+              <div className={styles.statsGrid}>
+                <div className={styles.statsCell}>
+                  <Text variant="caption" color="tertiary">Продажі</Text>
+                  <Text variant="labelMedium" weight="semibold">₴{empStats.totalSales.toLocaleString('uk-UA')}</Text>
+                </div>
+                <div className={styles.statsCell}>
+                  <Text variant="caption" color="tertiary">Період</Text>
+                  <Text variant="labelMedium" weight="semibold">Місяць</Text>
+                </div>
               </div>
             </>
           )}
         </div>
-      </GlassCard>
+      </div>
 
       {/* ══════════════════════════════════════════════
-          CHARTS — sales + hours last 7 days
+          CHART — compact (only if stats available)
           ══════════════════════════════════════════════ */}
-      {empStats && (
+      {empStats && empStats.dailySales?.length > 0 && (
         <GlassCard className={styles.chartCard}>
           <Text variant="labelLarge" weight="semibold">Продажі за 7 днів</Text>
           <div className={styles.chartContainer}>
@@ -355,8 +445,10 @@ export default function ProfilePage() {
       )}
 
       {/* ══════════════════════════════════════════════
-          SHIFT HISTORY TABLE
+          UI PREFERENCES + SHIFT HISTORY
           ══════════════════════════════════════════════ */}
+      <UIPreferencesSection />
+
       <GlassCard className={styles.tableCard}>
         <div className={styles.tableHeader}>
           <Text variant="labelLarge" weight="semibold">Мої зміни</Text>

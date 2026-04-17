@@ -216,7 +216,6 @@ export function ModifierGroupFormModal({
       isOpen={isOpen}
       onClose={onClose}
       title={isEditing ? 'Редагувати групу модифікаторів' : 'Нова група модифікаторів'}
-      subtitle="Налаштуйте опції для продуктів"
       icon="settings"
       size="lg"
       footer={footer}

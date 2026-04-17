@@ -1,7 +1,7 @@
 /**
  * OrderSummary Component Styles
  *
- * Elevated glass cart panel with mobile bottom-sheet behavior
+ * Elevated cart panel — polished, clear hierarchy
  */
 
 .container {
@@ -27,7 +27,8 @@
   width: 40px;
   height: 5px;
   border-radius: 2.5px;
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--text-disabled);
+  opacity: 0.5;
 }
 
 .handleSummary {
@@ -79,11 +80,12 @@
   font-size: var(--text-sm);
   font-weight: var(--font-semibold);
   cursor: pointer;
-  transition: opacity var(--duration-fast) var(--ease-default);
+  transition: opacity 120ms var(--ease-default), transform 120ms var(--ease-default);
 }
 
 .handlePayBtn:active {
-  opacity: 0.8;
+  opacity: 0.85;
+  transform: scale(0.97);
 }
 
 /* ============================================
@@ -107,6 +109,7 @@
 .headerInfo h4 {
   font-size: var(--text-sm);
   font-weight: var(--font-semibold);
+  letter-spacing: -0.01em;
 }
 
 .headerInfo span {
@@ -125,6 +128,25 @@
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+
+  /* Thin scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: var(--glass-border) transparent;
+}
+
+.items::-webkit-scrollbar {
+  width: 4px;
+}
+
+.items::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.items::-webkit-scrollbar-thumb {
+  background: var(--glass-border);
+  border-radius: 2px;
 }
 
 .itemsList {
@@ -146,7 +168,7 @@
 }
 
 .empty svg {
-  opacity: 0.12;
+  opacity: 0.1;
   width: 3.5rem;
   height: 3.5rem;
 }
@@ -164,7 +186,7 @@
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-3);
   padding: var(--space-4);
   border-top: 1px solid var(--glass-border);
   background: var(--bg-secondary);
@@ -214,6 +236,8 @@
   font-size: var(--text-2xl);
   font-weight: var(--font-bold);
   color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
 }
 
 /* Actions */
@@ -228,10 +252,19 @@
 
 .checkoutButton {
   flex: 1;
-  min-height: 3rem;
-  font-size: var(--text-sm);
-  font-weight: var(--font-medium);
+  min-height: 3.25rem;
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
   border-radius: var(--radius-xl);
+  letter-spacing: -0.01em;
+  transition:
+    background 120ms var(--ease-default),
+    transform 120ms var(--ease-default),
+    box-shadow 120ms var(--ease-default);
+}
+
+.checkoutButton:active {
+  transform: scale(0.98);
 }
 
 /* ============================================
@@ -255,6 +288,10 @@
     box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.08);
   }
 
+  :root.dark .container {
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.25);
+  }
+
   .actions {
     flex-direction: column;
   }
@@ -265,21 +302,15 @@
 }
 
 @media (max-width: 480px) {
-  /* Show mobile handle */
-  .mobileHandle {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--space-2);
-    padding: var(--space-3) var(--space-3) var(--space-2);
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    user-select: none;
+  .container {
+    border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+    border: none;
+    box-shadow: none;
   }
 
   /* Compact header */
   .header {
-    padding: var(--space-2) var(--space-3);
+    padding: var(--space-2) var(--space-4);
   }
 
   .headerInfo h4 {
@@ -287,18 +318,14 @@
   }
 
   /* Compact items area */
-  .items {
-    max-height: 35vh;
-  }
-
   .itemsList {
     padding: 0 var(--space-3);
   }
 
   /* Compact footer */
   .footer {
-    padding: var(--space-2) var(--space-3);
-    padding-bottom: calc(var(--space-2) + env(safe-area-inset-bottom, 0px));
+    padding: var(--space-3) var(--space-4);
+    padding-bottom: calc(var(--space-3) + env(safe-area-inset-bottom, 0px));
     gap: var(--space-2);
   }
 
@@ -311,6 +338,6 @@
   }
 
   .checkoutButton {
-    min-height: 2.5rem;
+    min-height: 2.75rem;
   }
 }

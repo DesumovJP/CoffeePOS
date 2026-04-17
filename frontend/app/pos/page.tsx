@@ -6,7 +6,7 @@
  * Main point of sale interface
  */
 
-import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   ProductGrid,
   OrderSummary,
@@ -21,11 +21,13 @@ import {
   type ModifierModalResult,
 } from '@/components';
 import { Icon, Text } from '@/components/atoms';
+import { SegmentedControl } from '@/components/molecules';
 import {
   useOrderStore,
   selectCurrentOrder,
   selectIsPaymentModalOpen,
   useShiftStore,
+  usePreferencesStore,
 } from '@/lib/store';
 import { useProducts, useActiveCategories, useRecipes, useKeyboardShortcuts, type ShortcutConfig } from '@/lib/hooks';
 import type { Product as ApiProduct } from '@/lib/api';
@@ -164,6 +166,95 @@ function transformToModifierProduct(product: ApiProduct): ProductForModifier {
 }
 
 // ============================================
+// POS SETTINGS POPOVER
+// ============================================
+
+function PosSettingsPopover({
+  showShortcuts,
+  setShowShortcuts,
+}: {
+  showShortcuts: boolean;
+  setShowShortcuts: (fn: (v: boolean) => boolean) => void;
+}) {
+  const posGridColumns = usePreferencesStore((s) => s.posGridColumns);
+  const posCardSize = usePreferencesStore((s) => s.posCardSize);
+  const setPosGridColumns = usePreferencesStore((s) => s.setPosGridColumns);
+  const setPosCardSize = usePreferencesStore((s) => s.setPosCardSize);
+
+  return (
+    <div className={styles.shortcutsIndicator}>
+      <button
+        type="button"
+        className={styles.shortcutsButton}
+        onClick={() => setShowShortcuts((v: boolean) => !v)}
+        title="Налаштування"
+        aria-label="Налаштування відображення"
+      >
+        <Icon name="settings" size="sm" color="secondary" />
+      </button>
+      {showShortcuts && (
+        <div className={styles.shortcutsTooltip}>
+          {/* Grid settings */}
+          <Text variant="labelMedium" weight="semibold">Сітка товарів</Text>
+          <div className={styles.settingRow}>
+            <Text variant="bodySmall" color="secondary">Колонки</Text>
+            <div className={styles.columnButtons}>
+              {[null, 2, 3, 4, 5, 6].map((cols) => (
+                <button
+                  key={cols ?? 'auto'}
+                  type="button"
+                  className={`${styles.columnBtn} ${posGridColumns === cols ? styles.columnBtnActive : ''}`}
+                  onClick={() => setPosGridColumns(cols)}
+                >
+                  {cols ?? 'Auto'}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className={styles.settingRow}>
+            <Text variant="bodySmall" color="secondary">Розмір</Text>
+            <div className={styles.columnButtons}>
+              {(['small', 'medium', 'large'] as const).map((size) => (
+                <button
+                  key={size}
+                  type="button"
+                  className={`${styles.columnBtn} ${posCardSize === size ? styles.columnBtnActive : ''}`}
+                  onClick={() => setPosCardSize(size)}
+                >
+                  {size === 'small' ? 'S' : size === 'medium' ? 'M' : 'L'}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Keyboard shortcuts */}
+          <div className={styles.settingDivider} />
+          <Text variant="labelMedium" weight="semibold">Гарячі клавіші</Text>
+          <div className={styles.shortcutsList}>
+            <div className={styles.shortcutItem}>
+              <kbd className={styles.kbd}>Enter</kbd>
+              <Text variant="bodySmall" color="secondary">Оплата</Text>
+            </div>
+            <div className={styles.shortcutItem}>
+              <kbd className={styles.kbd}>Esc</kbd>
+              <Text variant="bodySmall" color="secondary">Закрити</Text>
+            </div>
+            <div className={styles.shortcutItem}>
+              <kbd className={styles.kbd}>F1</kbd>
+              <Text variant="bodySmall" color="secondary">Пошук</Text>
+            </div>
+            <div className={styles.shortcutItem}>
+              <kbd className={styles.kbd}>Del</kbd>
+              <Text variant="bodySmall" color="secondary">Очистити</Text>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================
 // COMPONENT
 // ============================================
 
@@ -266,23 +357,12 @@ export default function POSPage() {
     return parts[parts.length - 1] || '---';
   }, [currentOrder]);
 
-  // Mobile cart drawer (collapsed/expanded)
-  const [cartExpanded, setCartExpanded] = useState(false);
-  const cartTouchStartY = useRef(0);
+  // Mobile cart drawer (side panel)
+  const [cartDrawerOpen, setCartDrawerOpen] = useState(false);
 
   useEffect(() => {
-    if (orderItems.length === 0) setCartExpanded(false);
+    if (orderItems.length === 0) setCartDrawerOpen(false);
   }, [orderItems.length]);
-
-  const handleCartTouchStart = useCallback((e: React.TouchEvent) => {
-    cartTouchStartY.current = e.touches[0].clientY;
-  }, []);
-
-  const handleCartTouchEnd = useCallback((e: React.TouchEvent) => {
-    const deltaY = e.changedTouches[0].clientY - cartTouchStartY.current;
-    if (deltaY > 40) setCartExpanded(false);
-    if (deltaY < -40) setCartExpanded(true);
-  }, []);
 
   // Handlers
   const handleProductAdd = useCallback(async (event: ProductAddEvent) => {
@@ -470,55 +550,16 @@ export default function POSPage() {
               mobileSearchOpen={mobileSearchOpen}
               onMobileSearchClose={() => setMobileSearchOpen(false)}
               headerExtra={
-                <div className={styles.shortcutsIndicator}>
-                  <button
-                    type="button"
-                    className={styles.shortcutsButton}
-                    onClick={() => setShowShortcuts((v) => !v)}
-                    title="Гарячі клавіші"
-                    aria-label="Показати гарячі клавіші"
-                  >
-                    <Icon name="settings" size="sm" color="secondary" />
-                  </button>
-                  {showShortcuts && (
-                    <div className={styles.shortcutsTooltip}>
-                      <Text variant="labelMedium" weight="semibold">Гарячі клавіші</Text>
-                      <div className={styles.shortcutsList}>
-                        <div className={styles.shortcutItem}>
-                          <kbd className={styles.kbd}>Enter</kbd>
-                          <Text variant="bodySmall" color="secondary">Відкрити оплату</Text>
-                        </div>
-                        <div className={styles.shortcutItem}>
-                          <kbd className={styles.kbd}>Esc</kbd>
-                          <Text variant="bodySmall" color="secondary">Закрити / Очистити</Text>
-                        </div>
-                        <div className={styles.shortcutItem}>
-                          <kbd className={styles.kbd}>F1</kbd>
-                          <Text variant="bodySmall" color="secondary">Фокус на пошук</Text>
-                        </div>
-                        <div className={styles.shortcutItem}>
-                          <kbd className={styles.kbd}>Del</kbd>
-                          <Text variant="bodySmall" color="secondary">Очистити кошик</Text>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
+                <PosSettingsPopover showShortcuts={showShortcuts} setShowShortcuts={setShowShortcuts} />
               }
             />
           </div>
 
-          {/* Order summary */}
-          <div
-            className={`${styles.order} ${orderItems.length === 0 ? styles.orderEmpty : !cartExpanded ? styles.orderCollapsed : ''}`}
-            onTouchStart={handleCartTouchStart}
-            onTouchEnd={handleCartTouchEnd}
-          >
+          {/* Order summary — desktop/tablet inline panel */}
+          <div className={styles.order}>
             <OrderSummary
               items={orderItems}
               orderNumber={orderNumber}
-              collapsed={!cartExpanded}
-              onToggle={() => setCartExpanded((v) => !v)}
               onQuantityChange={handleQuantityChange}
               onRemoveItem={handleRemoveItem}
               onClear={handleClearOrder}
@@ -527,6 +568,38 @@ export default function POSPage() {
             />
           </div>
         </main>
+
+        {/* Mobile: cart FAB + side drawer */}
+        {orderItems.length > 0 && (
+          <button
+            type="button"
+            className={styles.cartFab}
+            onClick={() => setCartDrawerOpen(true)}
+            aria-label={`Кошик — ${orderItems.reduce((s, i) => s + i.quantity, 0)} позицій`}
+          >
+            <Icon name="cart" size="md" />
+            <span className={styles.cartFabBadge}>
+              {orderItems.reduce((s, i) => s + i.quantity, 0)}
+            </span>
+          </button>
+        )}
+
+        {cartDrawerOpen && (
+          <>
+            <div className={styles.cartOverlay} onClick={() => setCartDrawerOpen(false)} aria-hidden="true" />
+            <div className={styles.cartDrawer}>
+              <OrderSummary
+                items={orderItems}
+                orderNumber={orderNumber}
+                onQuantityChange={handleQuantityChange}
+                onRemoveItem={handleRemoveItem}
+                onClear={handleClearOrder}
+                onCheckout={() => { setCartDrawerOpen(false); handleCheckout(); }}
+                onAddDiscount={() => {}}
+              />
+            </div>
+          </>
+        )}
 
         {/* Payment Modal */}
         <PaymentModal

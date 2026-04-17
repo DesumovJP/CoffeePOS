@@ -1,7 +1,7 @@
 /**
  * Profile Page Styles
  *
- * Single-scroll dashboard: hero → charts → shift history
+ * Compact dashboard: hero (2-col) + chart + preferences + shift history
  */
 
 .page {
@@ -19,11 +19,21 @@
 }
 
 /* ============================================
-   HERO CARD
+   HERO ROW — 2-column: identity + stats
    ============================================ */
 
+.heroRow {
+  display: grid;
+  grid-template-columns: 1fr 220px;
+  gap: var(--space-4);
+  align-items: start;
+}
+
 .heroCard {
-  padding: var(--space-6);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
 }
 
 .heroShiftBar {
@@ -31,24 +41,16 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
-  padding: var(--space-2-5) var(--space-3);
+  padding: var(--space-2) var(--space-3);
   background: color-mix(in srgb, var(--color-success) 8%, transparent);
   border: 1px solid color-mix(in srgb, var(--color-success) 20%, transparent);
   border-radius: var(--radius-md);
-  margin-bottom: var(--space-4);
 }
 
 .heroShiftInfo {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-}
-
-.heroTop {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  margin-bottom: var(--space-6);
 }
 
 .heroIdentity {
@@ -61,7 +63,7 @@
 .heroInfo {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-1-5);
   min-width: 0;
 }
 
@@ -72,50 +74,43 @@
   flex-wrap: wrap;
 }
 
-/* Hire badge — inline below role/email */
-.hireBadge {
+/* Stats sidebar card (2×2 grid pattern) */
+.statsCard {
   display: flex;
-  align-items: center;
-  gap: var(--space-1-5);
-  margin-top: var(--space-1);
+  flex-direction: column;
+  background: var(--bg-secondary);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
 }
 
-/* ── Stats strip ── */
-.heroStats {
-  display: flex;
-  align-items: center;
-  gap: var(--space-6);
-  padding-top: var(--space-5);
-  border-top: 1px solid var(--glass-border);
-  flex-wrap: wrap;
+.statsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-bottom: 1px solid var(--glass-border);
 }
 
-.heroStat {
+.statsGrid:last-child {
+  border-bottom: none;
+}
+
+.statsCell {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  min-width: 80px;
+  padding: var(--space-2-5) var(--space-3);
 }
 
-.heroStatDivider {
-  width: 1px;
-  height: 36px;
-  background: var(--glass-border);
-  flex-shrink: 0;
+.statsCell + .statsCell {
+  border-left: 1px solid var(--glass-border);
 }
 
 /* ============================================
-   CHARTS ROW
+   CHART
    ============================================ */
 
-.chartsRow {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-4);
-}
-
 .chartCard {
-  padding: var(--space-5);
+  padding: var(--space-4);
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
@@ -123,7 +118,7 @@
 
 .chartContainer {
   width: 100%;
-  height: 220px;
+  height: 180px;
 }
 
 .chartTooltip {
@@ -140,7 +135,7 @@
 }
 
 /* ============================================
-   SHIFT TABLE
+   TABLE
    ============================================ */
 
 .tableCard {
@@ -178,9 +173,98 @@
 }
 
 /* ============================================
-   RESPONSIVE
+   UI PREFERENCES
    ============================================ */
 
+.prefsGrid {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-3) var(--space-4);
+  gap: var(--space-3);
+}
+
+.prefRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.prefLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.prefButtons {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--radius-lg);
+  background: var(--bg-secondary);
+  border: 1px solid var(--glass-border);
+}
+
+.prefBtn {
+  padding: var(--space-1-5) var(--space-3);
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-tertiary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-default);
+  white-space: nowrap;
+}
+
+.prefBtn:hover {
+  color: var(--text-secondary);
+}
+
+.prefBtnActive {
+  background: var(--glass-bg-elevated);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+/* iOS-style toggle switch */
+.toggle {
+  position: relative;
+  width: 44px;
+  height: 26px;
+  border-radius: var(--radius-full);
+  background: var(--color-neutral-300);
+  border: none;
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-default);
+  flex-shrink: 0;
+}
+
+.toggleOn {
+  background: var(--color-success);
+}
+
+.toggleThumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-full);
+  background: var(--color-neutral-0);
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--duration-fast) var(--ease-spring);
+}
+
+.toggleOn .toggleThumb {
+  transform: translateX(18px);
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
 
 @media (max-width: 768px) {
   .page {
@@ -188,20 +272,33 @@
     gap: var(--space-3);
   }
 
+  .heroRow {
+    grid-template-columns: 1fr;
+  }
+
   .heroCard {
     padding: var(--space-4);
   }
 
-  .heroStats {
-    gap: var(--space-4);
+  .chartContainer {
+    height: 160px;
+  }
+}
+
+@media (max-width: 640px) {
+  .prefRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2);
   }
 
-  .heroStatDivider {
-    display: none;
+  .prefButtons {
+    width: 100%;
   }
 
-  .chartsRow {
-    grid-template-columns: 1fr;
+  .prefBtn {
+    flex: 1;
+    text-align: center;
   }
 }
 
@@ -216,10 +313,10 @@
   }
 
   .chartCard {
-    padding: var(--space-4);
+    padding: var(--space-3);
   }
 
   .chartContainer {
-    height: 160px;
+    height: 140px;
   }
 }
