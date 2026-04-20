@@ -122,10 +122,24 @@ export default factories.createCoreController('api::order.order', ({ strapi }) =
       payment.amount = total;
     }
 
-    // Get current open shift
+    // Get current open shift. Reject if none — every sale must attach to a
+    // shift so cash-control, reports, and activity logs stay consistent. The
+    // frontend has ShiftGuard, but a direct API client must not be able to
+    // bypass it.
     const currentShift = await strapi.db.query('api::shift.shift').findOne({
       where: { status: 'open' },
     });
+    if (!currentShift) {
+      ctx.status = 409;
+      ctx.body   = {
+        error: {
+          status:  409,
+          name:    'NoOpenShift',
+          message: 'Зміна не відкрита. Відкрийте зміну перед створенням замовлення.',
+        },
+      };
+      return;
+    }
 
     // Create the order
     const createdOrder = await strapi.db.query('api::order.order').create({
