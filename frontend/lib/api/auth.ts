@@ -44,14 +44,11 @@ const client = ApiClient.getInstance();
 // AUTH API
 // ============================================
 
-// In live mode, use relative URL so Next.js rewrites can proxy to Strapi (avoids CORS)
-const isProxyMode =
-  typeof window !== 'undefined' &&
-  process.env.NEXT_PUBLIC_API_MODE === 'live';
-
-const BASE_URL = isProxyMode
-  ? ''
-  : (process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337').replace(/\/+$/, '');
+// Browser calls go through Next.js rewrites (avoids CORS); SSR calls go direct.
+const BASE_URL =
+  typeof window !== 'undefined'
+    ? ''
+    : (process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337').replace(/\/+$/, '');
 
 export const authApi = {
   /**

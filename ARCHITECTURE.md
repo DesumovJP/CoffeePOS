@@ -1,6 +1,6 @@
 # CoffeePOS — Architecture
 
-> Last updated: 2026-04-16
+> Last updated: 2026-04-20
 
 ## System Overview
 
@@ -261,20 +261,45 @@ When an order is paid, the backend deducts ingredient quantities automatically v
 
 ### Activity Logging
 
-Shift-scoped activity log stored as JSON array in `shift.activities` field. Each activity has `id`, `type`, `timestamp`, and `details`.
+Shift-scoped activity log stored as JSON array in `shift.activities` field. Each activity has `id`, `type`, `timestamp`, and `details`. Every CRUD action performed while a shift is open is recorded into that shift's activity list so the Dashboard day-detail modal renders a complete audit trail.
+
+**Operational events (order/supply/writeoff/shift):**
 
 | Activity Type | Trigger |
 |---|---|
 | `order_create` | New order created |
 | `order_status` | Order status change |
-| `supply_receive` | Supply received |
-| `writeoff_create` | Write-off created |
+| `order_cancel` | Order cancelled |
+| `supply_receive` | Supply received (stock added) |
+| `writeoff_create` | Write-off created (stock deducted) |
 | `shift_open` | Shift opened |
 | `shift_close` | Shift closed |
 
+**Admin CRUD events** (logged from core controllers via `logCurrentShiftActivity`):
+
+| Entity | Types |
+|---|---|
+| Product | `product_create`, `product_update`, `product_delete` |
+| Category | `category_create`, `category_update`, `category_delete` |
+| Modifier | `modifier_create`, `modifier_update`, `modifier_delete` |
+| ModifierGroup | `modifier_group_create`, `modifier_group_update`, `modifier_group_delete` |
+| Ingredient | `ingredient_create`, `ingredient_update`, `ingredient_delete`, `ingredient_adjust` (stock changed) |
+| IngredientCategory | `ingredient_category_create`, `ingredient_category_update`, `ingredient_category_delete` |
+| Recipe | `recipe_create`, `recipe_update`, `recipe_delete` |
+| Employee | `employee_create`, `employee_update`, `employee_delete` |
+| Supplier | `supplier_create`, `supplier_update`, `supplier_delete` |
+| Task | `task_create`, `task_update`, `task_complete`, `task_delete` |
+| CafeTable | `table_create`, `table_update`, `table_delete` |
+
+Total: **41 activity types**.
+
 **Utility**: `backend/src/utils/activity.ts` — `ActivityType`, `Activity` interface, `generateActivityId()` helper.
 
-**Service**: `backend/src/api/shift/services/shift.ts` — `logActivity(shiftId, type, details)` prepends activity to JSON array.
+**Service**: `backend/src/api/shift/services/shift.ts`
+- `logActivity(shiftId, type, details)` — prepends activity to a specific shift's JSON array
+- `logCurrentShiftActivity(type, details)` — finds the currently open shift and logs to it; no-op if no open shift (admin CRUD outside a shift is silently ignored)
+
+**Frontend rendering**: `components/molecules/ActivityInline` maps each type to an icon + Ukrainian label; `getSummary()` produces a one-line description. Generic fallback uses `details.name || details.title || details.number` + optional `user`.
 
 ### Shift Lifecycle
 
@@ -300,8 +325,8 @@ CLOSE  → records closingCash, calculates difference, logs shift_close activity
 
 - **Root directory**: `frontend`
 - **Framework**: Next.js (auto-detected)
-- **Env vars**: `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_API_MODE=live`
-- **API Proxy**: Next.js rewrites `/api/*` → Strapi backend (avoids CORS)
+- **Env vars**: `NEXT_PUBLIC_STRAPI_URL` (Railway URL)
+- **API Proxy**: Next.js rewrites `/api/*` → Strapi backend (avoids CORS). Only active when `NEXT_PUBLIC_STRAPI_URL` ≠ `http://localhost:1337`.
 
 ### Environment Variables (Railway)
 
@@ -337,11 +362,6 @@ CLOSE  → records closingCash, calculates difference, logs shift_close activity
 - CORS restricted to `FRONTEND_URL`
 - Security headers via Strapi middleware (CSP allows DO Spaces domain)
 - Robots: `noindex, nofollow`
-
-## Dual API Mode
-
-- `NEXT_PUBLIC_API_MODE=live` — real Strapi API (production)
-- `NEXT_PUBLIC_API_MODE=mock` — in-memory mock data (development only)
 
 ## Seed Data
 
@@ -452,8 +472,8 @@ Type → icon and color mapping defined in `TYPE_ICONS` / `TYPE_COLORS` constant
 |---|---|
 | `orderStore.ts` | Calls `notifyOrderCompleted` after successful payment |
 | `ShiftGuard` / shift hooks | Calls `notifyShiftAction` on open/close |
-| `suppliesApi` mock | Calls `notifySupplyReceived` |
-| `ingredientsApi` mock | Calls `notifyLowStock` / `notifyOutOfStock` |
+| `useLowStockIngredients` hook | Calls `notifyLowStock` / `notifyOutOfStock` when live-poll returns thresholds |
+| Supplies flow (after `supply.receive` succeeds) | Calls `notifySupplyReceived` |
 
 ### Selectors
 

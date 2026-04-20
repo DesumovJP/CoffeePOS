@@ -1,14 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 // Mock the dependent stores before importing orderStore
-vi.mock('../inventoryStore', () => ({
-  useInventoryStore: {
-    getState: () => ({
-      processSale: vi.fn().mockReturnValue({ success: true, errors: [] }),
-    }),
-  },
-}));
-
 vi.mock('../notificationStore', () => ({
   useNotificationStore: {
     getState: () => ({

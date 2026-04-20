@@ -1,6 +1,41 @@
 import { factories } from '@strapi/strapi';
 
 export default factories.createCoreController('api::employee.employee', ({ strapi }) => ({
+  async create(ctx) {
+    const response = await super.create(ctx);
+    const entry: any = response?.data || {};
+    await strapi.service('api::shift.shift').logCurrentShiftActivity('employee_create', {
+      documentId: entry.documentId,
+      name: entry.name,
+      role: entry.role,
+      user: ctx.state?.user?.username || ctx.state?.user?.email,
+    });
+    return response;
+  },
+  async update(ctx) {
+    const response = await super.update(ctx);
+    const entry: any = response?.data || {};
+    await strapi.service('api::shift.shift').logCurrentShiftActivity('employee_update', {
+      documentId: entry.documentId,
+      name: entry.name,
+      role: entry.role,
+      user: ctx.state?.user?.username || ctx.state?.user?.email,
+    });
+    return response;
+  },
+  async delete(ctx) {
+    const existing: any = await strapi.db
+      .query('api::employee.employee')
+      .findOne({ where: { documentId: ctx.params.id } });
+    const response = await super.delete(ctx);
+    await strapi.service('api::shift.shift').logCurrentShiftActivity('employee_delete', {
+      documentId: ctx.params.id,
+      name: existing?.name,
+      user: ctx.state?.user?.username || ctx.state?.user?.email,
+    });
+    return response;
+  },
+
   /**
    * GET /api/employees/:id/stats?month=M&year=YYYY
    * Returns employee performance stats filtered to the given month (defaults to current).

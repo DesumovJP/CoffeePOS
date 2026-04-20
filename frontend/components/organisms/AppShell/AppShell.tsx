@@ -14,11 +14,10 @@ import { Sidebar } from '@/components/organisms/Sidebar';
 import { Drawer } from '@/components/organisms/Drawer';
 import { TaskWidget } from '@/components/organisms/TaskWidget';
 import { NotificationCenter } from '@/components/organisms/NotificationCenter';
-import { Text, Button, Icon, type IconName, MockBanner } from '@/components/atoms';
+import { Text, Button, Icon, type IconName } from '@/components/atoms';
 import type { NavGroup } from '@/components/organisms/Sidebar';
 import { useAuth } from '@/lib/providers/AuthProvider';
 import { useEmployees } from '@/lib/hooks';
-import { IS_MOCK } from '@/lib/mock/helpers';
 import styles from './AppShell.module.css';
 
 // ============================================
@@ -245,7 +244,6 @@ export function AppShell({ children }: AppShellProps) {
                   <Icon name={meta.action.icon} size="md" />
                 </Button>
               )}
-              {IS_MOCK && <MockBanner />}
               <NotificationCenter position="right" />
             </div>
           </header>
@@ -306,7 +304,6 @@ export function AppShell({ children }: AppShellProps) {
                 <Icon name="search" size="md" />
               </Button>
             )}
-            {IS_MOCK && <MockBanner />}
             <NotificationCenter position="right" />
           </div>
         </div>

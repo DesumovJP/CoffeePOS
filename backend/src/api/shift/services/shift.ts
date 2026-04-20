@@ -12,6 +12,19 @@ export default factories.createCoreService('api::shift.shift', ({ strapi }) => (
   },
 
   /**
+   * Log an activity to the currently open shift. No-op if no open shift exists.
+   * Used for admin CRUD actions (products, employees, etc.) that occur during a shift.
+   */
+  async logCurrentShiftActivity(type: ActivityType, details: Record<string, unknown>) {
+    const openShift = await strapi.db.query('api::shift.shift').findOne({
+      where: { status: 'open' },
+      orderBy: { openedAt: 'desc' },
+    });
+    if (!openShift) return;
+    return this.logActivity(openShift.id, type, details);
+  },
+
+  /**
    * Add a sale to the current shift totals
    */
   async addSale(shiftId: number, amount: number, paymentMethod: string) {

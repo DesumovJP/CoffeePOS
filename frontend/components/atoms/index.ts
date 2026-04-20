@@ -13,7 +13,6 @@ export * from './Icon';
 export * from './Avatar';
 export * from './Badge';
 export * from './Divider';
-export * from './MockBanner';
 export * from './Modal';
 export * from './Toast';
 export * from './ThemeToggle';

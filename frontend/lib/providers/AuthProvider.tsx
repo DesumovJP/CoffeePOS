@@ -4,7 +4,6 @@
  * CoffeePOS - Auth Provider
  *
  * Manages authentication state, token persistence, and user context.
- * Supports mock mode (auto-auth) via NEXT_PUBLIC_API_MODE=mock.
  */
 
 import {
@@ -18,7 +17,6 @@ import {
 } from 'react';
 import { useRouter } from 'next/navigation';
 import { authApi, type AuthUser } from '@/lib/api/auth';
-import { IS_MOCK } from '@/lib/mock/helpers';
 
 // ============================================
 // TYPES
@@ -43,25 +41,6 @@ export interface AuthContextValue extends AuthState {
   /** Logout and redirect to /login */
   logout: () => void;
 }
-
-// ============================================
-// MOCK USER
-// ============================================
-
-const MOCK_USER: AuthUser = {
-  id: 3,
-  username: 'Олена Коваленко',
-  email: 'olena@paradise.cafe',
-  confirmed: true,
-  blocked: false,
-  role: {
-    id: 3,
-    name: 'Barista',
-    type: 'barista',
-  },
-};
-
-const MOCK_TOKEN = 'mock-jwt-token';
 
 // ============================================
 // STORAGE KEY
@@ -97,15 +76,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // ------------------------------------------
   useEffect(() => {
     async function initAuth() {
-      // Mock mode: auto-authenticate
-      if (IS_MOCK) {
-        setUser(MOCK_USER);
-        setToken(MOCK_TOKEN);
-        localStorage.setItem(TOKEN_KEY, MOCK_TOKEN);
-        setIsLoading(false);
-        return;
-      }
-
       // Check for existing token in localStorage
       const savedToken = localStorage.getItem(TOKEN_KEY);
 

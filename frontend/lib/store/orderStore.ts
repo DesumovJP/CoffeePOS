@@ -6,10 +6,7 @@
 
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
-import { useInventoryStore } from './inventoryStore';
 import { useNotificationStore } from './notificationStore';
-
-const IS_LIVE = process.env.NEXT_PUBLIC_API_MODE === 'live';
 
 // ============================================
 // TYPES
@@ -370,29 +367,6 @@ export const useOrderStore = create<OrderState>()(
           if (!currentOrder || currentOrder.items.length === 0) return;
 
           const notificationStore = useNotificationStore.getState();
-
-          // Process inventory deductions only in mock mode
-          // In live mode, the backend handles inventory deduction in the order controller
-          if (!IS_LIVE) {
-            const inventoryStore = useInventoryStore.getState();
-            const errors: string[] = [];
-            for (const item of currentOrder.items) {
-              const result = inventoryStore.processSale(
-                item.productId,
-                item.variantId,
-                item.quantity,
-                currentOrder.id
-              );
-
-              if (!result.success) {
-                errors.push(...result.errors);
-              }
-            }
-
-            if (errors.length > 0) {
-              console.warn('Inventory deduction warnings:', errors);
-            }
-          }
 
           // Add to completed orders
           const completedOrder: Order = {

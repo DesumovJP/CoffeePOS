@@ -39,14 +39,12 @@ export interface RequestOptions {
 // CONFIG
 // ============================================
 
-// In live mode, use relative URL so Next.js rewrites can proxy to Strapi (avoids CORS)
-const isProxyMode =
-  typeof window !== 'undefined' &&
-  process.env.NEXT_PUBLIC_API_MODE === 'live';
-
-const API_URL = isProxyMode
-  ? ''
-  : (process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337').replace(/\/+$/, '');
+// Browser calls go through Next.js rewrites (relative URL → proxy to Strapi, avoids CORS)
+// SSR calls go direct to the Strapi URL
+const API_URL =
+  typeof window !== 'undefined'
+    ? ''
+    : (process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337').replace(/\/+$/, '');
 const API_PREFIX = '/api';
 
 // ============================================

@@ -36,75 +36,6 @@ import { ShiftGuard } from '@/components/organisms/ShiftGuard';
 import styles from './page.module.css';
 
 // ============================================
-// MOCK DATA (fallback when API unavailable)
-// ============================================
-
-const mockCategories: Category[] = [
-  { id: 'coffee', name: 'Кава' },
-  { id: 'tea', name: 'Чай' },
-  { id: 'desserts', name: 'Десерти' },
-  { id: 'food', name: 'Їжа' },
-  { id: 'drinks', name: 'Напої' },
-];
-
-const mockProducts: ProductGridProduct[] = [
-  { id: '1', name: 'Еспресо', price: 45, category: 'coffee', inStock: true },
-  { id: '2', name: 'Американо', price: 55, category: 'coffee', inStock: true, variants: [
-    { id: 's', name: '250 мл', price: 55, isDefault: true },
-    { id: 'm', name: '350 мл', price: 65 },
-    { id: 'l', name: '450 мл', price: 75 },
-  ]},
-  { id: '3', name: 'Капучіно', price: 65, category: 'coffee', inStock: true, variants: [
-    { id: 's', name: '250 мл', price: 65, isDefault: true },
-    { id: 'm', name: '350 мл', price: 75 },
-    { id: 'l', name: '450 мл', price: 85 },
-  ]},
-  { id: '4', name: 'Латте', price: 70, category: 'coffee', inStock: true, variants: [
-    { id: 's', name: '300 мл', price: 70, isDefault: true },
-    { id: 'm', name: '400 мл', price: 85 },
-    { id: 'l', name: '500 мл', price: 95 },
-  ]},
-  { id: '5', name: 'Флет Вайт', price: 75, category: 'coffee', inStock: true },
-  { id: '6', name: 'Раф', price: 85, category: 'coffee', inStock: true, variants: [
-    { id: 's', name: '300 мл', price: 85, isDefault: true },
-    { id: 'm', name: '400 мл', price: 100 },
-  ]},
-  { id: '7', name: 'Мокко', price: 80, category: 'coffee', inStock: true },
-  { id: '8', name: 'Айс Латте', price: 75, category: 'coffee', inStock: true, variants: [
-    { id: 'm', name: '400 мл', price: 75, isDefault: true },
-    { id: 'l', name: '500 мл', price: 90 },
-  ]},
-  { id: '9', name: 'Чорний чай', price: 40, category: 'tea', inStock: true, variants: [
-    { id: 's', name: '300 мл', price: 40, isDefault: true },
-    { id: 'l', name: '500 мл', price: 55 },
-  ]},
-  { id: '10', name: 'Зелений чай', price: 45, category: 'tea', inStock: true, variants: [
-    { id: 's', name: '300 мл', price: 45, isDefault: true },
-    { id: 'l', name: '500 мл', price: 60 },
-  ]},
-  { id: '11', name: 'Матча Латте', price: 85, category: 'tea', inStock: true, variants: [
-    { id: 's', name: '300 мл', price: 85, isDefault: true },
-    { id: 'm', name: '400 мл', price: 100 },
-  ]},
-  { id: '12', name: 'Чізкейк', price: 95, category: 'desserts', inStock: true },
-  { id: '13', name: 'Тірамісу', price: 110, category: 'desserts', inStock: true },
-  { id: '14', name: 'Круасан', price: 55, category: 'desserts', inStock: true },
-  { id: '15', name: 'Маффін', price: 45, category: 'desserts', stockQuantity: 2, lowStockThreshold: 5, inStock: true },
-  { id: '16', name: 'Сендвіч з куркою', price: 120, category: 'food', inStock: true },
-  { id: '17', name: 'Сендвіч з лососем', price: 145, category: 'food', inStock: false },
-  { id: '18', name: 'Салат Цезар', price: 135, category: 'food', inStock: true },
-  { id: '19', name: 'Лимонад', price: 55, category: 'drinks', inStock: true, variants: [
-    { id: 's', name: '300 мл', price: 55, isDefault: true },
-    { id: 'l', name: '500 мл', price: 75 },
-  ]},
-  { id: '20', name: 'Фреш апельсин', price: 75, category: 'drinks', inStock: true, variants: [
-    { id: 's', name: '300 мл', price: 75, isDefault: true },
-    { id: 'l', name: '500 мл', price: 95 },
-  ]},
-];
-
-
-// ============================================
 // HELPERS
 // ============================================
 
@@ -283,19 +214,14 @@ export default function POSPage() {
     return map;
   }, [apiRecipes]);
 
-  // Transform API data or use mock data as fallback
   const products: ProductGridProduct[] = useMemo(() => {
-    if (apiProducts && apiProducts.length > 0) {
-      return apiProducts.map((p) => transformApiProduct(p, recipesMap));
-    }
-    return mockProducts;
+    if (!apiProducts) return [];
+    return apiProducts.map((p) => transformApiProduct(p, recipesMap));
   }, [apiProducts, recipesMap]);
 
   const categories: Category[] = useMemo(() => {
-    if (apiCategories && apiCategories.length > 0) {
-      return apiCategories.map(transformApiCategory);
-    }
-    return mockCategories;
+    if (!apiCategories) return [];
+    return apiCategories.map(transformApiCategory);
   }, [apiCategories]);
 
   // Zustand store

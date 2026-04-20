@@ -6,15 +6,9 @@
 
 import type { StrapiMedia } from './types';
 
+// Browser uploads go through Next.js rewrites (avoids CORS); return relative URL.
 function getUploadBaseUrl(): string {
-  if (typeof window === 'undefined') return '';
-  const isProxyMode = process.env.NEXT_PUBLIC_API_MODE === 'live';
-  if (isProxyMode) return '';
-  return (
-    process.env.NEXT_PUBLIC_API_URL ||
-    process.env.NEXT_PUBLIC_STRAPI_URL ||
-    'http://localhost:1337'
-  ).replace(/\/+$/, '');
+  return '';
 }
 
 /**
