@@ -135,4 +135,80 @@ export default factories.createCoreService('api::order.order', ({ strapi }) => (
       }
     }
   },
+
+  /**
+   * Refund inventory for a cancelled order — reverses every `sale` transaction
+   * previously logged under `ORD-{orderId}` by creating equal-and-opposite
+   * `adjustment` rows and restoring the stock row atomically.
+   *
+   * Idempotency: a refund writes `adjustment` reference `REFUND-ORD-{orderId}`;
+   * if any such row already exists we short-circuit so repeated cancel clicks
+   * can't double-credit stock.
+   */
+  async refundInventory(orderId: number, shiftId?: number) {
+    const knex = strapi.db.connection;
+
+    async function atomicIncrement(
+      table: 'products' | 'ingredients',
+      column: string,
+      rowId: number,
+      amount: number,
+    ): Promise<{ previousQty: number; newQty: number }> {
+      return knex.transaction(async (tx) => {
+        const [row] = await tx(table).where({ id: rowId }).forUpdate().select(column);
+        const previousQty = Number(row?.[column]) || 0;
+        const newQty      = previousQty + amount;
+        await tx(table).where({ id: rowId }).update({ [column]: newQty });
+        return { previousQty, newQty };
+      });
+    }
+
+    const refundRef = `REFUND-ORD-${orderId}`;
+    const existing = await strapi.db.query('api::inventory-transaction.inventory-transaction').findOne({
+      where: { reference: refundRef },
+      select: ['id'],
+    });
+    if (existing) return { refunded: 0, alreadyRefunded: true };
+
+    const saleRef = `ORD-${orderId}`;
+    const sales = await strapi.db.query('api::inventory-transaction.inventory-transaction').findMany({
+      where:    { reference: saleRef, type: 'sale' },
+      populate: { product: { select: ['id'] }, ingredient: { select: ['id'] } },
+    }) as any[];
+
+    let refunded = 0;
+    for (const s of sales) {
+      const refundQty = Math.abs(Number(s.quantity) || 0);
+      if (refundQty <= 0) continue;
+
+      const productId    = s.product?.id    || null;
+      const ingredientId = s.ingredient?.id || null;
+
+      let result: { previousQty: number; newQty: number } | null = null;
+      if (ingredientId) {
+        result = await atomicIncrement('ingredients', 'quantity', ingredientId, refundQty);
+      } else if (productId) {
+        result = await atomicIncrement('products', 'stock_quantity', productId, refundQty);
+      } else {
+        continue;
+      }
+
+      await strapi.db.query('api::inventory-transaction.inventory-transaction').create({
+        data: {
+          type:        'adjustment',
+          ingredient:  ingredientId || undefined,
+          product:     productId    || undefined,
+          quantity:    refundQty,
+          previousQty: result.previousQty,
+          newQty:      result.newQty,
+          reference:   refundRef,
+          shift:       shiftId || undefined,
+          notes:       'Auto-refund on order cancellation',
+        },
+      });
+      refunded++;
+    }
+
+    return { refunded, alreadyRefunded: false };
+  },
 }));

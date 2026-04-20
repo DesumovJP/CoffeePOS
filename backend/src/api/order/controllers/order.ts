@@ -158,10 +158,18 @@ export default factories.createCoreController('api::order.order', ({ strapi }) =
       populate: ['items', 'payment', 'shift'],
     });
 
-    // Log order status change
     const currentShift = await strapi.db.query('api::shift.shift').findOne({
       where: { status: 'open' },
     });
+
+    // Refund inventory on cancellation — reverses the `sale` transactions so
+    // cancelled orders don't permanently starve stock. Idempotent.
+    let refund: { refunded: number; alreadyRefunded: boolean } | undefined;
+    if (status === 'cancelled' && order.status !== 'cancelled') {
+      const orderService = strapi.service('api::order.order') as any;
+      refund = await orderService.refundInventory(order.id, currentShift?.id);
+    }
+
     if (currentShift) {
       const shiftService = strapi.service('api::shift.shift') as any;
       await shiftService.logActivity(currentShift.id, 'order_status', {
@@ -169,9 +177,10 @@ export default factories.createCoreController('api::order.order', ({ strapi }) =
         orderNumber: order.orderNumber,
         fromStatus: order.status,
         toStatus: status,
+        ...(refund ? { refundedLines: refund.refunded } : {}),
       });
     }
 
-    return { data: updated };
+    return { data: updated, meta: refund ? { refund } : undefined };
   },
 }));

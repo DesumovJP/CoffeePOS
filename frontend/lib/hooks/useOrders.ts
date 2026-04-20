@@ -9,6 +9,7 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { ordersApi, type GetOrdersParams } from '@/lib/api';
 import type { Order, OrderStatus } from '@/lib/api';
+import { productKeys } from './useProducts';
 
 // ============================================
 // QUERY KEYS
@@ -81,10 +82,14 @@ export function useUpdateOrderStatus() {
     mutationFn: ({ id, status }: { id: string; status: OrderStatus }) =>
       ordersApi.updateStatus(id, status),
     meta: { toast: { success: 'Статус замовлення оновлено', error: 'Не вдалось оновити статус' } },
-    onSuccess: (_, { id }) => {
+    onSuccess: (_, { id, status }) => {
       queryClient.invalidateQueries({ queryKey: orderKeys.detail(id) });
       queryClient.invalidateQueries({ queryKey: orderKeys.lists() });
       queryClient.invalidateQueries({ queryKey: orderKeys.active() });
+      // Cancellation refunds inventory on the server — refresh POS availability
+      if (status === 'cancelled') {
+        queryClient.invalidateQueries({ queryKey: productKeys.availability() });
+      }
     },
   });
 }
@@ -101,6 +106,7 @@ export function useCancelOrder() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: orderKeys.lists() });
       queryClient.invalidateQueries({ queryKey: orderKeys.active() });
+      queryClient.invalidateQueries({ queryKey: productKeys.availability() });
     },
   });
 }
