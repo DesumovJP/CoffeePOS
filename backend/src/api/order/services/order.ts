@@ -2,11 +2,17 @@ import { factories } from '@strapi/strapi';
 
 export default factories.createCoreService('api::order.order', ({ strapi }) => ({
   /**
-   * Deduct inventory based on recipes for order items.
+   * Deduct inventory for an order's items.
+   *
+   * Two tracking strategies, resolved per-product:
+   *   A) `trackInventory: true` → decrement product.stockQuantity directly
+   *      (used for pre-made/purchased goods: bottled water, packaged desserts…)
+   *   B) Recipe-based → decrement each ingredient.quantity via the matching recipe
+   *      (used for items assembled from raw ingredients: drinks, food)
    *
    * Lookup strategy (Strapi 5 — numeric `id` is dynamic, avoid):
-   *   - Product  → by `productDocumentId` (stable), falls back to numeric `product` id
-   *   - Ingredient → by `ingredientSlug` (stable), falls back to numeric `ingredientId`
+   *   - Product    → by `productDocumentId` (stable), falls back to numeric `product` id
+   *   - Ingredient → by `ingredientSlug`   (stable), falls back to numeric `ingredientId`
    */
   async deductInventory(orderId: number, items: any[], shiftId?: number) {
     for (const item of items) {
@@ -14,7 +20,42 @@ export default factories.createCoreService('api::order.order', ({ strapi }) => (
       const hasNumericId  = !!item.product;
       if (!hasDocumentId && !hasNumericId) continue;
 
-      // Prefer stable documentId over fragile numeric id
+      // Resolve the product entity first — needed for both tracking strategies
+      const productWhere = hasDocumentId
+        ? { documentId: item.productDocumentId }
+        : { id: item.product };
+
+      const product = await strapi.db.query('api::product.product').findOne({
+        where:  productWhere,
+        select: ['id', 'trackInventory', 'stockQuantity'],
+      }) as any;
+
+      // ── Strategy A: direct stockQuantity decrement ──────────────────
+      if (product?.trackInventory) {
+        const qty            = Number(item.quantity) || 1;
+        const previousQty    = Number(product.stockQuantity) || 0;
+        const newQty         = Math.max(0, previousQty - qty);
+
+        await strapi.db.query('api::product.product').update({
+          where: { id: product.id },
+          data:  { stockQuantity: newQty },
+        });
+
+        await strapi.db.query('api::inventory-transaction.inventory-transaction').create({
+          data: {
+            type:        'sale',
+            product:     product.id,
+            quantity:    -qty,
+            previousQty,
+            newQty,
+            reference:   `ORD-${orderId}`,
+            shift:       shiftId || undefined,
+          },
+        });
+        continue; // Done — simple tracked products do not also use recipes
+      }
+
+      // ── Strategy B: recipe-based ingredient deduction ───────────────
       const recipeWhere = hasDocumentId
         ? { product: { documentId: item.productDocumentId } }
         : { product: item.product };

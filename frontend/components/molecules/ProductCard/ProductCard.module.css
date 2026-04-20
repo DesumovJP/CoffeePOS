@@ -154,6 +154,39 @@
   color: var(--text-tertiary);
 }
 
+/* Stock pill — subtle, tabular-nums number shown next to price */
+.stock {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+  padding: 1px 6px;
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  color: var(--text-tertiary);
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-sm);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+
+.stockLow {
+  color: var(--color-warning);
+  background: color-mix(in srgb, var(--color-warning) 12%, transparent);
+}
+
+.stockOut {
+  color: var(--color-error);
+  background: color-mix(in srgb, var(--color-error) 12%, transparent);
+}
+
+.priceRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
 /* ============================================
    TOUCH
    ============================================ */

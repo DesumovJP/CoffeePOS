@@ -480,6 +480,7 @@ async function ensurePermissions(strapi: Core.Strapi) {
       'api::ingredient.ingredient.lowStock',
       'api::employee.employee.stats',
       'api::employee.employee.performance',
+      'api::product.product.getAvailability',
     ];
 
     for (const action of customActions) {

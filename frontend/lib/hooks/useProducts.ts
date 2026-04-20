@@ -22,6 +22,7 @@ export const productKeys = {
   detail: (id: string) => [...productKeys.details(), id] as const,
   featured: () => [...productKeys.all, 'featured'] as const,
   lowStock: () => [...productKeys.all, 'low-stock'] as const,
+  availability: () => [...productKeys.all, 'availability'] as const,
 };
 
 // ============================================
@@ -62,6 +63,24 @@ export function useFeaturedProducts() {
     queryKey: productKeys.featured(),
     queryFn: () => productsApi.getFeatured(),
     select: (data) => data.data,
+  });
+}
+
+/**
+ * Hook to fetch per-product availability map (documentId → remaining units).
+ *
+ * Recipe-based: max portions buildable from current ingredient stock.
+ * Tracked simple: product.stockQuantity.
+ * Untracked: null (not shown as a number on the UI).
+ *
+ * Kept fresh: 30s staleTime + invalidated after each order so the grid reflects sales.
+ */
+export function useProductAvailability() {
+  return useQuery({
+    queryKey: productKeys.availability(),
+    queryFn:  () => productsApi.getAvailability(),
+    select:   (res) => res.data,
+    staleTime: 30 * 1000,
   });
 }
 

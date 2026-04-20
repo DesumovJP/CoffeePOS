@@ -8,7 +8,7 @@
  */
 
 import { forwardRef, memo, type HTMLAttributes } from 'react';
-import { Text, Badge, Icon } from '@/components/atoms';
+import { Badge } from '@/components/atoms';
 import styles from './ProductCard.module.css';
 
 // ============================================
@@ -136,15 +136,31 @@ export const ProductCard = memo(forwardRef<HTMLButtonElement, ProductCardProps>(
           )}
         </div>
 
-        {/* Content — name + price only */}
+        {/* Content — name + price + (optional) stock */}
         <div className={styles.content}>
           <span className={styles.name}>{product.name}</span>
-          <span className={styles.price}>
-            {formatPrice(product.price, currency)}
-            {product.variants && product.variants.length > 1 && (
-              <span className={styles.hint}> · {product.variants.length} вар.</span>
+          <div className={styles.priceRow}>
+            <span className={styles.price}>
+              {formatPrice(product.price, currency)}
+              {product.variants && product.variants.length > 1 && (
+                <span className={styles.hint}> · {product.variants.length} вар.</span>
+              )}
+            </span>
+            {showStock && product.stockQuantity !== undefined && product.stockQuantity !== null && (
+              <span
+                className={`${styles.stock} ${
+                  product.stockQuantity === 0
+                    ? styles.stockOut
+                    : isLowStock
+                      ? styles.stockLow
+                      : ''
+                }`}
+                aria-label={`В наявності: ${product.stockQuantity}`}
+              >
+                {product.stockQuantity} шт
+              </span>
             )}
-          </span>
+          </div>
         </div>
       </button>
     );

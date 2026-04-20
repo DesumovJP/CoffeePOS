@@ -29,7 +29,8 @@ import {
   useShiftStore,
   usePreferencesStore,
 } from '@/lib/store';
-import { useProducts, useActiveCategories, useRecipes, useKeyboardShortcuts, type ShortcutConfig } from '@/lib/hooks';
+import { useProducts, useActiveCategories, useRecipes, useKeyboardShortcuts, useProductAvailability, productKeys, type ShortcutConfig } from '@/lib/hooks';
+import { useQueryClient } from '@tanstack/react-query';
 import type { Product as ApiProduct } from '@/lib/api';
 import { ordersApi, productsApi } from '@/lib/api';
 import { ShiftGuard } from '@/components/organisms/ShiftGuard';
@@ -46,8 +47,20 @@ import styles from './page.module.css';
 function transformApiProduct(
   product: ApiProduct,
   recipesMap: Map<number, Array<{ id: string; name: string; price: number; isDefault?: boolean }>>,
+  availability: Record<string, number | null> | undefined,
 ): ProductGridProduct {
   const variants = recipesMap.get(product.id);
+
+  // Prefer server-computed availability (handles both recipe-based and trackInventory).
+  // Fallback: product.stockQuantity for tracked items if availability map is missing.
+  const availQty = availability?.[product.documentId];
+  const stockQuantity =
+    availQty !== undefined && availQty !== null
+      ? availQty
+      : product.trackInventory
+        ? product.stockQuantity
+        : undefined;
+
   return {
     id: String(product.id),
     documentId: product.documentId,
@@ -56,8 +69,8 @@ function transformApiProduct(
     image: product.image?.url,
     category: product.category?.slug || '',
     inStock: product.isActive,
-    stockQuantity: product.trackInventory ? product.stockQuantity : undefined,
-    lowStockThreshold: product.trackInventory ? product.lowStockThreshold : undefined,
+    stockQuantity,
+    lowStockThreshold: product.lowStockThreshold,
     hasModifiers: (product.modifierGroups?.length || 0) > 0,
     variants: variants && variants.length > 1 ? variants : undefined,
   };
@@ -192,11 +205,13 @@ function PosSettingsPopover({
 
 export default function POSPage() {
   const { addToast } = useToast();
+  const queryClient = useQueryClient();
 
   // API Data
   const { data: apiProducts, isLoading: productsLoading, error: productsError } = useProducts({ isActive: true });
   const { data: apiCategories, isLoading: categoriesLoading, error: categoriesError } = useActiveCategories();
   const { data: apiRecipes } = useRecipes();
+  const { data: availability } = useProductAvailability();
 
   // Build recipes map: productId → variants array
   const recipesMap = useMemo(() => {
@@ -219,8 +234,8 @@ export default function POSPage() {
 
   const products: ProductGridProduct[] = useMemo(() => {
     if (!apiProducts) return [];
-    return apiProducts.map((p) => transformApiProduct(p, recipesMap));
-  }, [apiProducts, recipesMap]);
+    return apiProducts.map((p) => transformApiProduct(p, recipesMap, availability));
+  }, [apiProducts, recipesMap, availability]);
 
   const categories: Category[] = useMemo(() => {
     if (!apiCategories) return [];
@@ -397,6 +412,8 @@ export default function POSPage() {
 
         await ordersApi.create({ order: orderPayload.order, items: orderPayload.items, payment: orderPayload.payment });
         addToast({ type: 'success', title: 'Замовлення оформлено', message: `₴${total.toFixed(0)}`, duration: 3000 });
+        // Refresh availability — stockQuantity / ingredient quantities were decremented server-side
+        queryClient.invalidateQueries({ queryKey: productKeys.availability() });
       }
     } catch (err: any) {
       addToast({ type: 'error', title: 'Не вдалось створити замовлення', message: err?.message, duration: 4000 });
@@ -404,7 +421,7 @@ export default function POSPage() {
 
     completePayment(method, received);
     setIsProcessingPayment(false);
-  }, [completePayment, currentOrder, getTotal, addToast]);
+  }, [completePayment, currentOrder, getTotal, addToast, queryClient]);
 
   // Loading state
   const isLoading = productsLoading || categoriesLoading;
@@ -477,6 +494,7 @@ export default function POSPage() {
               onCategoryChange={setSelectedCategory}
               onSearchChange={setSearchQuery}
               loading={isLoading}
+              showStock
               mobileSearchOpen={mobileSearchOpen}
               onMobileSearchClose={() => setMobileSearchOpen(false)}
               headerExtra={

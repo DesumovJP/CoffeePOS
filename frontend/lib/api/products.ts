@@ -155,6 +155,18 @@ export const productsApi = {
   },
 
   /**
+   * Get per-product availability map.
+   *
+   * Backend computes:
+   *   - trackInventory products → stockQuantity
+   *   - recipe-based products   → max portions buildable from current ingredient stock
+   *   - untracked products      → null
+   */
+  async getAvailability(): Promise<ApiResponse<Record<string, number | null>>> {
+    return apiClient.get<Record<string, number | null>>('/products/availability');
+  },
+
+  /**
    * Get featured products
    */
   async getFeatured(): Promise<ApiResponse<Product[]>> {
