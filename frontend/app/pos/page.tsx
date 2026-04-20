@@ -419,18 +419,32 @@ export default function POSPage() {
         // Atomic commit: clear cart + close modal ONLY after server confirmed the order.
         completePayment(method, received);
       } catch (err: any) {
-        // Server unreachable — enqueue for retry. OfflineQueueProvider flushes
-        // on `online` + every 30s. Cart is cleared so the barista can continue;
-        // server-side idempotency on `orderNumber` guarantees no duplicate when
-        // the queued copy eventually lands.
-        enqueueOfflineOrder(payload, err);
-        addToast({
-          type: 'warning',
-          title: 'Замовлення додано в чергу',
-          message: 'Буде надіслано автоматично при відновленні зв\'язку',
-          duration: 5000,
-        });
-        completePayment(method, received);
+        const status    = Number(err?.status) || 0;
+        const isNetwork = status === 0 || status >= 500;
+
+        if (isNetwork) {
+          // Server unreachable — enqueue for retry. OfflineQueueProvider flushes
+          // on `online` + every 30s. Cart is cleared so the barista can continue;
+          // server-side idempotency on `orderNumber` guarantees no duplicate when
+          // the queued copy eventually lands.
+          enqueueOfflineOrder(payload, err);
+          addToast({
+            type: 'warning',
+            title: 'Замовлення додано в чергу',
+            message: 'Буде надіслано автоматично при відновленні зв\'язку',
+            duration: 5000,
+          });
+          completePayment(method, received);
+        } else {
+          // Hard business error (e.g., 409 insufficient stock, 400 validation)
+          // — retrying won't help. Keep the cart so the barista can adjust.
+          addToast({
+            type: 'error',
+            title: 'Не вдалось оформити замовлення',
+            message: err?.message || 'Перевірте склад товарів',
+            duration: 6000,
+          });
+        }
       }
     } finally {
       setIsProcessingPayment(false);

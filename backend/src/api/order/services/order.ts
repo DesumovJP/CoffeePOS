@@ -1,5 +1,35 @@
 import { factories } from '@strapi/strapi';
 
+/**
+ * Thrown when a decrement would drop a stock row below zero. Carries enough
+ * context for the controller to shape a 409 response without a second DB hit.
+ */
+export class InsufficientStockError extends Error {
+  table:     'products' | 'ingredients';
+  rowId:     number;
+  requested: number;
+  available: number;
+  label?:    string;
+
+  constructor(details: {
+    table:     'products' | 'ingredients';
+    rowId:     number;
+    requested: number;
+    available: number;
+    label?:    string;
+  }) {
+    super(
+      `Insufficient stock on ${details.table}#${details.rowId}: need ${details.requested}, have ${details.available}`,
+    );
+    this.name      = 'InsufficientStockError';
+    this.table     = details.table;
+    this.rowId     = details.rowId;
+    this.requested = details.requested;
+    this.available = details.available;
+    this.label     = details.label;
+  }
+}
+
 export default factories.createCoreService('api::order.order', ({ strapi }) => ({
   /**
    * Deduct inventory for an order's items — race-safe.
@@ -32,11 +62,17 @@ export default factories.createCoreService('api::order.order', ({ strapi }) => (
       column: string,
       rowId: number,
       amount: number,
+      label?: string,
     ): Promise<{ previousQty: number; newQty: number }> {
       return knex.transaction(async (tx) => {
         const [row] = await tx(table).where({ id: rowId }).forUpdate().select(column);
         const previousQty = Number(row?.[column]) || 0;
-        const newQty      = Math.max(0, previousQty - amount);
+        if (previousQty < amount) {
+          throw new InsufficientStockError({
+            table, rowId, requested: amount, available: previousQty, label,
+          });
+        }
+        const newQty = previousQty - amount;
         await tx(table).where({ id: rowId }).update({ [column]: newQty });
         return { previousQty, newQty };
       });
@@ -54,14 +90,14 @@ export default factories.createCoreService('api::order.order', ({ strapi }) => (
 
       const product = await strapi.db.query('api::product.product').findOne({
         where:  productWhere,
-        select: ['id', 'trackInventory', 'stockQuantity'],
+        select: ['id', 'name', 'trackInventory', 'stockQuantity'],
       }) as any;
 
       // ── Strategy A: direct atomic stockQuantity decrement ───────────
       if (product?.trackInventory) {
         const qty = Number(item.quantity) || 1;
         const { previousQty, newQty } = await atomicDecrement(
-          'products', 'stock_quantity', product.id, qty,
+          'products', 'stock_quantity', product.id, qty, product.name,
         );
 
         await strapi.db.query('api::inventory-transaction.inventory-transaction').create({
@@ -107,13 +143,13 @@ export default factories.createCoreService('api::order.order', ({ strapi }) => (
 
               const ingredient = await strapi.db.query('api::ingredient.ingredient').findOne({
                 where:  ingredientWhere,
-                select: ['id'],
-              });
+                select: ['id', 'name'],
+              }) as any;
               if (!ingredient) continue;
 
               const deductAmount = amount * (Number(item.quantity) || 1);
               const { previousQty, newQty } = await atomicDecrement(
-                'ingredients', 'quantity', ingredient.id, deductAmount,
+                'ingredients', 'quantity', ingredient.id, deductAmount, ingredient.name,
               );
 
               await strapi.db.query('api::inventory-transaction.inventory-transaction').create({
@@ -160,13 +196,13 @@ export default factories.createCoreService('api::order.order', ({ strapi }) => (
 
           const ing = await strapi.db.query('api::ingredient.ingredient').findOne({
             where,
-            select: ['id'],
-          });
+            select: ['id', 'name'],
+          }) as any;
           if (!ing) continue;
 
           const deductAmount = amount * (Number(item.quantity) || 1);
           const { previousQty, newQty } = await atomicDecrement(
-            'ingredients', 'quantity', ing.id, deductAmount,
+            'ingredients', 'quantity', ing.id, deductAmount, ing.name,
           );
 
           await strapi.db.query('api::inventory-transaction.inventory-transaction').create({

@@ -135,14 +135,17 @@ export async function flush(): Promise<FlushResult> {
         result.sent += 1;
       } catch (err) {
         result.failed += 1;
+        const status  = Number((err as any)?.status) || 0;
+        const isHardBusinessError = status >= 400 && status < 500;
         const current = read();
         const idx = current.findIndex((q) => q.id === entry.id);
         if (idx >= 0) {
           current[idx].attempts += 1;
           current[idx].lastError = describeError(err);
-          if (current[idx].attempts >= MAX_ATTEMPTS) {
-            // Give up — remove so it doesn't block the queue forever.
-            // The payload is still discoverable from the last-error toast.
+          if (isHardBusinessError || current[idx].attempts >= MAX_ATTEMPTS) {
+            // 4xx won't resolve with retries; drop so the queue doesn't spin.
+            // Also give up after MAX_ATTEMPTS on transient errors. The payload
+            // is still discoverable from the last-error toast.
             current.splice(idx, 1);
             result.dropped += 1;
           }

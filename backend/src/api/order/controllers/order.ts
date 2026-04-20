@@ -1,6 +1,7 @@
 import { factories } from '@strapi/strapi';
 import { validateRequired, validateNumber, validateArray, validateEnum, ValidationError } from '../../../utils/validate';
 import { canTransition, getTimestampField, getAllowedTransitions } from '../../../utils/order-state-machine';
+import { InsufficientStockError } from '../services/order';
 
 export default factories.createCoreController('api::order.order', ({ strapi }) => ({
   /**
@@ -105,10 +106,41 @@ export default factories.createCoreController('api::order.order', ({ strapi }) =
       });
     }
 
-    // Deduct inventory via recipes
-    const orderService = strapi.service('api::order.order');
+    // Deduct inventory via recipes. If any row would go negative we roll back
+    // everything — refund whatever partial deductions succeeded, delete the
+    // order skeleton, and return 409. The client treats this as a hard fail
+    // (it is NOT queued for retry; the stock won't magically appear).
+    const orderService = strapi.service('api::order.order') as any;
     if (Array.isArray(items)) {
-      await orderService.deductInventory(orderId, items, currentShift?.id);
+      try {
+        await orderService.deductInventory(orderId, items, currentShift?.id);
+      } catch (err: any) {
+        if (err instanceof InsufficientStockError) {
+          try {
+            await orderService.refundInventory(orderId, currentShift?.id);
+          } catch { /* best-effort; we're already on the error path */ }
+          await strapi.db.query('api::order-item.order-item').deleteMany({ where: { order: orderId } });
+          await strapi.db.query('api::payment.payment').deleteMany({ where: { order: orderId } });
+          await strapi.db.query('api::order.order').delete({ where: { id: orderId } });
+          ctx.status = 409;
+          ctx.body   = {
+            error: {
+              status:  409,
+              name:    'InsufficientStock',
+              message: `Недостатньо запасів: ${err.label || err.table}. Залишок: ${err.available}, потрібно: ${err.requested}.`,
+              details: {
+                resource:  err.table,
+                id:        err.rowId,
+                label:     err.label,
+                requested: err.requested,
+                available: err.available,
+              },
+            },
+          };
+          return;
+        }
+        throw err;
+      }
     }
 
     // Update shift totals
