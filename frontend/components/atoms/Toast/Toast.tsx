@@ -18,6 +18,7 @@ import {
 } from 'react';
 import { Icon, type IconName } from '@/components/atoms/Icon';
 import { Text } from '@/components/atoms/Text';
+import { setToastHandler } from '@/lib/toastBridge';
 import styles from './Toast.module.css';
 
 // ============================================
@@ -164,6 +165,11 @@ export function ToastProvider({ children }: ToastProviderProps) {
   const removeToast = useCallback((id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
+
+  useEffect(() => {
+    setToastHandler(addToast);
+    return () => setToastHandler(null);
+  }, [addToast]);
 
   return (
     <ToastContext.Provider value={{ addToast, removeToast }}>

@@ -73,6 +73,7 @@ export function useCreateCategory() {
 
   return useMutation({
     mutationFn: (data: CategoryInput) => categoriesApi.create(data),
+    meta: { toast: { success: 'Категорію створено', error: 'Не вдалось створити категорію' } },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: categoryKeys.lists() });
       queryClient.invalidateQueries({ queryKey: categoryKeys.active() });
@@ -89,6 +90,7 @@ export function useUpdateCategory() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<CategoryInput> }) =>
       categoriesApi.update(id, data),
+    meta: { toast: { success: 'Категорію оновлено', error: 'Не вдалось оновити категорію' } },
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: categoryKeys.detail(id) });
       queryClient.invalidateQueries({ queryKey: categoryKeys.lists() });
@@ -105,6 +107,7 @@ export function useDeleteCategory() {
 
   return useMutation({
     mutationFn: (id: string) => categoriesApi.delete(id),
+    meta: { toast: { success: 'Категорію видалено', error: 'Не вдалось видалити категорію' } },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: categoryKeys.lists() });
       queryClient.invalidateQueries({ queryKey: categoryKeys.active() });
@@ -120,6 +123,7 @@ export function useReorderCategories() {
 
   return useMutation({
     mutationFn: (orderedIds: string[]) => categoriesApi.reorder(orderedIds),
+    meta: { toast: { success: 'Порядок категорій оновлено', error: 'Не вдалось оновити порядок' } },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: categoryKeys.lists() });
       queryClient.invalidateQueries({ queryKey: categoryKeys.active() });

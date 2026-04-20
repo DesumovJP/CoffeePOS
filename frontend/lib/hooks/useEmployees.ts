@@ -60,6 +60,7 @@ export function useCreateEmployee() {
 
   return useMutation({
     mutationFn: (data: EmployeeInput) => employeesApi.create(data),
+    meta: { toast: { success: 'Працівника створено', error: 'Не вдалось створити працівника' } },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: employeeKeys.lists() });
       queryClient.invalidateQueries({ queryKey: employeeKeys.performance() });
@@ -73,6 +74,7 @@ export function useUpdateEmployee() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<EmployeeInput> }) =>
       employeesApi.update(id, data),
+    meta: { toast: { success: 'Працівника оновлено', error: 'Не вдалось оновити працівника' } },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: employeeKeys.lists() });
       queryClient.invalidateQueries({ queryKey: employeeKeys.performance() });
@@ -85,6 +87,7 @@ export function useDeleteEmployee() {
 
   return useMutation({
     mutationFn: (id: string) => employeesApi.delete(id),
+    meta: { toast: { success: 'Працівника видалено', error: 'Не вдалось видалити працівника' } },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: employeeKeys.lists() });
       queryClient.invalidateQueries({ queryKey: employeeKeys.performance() });

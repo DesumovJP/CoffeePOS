@@ -88,6 +88,7 @@ export function useCreateProduct() {
 
   return useMutation({
     mutationFn: (data: ProductInput) => productsApi.create(data),
+    meta: { toast: { success: 'Продукт створено', error: 'Не вдалось створити продукт' } },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: productKeys.lists() });
     },
@@ -103,6 +104,7 @@ export function useUpdateProduct() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<ProductInput> }) =>
       productsApi.update(id, data),
+    meta: { toast: { success: 'Продукт оновлено', error: 'Не вдалось оновити продукт' } },
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: productKeys.detail(id) });
       queryClient.invalidateQueries({ queryKey: productKeys.lists() });
@@ -118,6 +120,7 @@ export function useDeleteProduct() {
 
   return useMutation({
     mutationFn: (id: string) => productsApi.delete(id),
+    meta: { toast: { success: 'Продукт видалено', error: 'Не вдалось видалити продукт' } },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: productKeys.lists() });
     },
@@ -133,6 +136,7 @@ export function useUpdateProductStock() {
   return useMutation({
     mutationFn: ({ id, quantity }: { id: string; quantity: number }) =>
       productsApi.updateStock(id, quantity),
+    meta: { toast: { success: 'Залишок оновлено', error: 'Не вдалось оновити залишок' } },
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: productKeys.detail(id) });
       queryClient.invalidateQueries({ queryKey: productKeys.lists() });

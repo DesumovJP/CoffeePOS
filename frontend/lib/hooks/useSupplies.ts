@@ -26,6 +26,7 @@ export function useCreateSupply() {
 
   return useMutation({
     mutationFn: (data: SupplyCreateData) => suppliesApi.create(data),
+    meta: { toast: { success: 'Поставку створено', error: 'Не вдалось створити поставку' } },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: supplyKeys.lists() });
     },
@@ -38,6 +39,7 @@ export function useReceiveSupply() {
   return useMutation({
     mutationFn: ({ id, receivedBy }: { id: string; receivedBy: string }) =>
       suppliesApi.receive(id, receivedBy),
+    meta: { toast: { success: 'Поставку отримано', error: 'Не вдалось прийняти поставку' } },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: supplyKeys.lists() });
     },
@@ -49,6 +51,7 @@ export function useCancelSupply() {
 
   return useMutation({
     mutationFn: (id: string) => suppliesApi.cancel(id),
+    meta: { toast: { success: 'Поставку скасовано', error: 'Не вдалось скасувати поставку' } },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: supplyKeys.lists() });
     },

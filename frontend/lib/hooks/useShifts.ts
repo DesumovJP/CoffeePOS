@@ -47,6 +47,7 @@ export function useOpenShift() {
 
   return useMutation({
     mutationFn: (data: ShiftOpenData) => shiftsApi.open(data),
+    meta: { toast: { success: 'Зміну відкрито', error: 'Не вдалось відкрити зміну' } },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: shiftKeys.current() });
       queryClient.invalidateQueries({ queryKey: shiftKeys.lists() });
@@ -59,6 +60,7 @@ export function useCloseShift() {
 
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: ShiftCloseData }) => shiftsApi.close(id, data),
+    meta: { toast: { success: 'Зміну закрито', error: 'Не вдалось закрити зміну' } },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: shiftKeys.current() });
       queryClient.invalidateQueries({ queryKey: shiftKeys.lists() });

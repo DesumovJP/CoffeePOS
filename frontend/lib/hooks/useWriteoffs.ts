@@ -26,6 +26,7 @@ export function useCreateWriteoff() {
 
   return useMutation({
     mutationFn: (data: WriteOffCreateData) => writeoffsApi.create(data),
+    meta: { toast: { success: 'Списання створено', error: 'Не вдалось створити списання' } },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: writeoffKeys.lists() });
     },

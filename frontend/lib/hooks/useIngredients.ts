@@ -104,6 +104,7 @@ export function useCreateIngredient() {
 
   return useMutation({
     mutationFn: (data: IngredientInput) => ingredientsApi.create(data),
+    meta: { toast: { success: 'Інгредієнт створено', error: 'Не вдалось створити інгредієнт' } },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ingredientKeys.lists() });
     },
@@ -119,6 +120,7 @@ export function useUpdateIngredient() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<IngredientInput> }) =>
       ingredientsApi.update(id, data),
+    meta: { toast: { success: 'Інгредієнт оновлено', error: 'Не вдалось оновити інгредієнт' } },
     onSuccess: (_, { id, data }) => {
       queryClient.invalidateQueries({ queryKey: ingredientKeys.detail(id) });
       queryClient.invalidateQueries({ queryKey: ingredientKeys.lists() });
@@ -138,6 +140,7 @@ export function useDeleteIngredient() {
 
   return useMutation({
     mutationFn: (id: string) => ingredientsApi.delete(id),
+    meta: { toast: { success: 'Інгредієнт видалено', error: 'Не вдалось видалити інгредієнт' } },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ingredientKeys.lists() });
     },
@@ -162,6 +165,7 @@ export function useAdjustIngredientQuantity() {
       type?: InventoryTransaction['type'];
       notes?: string;
     }) => ingredientsApi.adjustQuantity(id, adjustment, type, notes),
+    meta: { toast: { success: 'Залишок скориговано', error: 'Не вдалось скоригувати залишок' } },
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ingredientKeys.detail(id) });
       queryClient.invalidateQueries({ queryKey: ingredientKeys.lists() });
@@ -217,6 +221,7 @@ export function useCreateIngredientCategory() {
 
   return useMutation({
     mutationFn: (data: IngredientCategoryInput) => ingredientCategoriesApi.create(data),
+    meta: { toast: { success: 'Категорію інгредієнтів створено', error: 'Не вдалось створити категорію' } },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ingredientCategoryKeys.lists() });
     },
@@ -232,6 +237,7 @@ export function useUpdateIngredientCategory() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<IngredientCategoryInput> }) =>
       ingredientCategoriesApi.update(id, data),
+    meta: { toast: { success: 'Категорію інгредієнтів оновлено', error: 'Не вдалось оновити категорію' } },
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ingredientCategoryKeys.detail(id) });
       queryClient.invalidateQueries({ queryKey: ingredientCategoryKeys.lists() });
@@ -247,6 +253,7 @@ export function useDeleteIngredientCategory() {
 
   return useMutation({
     mutationFn: (id: string) => ingredientCategoriesApi.delete(id),
+    meta: { toast: { success: 'Категорію інгредієнтів видалено', error: 'Не вдалось видалити категорію' } },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ingredientCategoryKeys.lists() });
     },
@@ -276,6 +283,7 @@ export function useCreateInventoryTransaction() {
 
   return useMutation({
     mutationFn: (data: InventoryTransactionInput) => inventoryTransactionsApi.create(data),
+    meta: { toast: { success: 'Транзакцію створено', error: 'Не вдалось створити транзакцію' } },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: inventoryTransactionKeys.lists() });
       queryClient.invalidateQueries({ queryKey: ingredientKeys.lists() });

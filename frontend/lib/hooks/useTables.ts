@@ -61,6 +61,7 @@ export function useCreateTable() {
 
   return useMutation({
     mutationFn: (data: CafeTableInput) => tablesApi.create(data),
+    meta: { toast: { success: 'Стіл створено', error: 'Не вдалось створити стіл' } },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: tableKeys.lists() });
     },
@@ -76,6 +77,7 @@ export function useUpdateTable() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<CafeTableInput> }) =>
       tablesApi.update(id, data),
+    meta: { toast: { success: 'Стіл оновлено', error: 'Не вдалось оновити стіл' } },
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: tableKeys.detail(id) });
       queryClient.invalidateQueries({ queryKey: tableKeys.lists() });
@@ -91,6 +93,7 @@ export function useDeleteTable() {
 
   return useMutation({
     mutationFn: (id: string) => tablesApi.delete(id),
+    meta: { toast: { success: 'Стіл видалено', error: 'Не вдалось видалити стіл' } },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: tableKeys.lists() });
     },

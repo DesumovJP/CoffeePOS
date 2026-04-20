@@ -33,6 +33,7 @@ import { useProducts, useActiveCategories, useRecipes, useKeyboardShortcuts, typ
 import type { Product as ApiProduct } from '@/lib/api';
 import { ordersApi, productsApi } from '@/lib/api';
 import { ShiftGuard } from '@/components/organisms/ShiftGuard';
+import { useToast } from '@/components/atoms/Toast';
 import styles from './page.module.css';
 
 // ============================================
@@ -190,6 +191,8 @@ function PosSettingsPopover({
 // ============================================
 
 export default function POSPage() {
+  const { addToast } = useToast();
+
   // API Data
   const { data: apiProducts, isLoading: productsLoading, error: productsError } = useProducts({ isActive: true });
   const { data: apiCategories, isLoading: categoriesLoading, error: categoriesError } = useActiveCategories();
@@ -393,14 +396,15 @@ export default function POSPage() {
         };
 
         await ordersApi.create({ order: orderPayload.order, items: orderPayload.items, payment: orderPayload.payment });
+        addToast({ type: 'success', title: 'Замовлення оформлено', message: `₴${total.toFixed(0)}`, duration: 3000 });
       }
-    } catch {
-      // Fall back to local-only order tracking
+    } catch (err: any) {
+      addToast({ type: 'error', title: 'Не вдалось створити замовлення', message: err?.message, duration: 4000 });
     }
 
     completePayment(method, received);
     setIsProcessingPayment(false);
-  }, [completePayment, currentOrder, getTotal]);
+  }, [completePayment, currentOrder, getTotal, addToast]);
 
   // Loading state
   const isLoading = productsLoading || categoriesLoading;

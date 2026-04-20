@@ -80,6 +80,7 @@ export function useUpdateOrderStatus() {
   return useMutation({
     mutationFn: ({ id, status }: { id: string; status: OrderStatus }) =>
       ordersApi.updateStatus(id, status),
+    meta: { toast: { success: 'Статус замовлення оновлено', error: 'Не вдалось оновити статус' } },
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: orderKeys.detail(id) });
       queryClient.invalidateQueries({ queryKey: orderKeys.lists() });
@@ -96,6 +97,7 @@ export function useCancelOrder() {
 
   return useMutation({
     mutationFn: (id: string) => ordersApi.cancel(id),
+    meta: { toast: { success: 'Замовлення скасовано', error: 'Не вдалось скасувати замовлення' } },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: orderKeys.lists() });
       queryClient.invalidateQueries({ queryKey: orderKeys.active() });

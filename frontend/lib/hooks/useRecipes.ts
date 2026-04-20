@@ -35,6 +35,7 @@ export function useDeleteRecipe() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (documentId: string) => recipesApi.delete(documentId),
+    meta: { toast: { success: 'Рецепт видалено', error: 'Не вдалось видалити рецепт' } },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: recipeKeys.lists() });
     },

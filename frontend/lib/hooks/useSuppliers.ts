@@ -28,6 +28,7 @@ export function useCreateSupplier() {
 
   return useMutation({
     mutationFn: (data: SupplierCreateData) => suppliersApi.create(data),
+    meta: { toast: { success: 'Постачальника створено', error: 'Не вдалось створити постачальника' } },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: supplierKeys.lists() });
     },
@@ -40,6 +41,7 @@ export function useUpdateSupplier() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<SupplierCreateData> }) =>
       suppliersApi.update(id, data),
+    meta: { toast: { success: 'Постачальника оновлено', error: 'Не вдалось оновити постачальника' } },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: supplierKeys.lists() });
     },
@@ -51,6 +53,7 @@ export function useDeleteSupplier() {
 
   return useMutation({
     mutationFn: (id: string) => suppliersApi.delete(id),
+    meta: { toast: { success: 'Постачальника видалено', error: 'Не вдалось видалити постачальника' } },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: supplierKeys.lists() });
     },
