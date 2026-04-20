@@ -75,63 +75,114 @@ export default factories.createCoreService('api::order.order', ({ strapi }) => (
             shift:       shiftId || undefined,
           },
         });
-        continue; // Done — simple tracked products do not also use recipes
+      } else {
+        // ── Strategy B: recipe-based ingredient deduction ─────────────
+        const recipeWhere = hasDocumentId
+          ? { product: { documentId: item.productDocumentId } }
+          : { product: item.product };
+
+        const recipes = await strapi.db.query('api::recipe.recipe').findMany({
+          where: recipeWhere,
+        });
+
+        if (recipes && recipes.length > 0) {
+          // Match recipe by variantId (legacy: sizeId), fall back to isDefault, then first
+          let recipe = recipes.find((r: any) => r.isDefault);
+          const vid = item.variantId || item.sizeId;
+          if (vid) {
+            const matched = recipes.find((r: any) => r.variantId === vid || r.sizeId === vid);
+            if (matched) recipe = matched;
+          }
+          if (!recipe) recipe = recipes[0];
+
+          const recipeIngredients = recipe.ingredients;
+          if (Array.isArray(recipeIngredients)) {
+            for (const ri of recipeIngredients) {
+              const amount = Number(ri.amount) || 0;
+              if (amount <= 0) continue; // no-op — skip
+
+              const ingredientWhere = ri.ingredientSlug
+                ? { slug: ri.ingredientSlug }
+                : { id: ri.ingredientId };
+
+              const ingredient = await strapi.db.query('api::ingredient.ingredient').findOne({
+                where:  ingredientWhere,
+                select: ['id'],
+              });
+              if (!ingredient) continue;
+
+              const deductAmount = amount * (Number(item.quantity) || 1);
+              const { previousQty, newQty } = await atomicDecrement(
+                'ingredients', 'quantity', ingredient.id, deductAmount,
+              );
+
+              await strapi.db.query('api::inventory-transaction.inventory-transaction').create({
+                data: {
+                  type:        'sale',
+                  ingredient:  ingredient.id,
+                  product:     item.product || undefined,
+                  quantity:    -deductAmount,
+                  previousQty,
+                  newQty,
+                  reference:   `ORD-${orderId}`,
+                  shift:       shiftId || undefined,
+                },
+              });
+            }
+          }
+        }
       }
 
-      // ── Strategy B: recipe-based ingredient deduction ───────────────
-      const recipeWhere = hasDocumentId
-        ? { product: { documentId: item.productDocumentId } }
-        : { product: item.product };
+      // ── Modifier-level ingredient deduction ─────────────────────────
+      // Modifiers can add real stock cost (extra shot = more beans, syrup =
+      // syrup, whipped cream, etc). The `modifier.ingredients` JSON field
+      // lists what each modifier consumes; we deduct it here per-item.
+      // Runs for both trackInventory and recipe products.
+      const itemMods = Array.isArray(item.modifiers) ? item.modifiers : [];
+      for (const mod of itemMods) {
+        const modId = parseInt(String(mod?.id ?? ''), 10);
+        if (!modId || Number.isNaN(modId)) continue;
 
-      const recipes = await strapi.db.query('api::recipe.recipe').findMany({
-        where: recipeWhere,
-      });
+        const modRow = await strapi.db.query('api::modifier.modifier').findOne({
+          where:  { id: modId },
+          select: ['id', 'name', 'ingredients'],
+        }) as any;
+        const modIngs = modRow?.ingredients;
+        if (!Array.isArray(modIngs) || modIngs.length === 0) continue;
 
-      if (!recipes || recipes.length === 0) continue;
+        for (const mi of modIngs) {
+          const amount = Number(mi.amount) || 0;
+          if (amount <= 0) continue;
 
-      // Match recipe by variantId (legacy: sizeId), fall back to isDefault, then first
-      let recipe = recipes.find((r: any) => r.isDefault);
-      const vid = item.variantId || item.sizeId;
-      if (vid) {
-        const matched = recipes.find((r: any) => r.variantId === vid || r.sizeId === vid);
-        if (matched) recipe = matched;
-      }
-      if (!recipe) recipe = recipes[0];
+          const where = mi.ingredientSlug
+            ? { slug: mi.ingredientSlug }
+            : { id: mi.ingredientId };
 
-      const recipeIngredients = recipe.ingredients;
-      if (!Array.isArray(recipeIngredients)) continue;
+          const ing = await strapi.db.query('api::ingredient.ingredient').findOne({
+            where,
+            select: ['id'],
+          });
+          if (!ing) continue;
 
-      for (const ri of recipeIngredients) {
-        const amount = Number(ri.amount) || 0;
-        if (amount <= 0) continue; // no-op — skip
+          const deductAmount = amount * (Number(item.quantity) || 1);
+          const { previousQty, newQty } = await atomicDecrement(
+            'ingredients', 'quantity', ing.id, deductAmount,
+          );
 
-        const ingredientWhere = ri.ingredientSlug
-          ? { slug: ri.ingredientSlug }
-          : { id: ri.ingredientId };
-
-        const ingredient = await strapi.db.query('api::ingredient.ingredient').findOne({
-          where:  ingredientWhere,
-          select: ['id'],
-        });
-        if (!ingredient) continue;
-
-        const deductAmount = amount * (Number(item.quantity) || 1);
-        const { previousQty, newQty } = await atomicDecrement(
-          'ingredients', 'quantity', ingredient.id, deductAmount,
-        );
-
-        await strapi.db.query('api::inventory-transaction.inventory-transaction').create({
-          data: {
-            type:        'sale',
-            ingredient:  ingredient.id,
-            product:     item.product || undefined,
-            quantity:    -deductAmount,
-            previousQty,
-            newQty,
-            reference:   `ORD-${orderId}`,
-            shift:       shiftId || undefined,
-          },
-        });
+          await strapi.db.query('api::inventory-transaction.inventory-transaction').create({
+            data: {
+              type:        'sale',
+              ingredient:  ing.id,
+              product:     item.product || undefined,
+              quantity:    -deductAmount,
+              previousQty,
+              newQty,
+              reference:   `ORD-${orderId}`,
+              shift:       shiftId || undefined,
+              notes:       `modifier:${modRow.name}`,
+            },
+          });
+        }
       }
     }
   },

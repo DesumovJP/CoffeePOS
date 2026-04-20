@@ -43,6 +43,9 @@
       "relation": "manyToOne",
       "target": "api::modifier-group.modifier-group",
       "inversedBy": "modifiers"
+    },
+    "ingredients": {
+      "type": "json"
     }
   }
 }
