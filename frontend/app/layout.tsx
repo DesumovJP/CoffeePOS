@@ -15,14 +15,14 @@ const manrope = Manrope({
 
 export const metadata: Metadata = {
   title: {
-    default: 'CoffeePOS',
-    template: '%s | CoffeePOS',
+    default: 'Smak',
+    template: '%s | Smak',
   },
-  description: 'Modern POS platform for HoReCa - cafes, restaurants, and coffee shops',
-  keywords: ['POS', 'point of sale', 'restaurant', 'cafe', 'HoReCa', 'inventory', 'management'],
-  authors: [{ name: 'CoffeePOS Team' }],
-  creator: 'CoffeePOS',
-  publisher: 'CoffeePOS',
+  description: 'Гнучка POS-система для HoReCa — ресторани, кафе, бари, готелі.',
+  keywords: ['POS', 'HoReCa', 'ресторан', 'кафе', 'бар', 'готель', 'облік', 'бізнес'],
+  authors: [{ name: 'Smak' }],
+  creator: 'Smak',
+  publisher: 'Smak',
   robots: {
     index: false,
     follow: false,
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'CoffeePOS',
+    title: 'Smak',
   },
   formatDetection: {
     telephone: false,
@@ -39,9 +39,9 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'uk_UA',
-    siteName: 'CoffeePOS',
-    title: 'CoffeePOS - Modern POS for HoReCa',
-    description: 'Modern POS platform for HoReCa - cafes, restaurants, and coffee shops',
+    siteName: 'Smak',
+    title: 'Smak — гнучка POS-система для HoReCa',
+    description: 'Гнучка система для ведення бізнесу. Ресторани, кафе, бари, готелі.',
   },
 };
 

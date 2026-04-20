@@ -194,7 +194,7 @@ export function AppShell({ children }: AppShellProps) {
   }
 
   // Get page metadata
-  const meta = pageMeta[pathname] || { title: 'CoffeePOS', icon: 'store' as IconName };
+  const meta = pageMeta[pathname] || { title: 'Smak', icon: 'store' as IconName };
 
   // Desktop/Tablet: Sidebar layout
   if (isTablet) {

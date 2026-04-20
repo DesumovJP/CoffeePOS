@@ -12,59 +12,59 @@ import styles from './page.module.css';
 const features = [
   {
     icon: 'package' as const,
-    title: 'Авто-списання інгредієнтів',
-    description: "Кожне замовлення автоматично зменшує запаси. Рецепти прив\u2019язані до товарів — склад завжди актуальний.",
+    title: 'Живий склад',
+    description: 'Кожне замовлення автоматично зменшує запаси. Рецепти прив\u2019язані до страв — залишки завжди точні.',
   },
   {
     icon: 'clock' as const,
-    title: 'Управління змінами',
-    description: 'Відкриття та закриття зміни, X/Z-звіти, зведення каси і контроль готівки.',
+    title: 'Зміни та каса',
+    description: 'Відкриття/закриття змін, X/Z-звіти, готівка та безгот — усе під контролем одного екрана.',
   },
   {
     icon: 'truck' as const,
-    title: 'Облік поставок',
-    description: 'Реєстрація поставок, автоматичне поповнення запасів, журнал постачальників.',
+    title: 'Поставки та постачальники',
+    description: 'Приймайте накладні, ведіть облік постачальників, плануйте замовлення, експортуйте у CSV.',
   },
   {
     icon: 'store' as const,
-    title: 'Мульти-локації',
-    description: 'Управляйте кількома закладами з однієї панелі адміністратора.',
+    title: 'Кілька закладів',
+    description: 'Мережа ресторанів, кав\u2019ярень чи барів? Керуйте усіма з єдиної панелі.',
   },
   {
     icon: 'wifi' as const,
-    title: 'Офлайн режим',
-    description: "Приймайте замовлення без інтернету. Синхронізація при відновленні з\u2019єднання.",
+    title: 'Офлайн-стійкість',
+    description: 'Інтернет зник — замовлення приймаються далі. Повна синхронізація після відновлення.',
   },
   {
-    icon: 'receipt' as const,
-    title: 'Звіти та Аналітика',
-    description: 'Денні й місячні звіти, топ-продукти, аналіз виплат і знижок у реальному часі.',
+    icon: 'chart' as const,
+    title: 'Аналітика у реальному часі',
+    description: 'Денні та місячні звіти, топ-позиції, продуктивність персоналу, знижки — усе наживо.',
   },
 ];
 
 const steps = [
-  { number: '01', title: 'Увійдіть в систему', description: 'Барист · менеджер · власник. Ролі з різними правами доступу.' },
-  { number: '02', title: 'Налаштуйте меню', description: 'Товари, категорії, модифікатори та рецепти за кілька хвилин.' },
-  { number: '03', title: 'Відкрийте зміну', description: 'Один натиск — і POS готовий приймати замовлення.' },
+  { number: '01', title: 'Запросіть команду', description: 'Власник · менеджер · бариста · офіціант. Гнучкі ролі та права.' },
+  { number: '02', title: 'Опишіть меню', description: 'Страви, категорії, модифікатори, рецепти — імпорт або з нуля за 10 хвилин.' },
+  { number: '03', title: 'Відкрийте зміну', description: 'Один натиск — термінал, кухня і склад синхронно готові до роботи.' },
 ];
 
 const testimonials = [
   {
-    quote: 'Перейшли на CoffeePOS — обслуговування стало вдвічі швидшим. Нові баристи освоюють за 10 хвилин.',
+    quote: 'Перейшли на Smak — час оформлення замовлення впав удвічі. Нові стажери освоюють термінал за 10 хвилин.',
     author: 'Олена Коваль',
     role: 'Власник, Coffee Lab Kyiv',
     initials: 'ОК',
   },
   {
-    quote: 'Нарешті POS де все інтуїтивно. Аналітика показує що і коли купують — меню вже оптимізували.',
+    quote: 'Керую трьома ресторанами з одного дашборда. Аналітика показує що продається — меню вже переглянули.',
     author: 'Дмитро Мельник',
-    role: 'Менеджер, Roast House',
+    role: 'CEO, Roast House Group',
     initials: 'ДМ',
   },
   {
-    quote: 'Склад списується автоматично. Повідомлення про низький залишок рятують від ситуації «молоко скінчилось».',
+    quote: 'Склад списується автоматично. Сповіщення про низькі залишки врятували не один вечір у барі.',
     author: 'Марія Василенко',
-    role: 'Власник, Bean & Brew',
+    role: 'Керуюча, Bar & Brew',
     initials: 'МВ',
   },
 ];
@@ -73,20 +73,20 @@ const testimonials = [
 // POS HERO MOCKUP
 // ============================================
 
-const CATEGORIES = ['Еспресо', 'Кава', 'Десерти', 'Чай'];
+const CATEGORIES = ['Бар', 'Кухня', 'Кава', 'Десерти'];
 
 const PRODUCTS = [
-  { name: 'Еспресо',   price: 55,  bg: '#2C1200', fg: '#FDEBD0' },
-  { name: 'Капучино',  price: 85,  bg: '#5C3317', fg: '#FDF5E6' },
-  { name: 'Латте',     price: 95,  bg: '#8B5E3C', fg: '#FFF8F0' },
-  { name: 'Американо', price: 65,  bg: '#3B2010', fg: '#FEF3E2' },
-  { name: 'Флет Уайт', price: 90,  bg: '#6F4E2A', fg: '#FEFAF5' },
-  { name: 'Раф кава',  price: 110, bg: '#A07850', fg: '#FFFDF8' },
+  { name: 'Еспресо',    price: 55,  bg: '#2C1200', fg: '#FDEBD0' },
+  { name: 'Капучино',   price: 85,  bg: '#5C3317', fg: '#FDF5E6' },
+  { name: 'Бургер',     price: 185, bg: '#6B3A1A', fg: '#FFF3E0' },
+  { name: 'Паста',      price: 165, bg: '#8A5A2B', fg: '#FFF8E8' },
+  { name: 'Аперол',     price: 145, bg: '#C8692B', fg: '#FFF5E4' },
+  { name: 'Чізкейк',    price: 95,  bg: '#A07850', fg: '#FFFDF8' },
 ];
 
 const INIT_ORDER = [
   { name: 'Капучино M', price: 85, qty: 2 },
-  { name: 'Круасан',    price: 65, qty: 1 },
+  { name: 'Бургер',     price: 185, qty: 1 },
 ];
 
 function PosHeroMockup() {
@@ -123,7 +123,7 @@ function PosHeroMockup() {
           <span style={{ background: '#FFBD2E' }} />
           <span style={{ background: '#28CA41' }} />
         </div>
-        <span className={styles.chromeTitle}>CoffeePOS — Зміна #12</span>
+        <span className={styles.chromeTitle}>Smak · Зміна #12</span>
         <div className={styles.chromeOnline}>
           <span className={styles.onlineDot} />
           Онлайн
@@ -230,9 +230,9 @@ export default function LandingPage() {
         <div className={styles.navInner}>
           <div className={styles.logo}>
             <div className={styles.logoIcon}>
-              <Icon name="coffee" size="sm" color="accent" />
+              <Icon name="sparkle" size="sm" color="accent" />
             </div>
-            <span className={styles.logoText}>CoffeePOS</span>
+            <span className={styles.logoText}>Smak</span>
           </div>
           <div className={styles.navCenter}>
             <Link href="#features" className={styles.navLink}>Можливості</Link>
@@ -254,20 +254,22 @@ export default function LandingPage() {
 
           {/* Left */}
           <div className={styles.heroLeft}>
+            <span className={styles.heroOverline}>POS · HoReCa · Україна</span>
             <h1 className={styles.heroTitle}>
-              POS-система,<br />
-              яку бариста<br />
-              <span className={styles.heroAccent}>обожнює</span>
+              Гнучка система<br />
+              для ведення<br />
+              <span className={styles.heroAccent}>вашого бізнесу</span>
             </h1>
 
             <p className={styles.heroSub}>
-              Від замовлення до чеку — три натиски.
+              Ресторан, кафе, бар чи готель — Smak підлаштовується під ваш формат,
+              а не навпаки. Термінал, склад, кухня та аналітика в одній платформі.
             </p>
 
             <div className={styles.heroCTAs}>
               <Link href="/pos">
                 <Button variant="primary" size="lg">
-                  Відкрити POS термінал →
+                  Відкрити термінал →
                 </Button>
               </Link>
               <Link href="#features">
@@ -317,9 +319,9 @@ export default function LandingPage() {
         <div className={styles.bentoInner}>
           <div className={styles.sectionHead}>
             <span className={styles.overline}>МОЖЛИВОСТІ</span>
-            <h2 className={styles.sectionTitle}>Все для кав&apos;ярні — в одній системі</h2>
+            <h2 className={styles.sectionTitle}>Все для вашого закладу — в одній платформі</h2>
             <p className={styles.sectionSub}>
-              Від POS-терміналу до складського обліку. Жодних зайвих підписок.
+              Від дотику до замовлення — до Z-звіту в кінці зміни. Без зайвих підписок.
             </p>
           </div>
           <div className={styles.bentoGrid}>
@@ -340,17 +342,17 @@ export default function LandingPage() {
       <section className={`${styles.showcase} ${styles.reveal}`}>
         <div className={styles.showcaseInner}>
           <div className={styles.showcaseText}>
-            <span className={styles.overline}>POS ТЕРМІНАЛ</span>
-            <h2 className={styles.showcaseTitle}>Один клік — замовлення в черзі</h2>
+            <span className={styles.overline}>ТЕРМІНАЛ</span>
+            <h2 className={styles.showcaseTitle}>Один дотик — і замовлення вже в роботі</h2>
             <p className={styles.showcaseSub}>
-              Розроблено щоб бариста не думав — а працював. Миттєвий пошук,
-              гнучкі модифікатори, оплата готівкою та карткою.
+              Розроблено так, щоб персонал не думав, а працював. Миттєвий пошук,
+              гнучкі модифікатори, будь-які способи оплати.
             </p>
             <ul className={styles.checkList}>
               {[
-                'Каталог з категоріями та пошуком (F1)',
-                'Модифікатори та розміри в 1 клік',
-                'Готівка, картка, знижки, розбивка',
+                'Каталог із категоріями та миттєвим пошуком (F1)',
+                'Модифікатори, розміри та дод. інгредієнти в 1 клік',
+                'Готівка, картка, розбивка, знижки, сертифікати',
                 'Клавіатурні шорткати для швидких касирів',
               ].map((item) => (
                 <li key={item}>
@@ -371,7 +373,7 @@ export default function LandingPage() {
                   <span style={{ background: '#FFBD2E' }} />
                   <span style={{ background: '#28CA41' }} />
                 </div>
-                <span className={styles.chromeTitle}>CoffeePOS · Термінал</span>
+                <span className={styles.chromeTitle}>Smak · Термінал</span>
               </div>
               <div className={styles.posDetailBody}>
                 <div className={styles.posDetailGrid}>
@@ -413,14 +415,14 @@ export default function LandingPage() {
         <div className={styles.dualInner}>
 
           <div className={styles.dualCard}>
-            <span className={styles.overline}>КУХОННИЙ ЕКРАН</span>
+            <span className={styles.overline}>КУХНЯ · KDS</span>
             <h3 className={styles.dualTitle}>Жодне замовлення не загубиться</h3>
-            <p className={styles.dualSub}>Real-time оновлення, таймери та статуси. Один дотик — страва готова.</p>
+            <p className={styles.dualSub}>Real-time синхронізація між залом і кухнею. Таймери, статуси, одне натискання — страва готова.</p>
             <div className={styles.kdsMock}>
               {[
                 { num: '#042', time: '2:15', items: ['Капучино ×2', 'Круасан'], status: 'preparing' },
-                { num: '#043', time: '0:48', items: ['Латте M', 'Тірамісу'], status: 'ready' },
-                { num: '#044', time: '4:02', items: ['Американо ×3'], status: 'pending' },
+                { num: '#043', time: '0:48', items: ['Бургер', 'Аперол'], status: 'ready' },
+                { num: '#044', time: '4:02', items: ['Паста ×2', 'Чізкейк'], status: 'pending' },
               ].map((order) => (
                 <div key={order.num} className={`${styles.kdsCard} ${styles[`kds${order.status}`]}`}>
                   <div className={styles.kdsTop}>
@@ -438,7 +440,7 @@ export default function LandingPage() {
           <div className={styles.dualCard}>
             <span className={styles.overline}>АНАЛІТИКА</span>
             <h3 className={styles.dualTitle}>Розумійте свій бізнес</h3>
-            <p className={styles.dualSub}>X/Z-звіти, топ-продукти та динаміка виручки за місяць.</p>
+            <p className={styles.dualSub}>X/Z-звіти, топ-позиції, продуктивність персоналу та динаміка виручки — у режимі реального часу.</p>
             <div className={styles.analyticsMock}>
               <div className={styles.analyticsRow}>
                 {[
@@ -526,11 +528,11 @@ export default function LandingPage() {
           <span className={styles.overline}>БЕЗКОШТОВНО</span>
           <h2 className={styles.ctaTitle}>Готові спробувати?</h2>
           <p className={styles.ctaSub}>
-            Відкрийте POS-термінал прямо зараз — без реєстрації та кредитної картки.
+            Відкрийте демо-термінал прямо зараз — без реєстрації та кредитної картки.
           </p>
           <div className={styles.ctaBtns}>
             <Link href="/pos">
-              <Button variant="primary" size="lg">Відкрити POS термінал →</Button>
+              <Button variant="primary" size="lg">Відкрити термінал →</Button>
             </Link>
             <Link href="/login">
               <Button variant="ghost" size="lg">Увійти в систему</Button>
@@ -548,18 +550,18 @@ export default function LandingPage() {
           <div className={styles.footerBrand}>
             <div className={styles.logo}>
               <div className={styles.logoIcon}>
-                <Icon name="coffee" size="sm" color="accent" />
+                <Icon name="sparkle" size="sm" color="accent" />
               </div>
-              <span className={styles.logoText}>CoffeePOS</span>
+              <span className={styles.logoText}>Smak</span>
             </div>
-            <p className={styles.footerDesc}>Сучасна POS-система для кав&apos;ярень та ресторанів</p>
+            <p className={styles.footerDesc}>Гнучка система для ведення бізнесу — HoReCa без компромісів.</p>
           </div>
           <div className={styles.footerCols}>
             <div className={styles.footerCol}>
               <h4 className={styles.footerHeading}>Продукт</h4>
               <Link href="#features" className={styles.footerLink}>Можливості</Link>
               <Link href="#how" className={styles.footerLink}>Як це працює</Link>
-              <Link href="/pos" className={styles.footerLink}>POS Термінал</Link>
+              <Link href="/pos" className={styles.footerLink}>Термінал</Link>
             </div>
             <div className={styles.footerCol}>
               <h4 className={styles.footerHeading}>Компанія</h4>
@@ -574,7 +576,7 @@ export default function LandingPage() {
           </div>
         </div>
         <div className={styles.footerBottom}>
-          © 2026 CoffeePOS · Всі права захищено · Зроблено в Україні 🇺🇦
+          © 2026 Smak · Всі права захищено · Зроблено в Україні 🇺🇦
         </div>
       </footer>
 

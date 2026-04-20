@@ -98,10 +98,10 @@ export default function LoginPage() {
           {/* Brand Header */}
           <div className={styles.header}>
             <div className={styles.logo}>
-              <Icon name="coffee" size="xl" color="accent" />
+              <Icon name="sparkle" size="xl" color="accent" />
             </div>
             <Text variant="h3" weight="bold" align="center">
-              CoffeePOS
+              Smak
             </Text>
             <Text variant="bodyMedium" color="secondary" align="center">
               Увійдіть до системи

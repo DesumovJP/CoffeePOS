@@ -86,7 +86,7 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
       order,
       items,
       payment,
-      cafeName = 'CoffeePOS Coffee',
+      cafeName = 'Smak',
       cafeAddress,
       baristaName,
       showPrintButton = true,
