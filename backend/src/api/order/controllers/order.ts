@@ -47,10 +47,57 @@ export default factories.createCoreController('api::order.order', ({ strapi }) =
       return { data: existing };
     }
 
+    // Re-price every line from the DB. The client is not trusted: a tampered
+    // request could pay ₴1 for a ₴100 product, and stale carts can legitimately
+    // disagree with the current catalog. Silent override is the right UX —
+    // barista sees the total in the payment modal before confirming.
+    if (Array.isArray(items)) {
+      for (const item of items) {
+        const productWhere = item.productDocumentId
+          ? { documentId: item.productDocumentId }
+          : item.product ? { id: item.product } : null;
+        if (!productWhere) continue;
+
+        const product = await strapi.db.query('api::product.product').findOne({
+          where:  productWhere,
+          select: ['id', 'price'],
+        }) as any;
+        if (!product) continue;
+
+        let unitPrice = Number(product.price) || 0;
+
+        const vid = item.variantId || item.sizeId;
+        if (vid) {
+          const recipe = await strapi.db.query('api::recipe.recipe').findOne({
+            where:  { product: product.id, variantId: vid },
+            select: ['price'],
+          }) as any;
+          if (recipe && Number(recipe.price) > 0) {
+            unitPrice = Number(recipe.price);
+          }
+        }
+
+        const itemMods = Array.isArray(item.modifiers) ? item.modifiers : [];
+        for (const mod of itemMods) {
+          const modId = parseInt(String(mod?.id ?? ''), 10);
+          if (!modId || Number.isNaN(modId)) continue;
+          const modRow = await strapi.db.query('api::modifier.modifier').findOne({
+            where:  { id: modId },
+            select: ['price'],
+          }) as any;
+          if (modRow) unitPrice += Number(modRow.price) || 0;
+        }
+
+        const qty = Number(item.quantity) || 1;
+        item.unitPrice  = unitPrice;
+        item.totalPrice = unitPrice * qty;
+      }
+    }
+
     // Validate and calculate discounts
     let subtotal = 0;
     if (Array.isArray(items)) {
-      subtotal = items.reduce((sum, item) => sum + (item.unitPrice || 0) * (item.quantity || 1), 0);
+      subtotal = items.reduce((sum, item) => sum + (Number(item.unitPrice) || 0) * (Number(item.quantity) || 1), 0);
     }
 
     let discountAmount = 0;
@@ -67,6 +114,13 @@ export default factories.createCoreController('api::order.order', ({ strapi }) =
     order.subtotal = subtotal;
     order.discountAmount = discountAmount;
     order.total = total;
+
+    // Force payment.amount to the server-computed total so the payment record
+    // can never diverge from what was owed. receivedAmount / changeAmount stay
+    // client-supplied (the server can't verify cash on the counter).
+    if (payment) {
+      payment.amount = total;
+    }
 
     // Get current open shift
     const currentShift = await strapi.db.query('api::shift.shift').findOne({
