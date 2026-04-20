@@ -2,6 +2,26 @@ import { factories } from '@strapi/strapi';
 import { validateRequired, sanitizeString, ValidationError } from '../../../utils/validate';
 
 export default factories.createCoreController('api::supply.supply', ({ strapi }) => ({
+  async create(ctx) {
+    const response = await super.create(ctx);
+    const entry: any = response?.data || {};
+    const items: any[] = Array.isArray(entry.items) ? entry.items : [];
+    await strapi.service('api::shift.shift').logCurrentShiftActivity('supply_create', {
+      documentId: entry.documentId,
+      supplierName: entry.supplierName,
+      itemCount: items.length,
+      totalCost: Number(entry.totalCost || 0),
+      user: ctx.state?.user?.username || ctx.state?.user?.email,
+    });
+    return response;
+  },
+  async update(ctx) {
+    return super.update(ctx);
+  },
+  async delete(ctx) {
+    return super.delete(ctx);
+  },
+
   /**
    * Receive a supply: update ingredient quantities and create transactions
    */
