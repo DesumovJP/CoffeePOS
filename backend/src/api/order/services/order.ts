@@ -2,7 +2,7 @@ import { factories } from '@strapi/strapi';
 
 export default factories.createCoreService('api::order.order', ({ strapi }) => ({
   /**
-   * Deduct inventory for an order's items.
+   * Deduct inventory for an order's items — race-safe.
    *
    * Two tracking strategies, resolved per-product:
    *   A) `trackInventory: true` → decrement product.stockQuantity directly
@@ -10,17 +10,44 @@ export default factories.createCoreService('api::order.order', ({ strapi }) => (
    *   B) Recipe-based → decrement each ingredient.quantity via the matching recipe
    *      (used for items assembled from raw ingredients: drinks, food)
    *
-   * Lookup strategy (Strapi 5 — numeric `id` is dynamic, avoid):
+   * Concurrency:
+   *   Each decrement runs in a short transaction with `SELECT … FOR UPDATE` on
+   *   the target row, then `UPDATE … SET x = GREATEST(0, x - n)`. This serialises
+   *   concurrent orders that touch the same product/ingredient row, preventing the
+   *   classic read-modify-write oversell race under parallel barista checkout.
+   *
+   * Lookup strategy (Strapi 5 — numeric `id` is dynamic, prefer stable refs):
    *   - Product    → by `productDocumentId` (stable), falls back to numeric `product` id
-   *   - Ingredient → by `ingredientSlug`   (stable), falls back to numeric `ingredientId`
+   *   - Ingredient → by `ingredientSlug`    (stable), falls back to numeric `ingredientId`
    */
   async deductInventory(orderId: number, items: any[], shiftId?: number) {
+    const knex = strapi.db.connection;
+
+    /**
+     * Atomic decrement helper — returns the *actual* previous and new quantity
+     * from the DB so the audit-log reflects what really happened.
+     */
+    async function atomicDecrement(
+      table: 'products' | 'ingredients',
+      column: string,
+      rowId: number,
+      amount: number,
+    ): Promise<{ previousQty: number; newQty: number }> {
+      return knex.transaction(async (tx) => {
+        const [row] = await tx(table).where({ id: rowId }).forUpdate().select(column);
+        const previousQty = Number(row?.[column]) || 0;
+        const newQty      = Math.max(0, previousQty - amount);
+        await tx(table).where({ id: rowId }).update({ [column]: newQty });
+        return { previousQty, newQty };
+      });
+    }
+
     for (const item of items) {
       const hasDocumentId = !!item.productDocumentId;
       const hasNumericId  = !!item.product;
       if (!hasDocumentId && !hasNumericId) continue;
 
-      // Resolve the product entity first — needed for both tracking strategies
+      // Resolve the product — needed to pick a deduction strategy
       const productWhere = hasDocumentId
         ? { documentId: item.productDocumentId }
         : { id: item.product };
@@ -30,16 +57,12 @@ export default factories.createCoreService('api::order.order', ({ strapi }) => (
         select: ['id', 'trackInventory', 'stockQuantity'],
       }) as any;
 
-      // ── Strategy A: direct stockQuantity decrement ──────────────────
+      // ── Strategy A: direct atomic stockQuantity decrement ───────────
       if (product?.trackInventory) {
-        const qty            = Number(item.quantity) || 1;
-        const previousQty    = Number(product.stockQuantity) || 0;
-        const newQty         = Math.max(0, previousQty - qty);
-
-        await strapi.db.query('api::product.product').update({
-          where: { id: product.id },
-          data:  { stockQuantity: newQty },
-        });
+        const qty = Number(item.quantity) || 1;
+        const { previousQty, newQty } = await atomicDecrement(
+          'products', 'stock_quantity', product.id, qty,
+        );
 
         await strapi.db.query('api::inventory-transaction.inventory-transaction').create({
           data: {
@@ -79,25 +102,23 @@ export default factories.createCoreService('api::order.order', ({ strapi }) => (
       if (!Array.isArray(recipeIngredients)) continue;
 
       for (const ri of recipeIngredients) {
-        // Prefer stable slug over fragile numeric id
+        const amount = Number(ri.amount) || 0;
+        if (amount <= 0) continue; // no-op — skip
+
         const ingredientWhere = ri.ingredientSlug
           ? { slug: ri.ingredientSlug }
           : { id: ri.ingredientId };
 
         const ingredient = await strapi.db.query('api::ingredient.ingredient').findOne({
-          where: ingredientWhere,
+          where:  ingredientWhere,
+          select: ['id'],
         });
-
         if (!ingredient) continue;
 
-        const deductAmount = ri.amount * (item.quantity || 1);
-        const previousQty  = ingredient.quantity || 0;
-        const newQty       = Math.max(0, previousQty - deductAmount);
-
-        await strapi.db.query('api::ingredient.ingredient').update({
-          where: { id: ingredient.id },
-          data:  { quantity: newQty },
-        });
+        const deductAmount = amount * (Number(item.quantity) || 1);
+        const { previousQty, newQty } = await atomicDecrement(
+          'ingredients', 'quantity', ingredient.id, deductAmount,
+        );
 
         await strapi.db.query('api::inventory-transaction.inventory-transaction').create({
           data: {
