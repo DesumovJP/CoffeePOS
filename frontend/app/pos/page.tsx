@@ -32,6 +32,7 @@ import { useProducts, useActiveCategories, useRecipes, useKeyboardShortcuts, use
 import { useQueryClient } from '@tanstack/react-query';
 import type { Product as ApiProduct } from '@/lib/api';
 import { ordersApi, productsApi } from '@/lib/api';
+import { enqueue as enqueueOfflineOrder } from '@/lib/offline/orderQueue';
 import { ShiftGuard } from '@/components/organisms/ShiftGuard';
 import { useToast } from '@/components/atoms/Toast';
 import styles from './page.module.css';
@@ -407,21 +408,30 @@ export default function POSPage() {
         },
       };
 
-      await ordersApi.create({ order: orderPayload.order, items: orderPayload.items, payment: orderPayload.payment });
+      const payload = { order: orderPayload.order, items: orderPayload.items, payment: orderPayload.payment };
 
-      addToast({ type: 'success', title: 'Замовлення оформлено', message: `₴${total.toFixed(0)}`, duration: 3000 });
-      queryClient.invalidateQueries({ queryKey: productKeys.availability() });
+      try {
+        await ordersApi.create(payload);
 
-      // Atomic commit: clear cart + close modal ONLY after server confirmed the order.
-      // If the request fails, the cart stays intact so the barista can retry.
-      completePayment(method, received);
-    } catch (err: any) {
-      addToast({
-        type: 'error',
-        title: 'Не вдалось оформити замовлення',
-        message: err?.message || 'Перевірте з\'єднання та спробуйте ще раз',
-        duration: 5000,
-      });
+        addToast({ type: 'success', title: 'Замовлення оформлено', message: `₴${total.toFixed(0)}`, duration: 3000 });
+        queryClient.invalidateQueries({ queryKey: productKeys.availability() });
+
+        // Atomic commit: clear cart + close modal ONLY after server confirmed the order.
+        completePayment(method, received);
+      } catch (err: any) {
+        // Server unreachable — enqueue for retry. OfflineQueueProvider flushes
+        // on `online` + every 30s. Cart is cleared so the barista can continue;
+        // server-side idempotency on `orderNumber` guarantees no duplicate when
+        // the queued copy eventually lands.
+        enqueueOfflineOrder(payload, err);
+        addToast({
+          type: 'warning',
+          title: 'Замовлення додано в чергу',
+          message: 'Буде надіслано автоматично при відновленні зв\'язку',
+          duration: 5000,
+        });
+        completePayment(method, received);
+      }
     } finally {
       setIsProcessingPayment(false);
     }

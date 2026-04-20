@@ -33,6 +33,19 @@ export default factories.createCoreController('api::order.order', ({ strapi }) =
       throw error;
     }
 
+    // Idempotency: if an order with this orderNumber already exists, return it.
+    // Clients running the offline-retry queue may re-send the same payload after
+    // a network blip — this makes the endpoint safe to retry without duplicating
+    // orders, inventory deductions, or shift sales.
+    const existing = await strapi.db.query('api::order.order').findOne({
+      where:    { orderNumber: order.orderNumber },
+      populate: ['items', 'payment', 'shift'],
+    });
+    if (existing) {
+      ctx.set('X-Idempotent-Replay', '1');
+      return { data: existing };
+    }
+
     // Validate and calculate discounts
     let subtotal = 0;
     if (Array.isArray(items)) {

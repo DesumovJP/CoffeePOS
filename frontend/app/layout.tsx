@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Manrope } from 'next/font/google';
 import { ThemeProvider } from '@/design-system/providers';
 import { PreferencesSync } from '@/design-system/providers/PreferencesSync';
-import { QueryProvider, AuthProvider } from '@/lib/providers';
+import { QueryProvider, AuthProvider, OfflineQueueProvider } from '@/lib/providers';
 import { AppShell, ErrorBoundary } from '@/components';
 import { ToastProvider } from '@/components/atoms/Toast';
 import './globals.css';
@@ -95,6 +95,7 @@ export default function RootLayout({
             <ThemeProvider defaultMode="system">
               <PreferencesSync />
               <ToastProvider>
+                <OfflineQueueProvider />
                 <ErrorBoundary>
                   <AppShell>
                     <main id="main-content">
