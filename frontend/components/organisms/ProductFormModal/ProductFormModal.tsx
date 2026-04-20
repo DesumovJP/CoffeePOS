@@ -11,6 +11,7 @@ import { useState, useEffect, useCallback, useRef, type FormEvent } from 'react'
 import { Text, Button, Input, Icon, Modal } from '@/components/atoms';
 import { productsApi, uploadFile } from '@/lib/api';
 import type { Product, ProductInput, Category } from '@/lib/api';
+import { emitToast } from '@/lib/toastBridge';
 import styles from './ProductFormModal.module.css';
 
 // ============================================
@@ -219,15 +220,17 @@ export function ProductFormModal({
       try {
         if (isEditMode && product) {
           await productsApi.update(product.documentId, data);
+          emitToast({ type: 'success', title: 'Продукт оновлено', message: data.name, duration: 3000 });
         } else {
           await productsApi.create(data);
+          emitToast({ type: 'success', title: 'Продукт створено', message: data.name, duration: 3000 });
         }
         onSuccess();
         onClose();
       } catch (err) {
-        setSubmitError(
-          err instanceof Error ? err.message : 'Помилка збереження продукту'
-        );
+        const msg = err instanceof Error ? err.message : 'Помилка збереження продукту';
+        setSubmitError(msg);
+        emitToast({ type: 'error', title: isEditMode ? 'Не вдалось оновити продукт' : 'Не вдалось створити продукт', message: msg, duration: 4000 });
       } finally {
         setIsSubmitting(false);
       }

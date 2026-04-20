@@ -12,6 +12,7 @@ import { Modal } from '@/components/atoms/Modal';
 import { recipesApi, uploadFile } from '@/lib/api';
 import type { ApiRecipe } from '@/lib/api';
 import type { Product, Ingredient } from '@/lib/api/types';
+import { emitToast } from '@/lib/toastBridge';
 import styles from './RecipeFormModal.module.css';
 
 // ============================================
@@ -223,14 +224,18 @@ export function RecipeFormModal({
     try {
       if (isEditing && recipe) {
         await recipesApi.update(recipe.documentId, payload);
+        emitToast({ type: 'success', title: 'Рецепт оновлено', duration: 3000 });
       } else {
         await recipesApi.create(payload);
+        emitToast({ type: 'success', title: 'Рецепт створено', duration: 3000 });
       }
       onSuccess();
       onClose();
     } catch (err: unknown) {
       const apiErr = err as { message?: string };
-      setError(apiErr.message || 'Помилка збереження');
+      const msg = apiErr.message || 'Помилка збереження';
+      setError(msg);
+      emitToast({ type: 'error', title: isEditing ? 'Не вдалось оновити рецепт' : 'Не вдалось створити рецепт', message: msg, duration: 4000 });
     } finally {
       setSubmitting(false);
     }

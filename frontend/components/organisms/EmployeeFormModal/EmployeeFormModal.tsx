@@ -10,6 +10,7 @@ import { useState, useEffect, useCallback, useRef, type FormEvent } from 'react'
 import { Text, Button, Input, Modal, Icon } from '@/components/atoms';
 import { employeesApi, uploadFile } from '@/lib/api';
 import type { Employee, EmployeeInput } from '@/lib/api';
+import { emitToast } from '@/lib/toastBridge';
 import styles from './EmployeeFormModal.module.css';
 
 // ============================================
@@ -204,15 +205,17 @@ export function EmployeeFormModal({
       try {
         if (isEditMode && employee) {
           await employeesApi.update(employee.documentId, data);
+          emitToast({ type: 'success', title: 'Працівника оновлено', message: data.name, duration: 3000 });
         } else {
           await employeesApi.create(data);
+          emitToast({ type: 'success', title: 'Працівника створено', message: data.name, duration: 3000 });
         }
         onSuccess();
         onClose();
       } catch (err) {
-        setSubmitError(
-          err instanceof Error ? err.message : 'Помилка збереження працівника'
-        );
+        const msg = err instanceof Error ? err.message : 'Помилка збереження працівника';
+        setSubmitError(msg);
+        emitToast({ type: 'error', title: isEditMode ? 'Не вдалось оновити працівника' : 'Не вдалось створити працівника', message: msg, duration: 4000 });
       } finally {
         setIsSubmitting(false);
       }

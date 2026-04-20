@@ -10,6 +10,7 @@ import { useState, useEffect, useCallback, type FormEvent } from 'react';
 import { Text, Button, Input, Modal } from '@/components/atoms';
 import { suppliersApi } from '@/lib/api';
 import type { Supplier, SupplierCreateData } from '@/lib/api';
+import { emitToast } from '@/lib/toastBridge';
 import styles from './SupplierFormModal.module.css';
 
 // ============================================
@@ -148,13 +149,17 @@ export function SupplierFormModal({ isOpen, onClose, supplier, initialName, onSu
     try {
       if (isEditMode && supplier) {
         await suppliersApi.update(supplier.documentId, data);
+        emitToast({ type: 'success', title: 'Постачальника оновлено', message: data.name, duration: 3000 });
       } else {
         await suppliersApi.create(data);
+        emitToast({ type: 'success', title: 'Постачальника створено', message: data.name, duration: 3000 });
       }
       onSuccess();
       onClose();
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : 'Помилка збереження постачальника');
+      const msg = err instanceof Error ? err.message : 'Помилка збереження постачальника';
+      setSubmitError(msg);
+      emitToast({ type: 'error', title: isEditMode ? 'Не вдалось оновити постачальника' : 'Не вдалось створити постачальника', message: msg, duration: 4000 });
     } finally {
       setIsSubmitting(false);
     }

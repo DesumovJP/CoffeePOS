@@ -11,6 +11,7 @@ import { Text, Button, Icon, Input } from '@/components/atoms';
 import { Modal } from '@/components/atoms/Modal';
 import { modifierGroupsApi, modifiersApi } from '@/lib/api';
 import type { ModifierGroup } from '@/lib/api/types';
+import { emitToast } from '@/lib/toastBridge';
 import styles from './ModifierGroupFormModal.module.css';
 
 // ============================================
@@ -188,11 +189,14 @@ export function ModifierGroupFormModal({
         }
       }
 
+      emitToast({ type: 'success', title: isEditing ? 'Групу модифікаторів оновлено' : 'Групу модифікаторів створено', message: groupPayload.name, duration: 3000 });
       onSuccess();
       onClose();
     } catch (err: unknown) {
       const apiErr = err as { message?: string };
-      setError(apiErr.message || 'Помилка збереження');
+      const msg = apiErr.message || 'Помилка збереження';
+      setError(msg);
+      emitToast({ type: 'error', title: isEditing ? 'Не вдалось оновити групу' : 'Не вдалось створити групу', message: msg, duration: 4000 });
     } finally {
       setSubmitting(false);
     }

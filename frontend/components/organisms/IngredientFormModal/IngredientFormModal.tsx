@@ -12,6 +12,7 @@ import { Text, Button, Input, Modal, Icon } from '@/components/atoms';
 import { ingredientsApi, uploadFile } from '@/lib/api';
 import type { Ingredient, IngredientInput, IngredientCategory, IngredientUnit } from '@/lib/api';
 import type { Supplier } from '@/lib/api/suppliers';
+import { emitToast } from '@/lib/toastBridge';
 import styles from './IngredientFormModal.module.css';
 
 // ============================================
@@ -224,15 +225,17 @@ export function IngredientFormModal({
       try {
         if (isEditMode && ingredient) {
           await ingredientsApi.update(ingredient.documentId, data);
+          emitToast({ type: 'success', title: 'Інгредієнт оновлено', message: data.name, duration: 3000 });
         } else {
           await ingredientsApi.create(data);
+          emitToast({ type: 'success', title: 'Інгредієнт створено', message: data.name, duration: 3000 });
         }
         onSuccess();
         onClose();
       } catch (err) {
-        setSubmitError(
-          err instanceof Error ? err.message : 'Помилка збереження інгредієнта'
-        );
+        const msg = err instanceof Error ? err.message : 'Помилка збереження інгредієнта';
+        setSubmitError(msg);
+        emitToast({ type: 'error', title: isEditMode ? 'Не вдалось оновити інгредієнт' : 'Не вдалось створити інгредієнт', message: msg, duration: 4000 });
       } finally {
         setIsSubmitting(false);
       }

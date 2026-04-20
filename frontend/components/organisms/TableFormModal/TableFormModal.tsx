@@ -11,6 +11,7 @@ import { Text, Button, Icon, Input } from '@/components/atoms';
 import { Modal } from '@/components/atoms/Modal';
 import { tablesApi } from '@/lib/api';
 import type { CafeTable } from '@/lib/api/types';
+import { emitToast } from '@/lib/toastBridge';
 import styles from './TableFormModal.module.css';
 
 // ============================================
@@ -95,14 +96,18 @@ export function TableFormModal({
 
       if (isEditing && table) {
         await tablesApi.update(table.documentId, payload);
+        emitToast({ type: 'success', title: 'Стіл оновлено', message: `№ ${payload.number}`, duration: 3000 });
       } else {
         await tablesApi.create(payload);
+        emitToast({ type: 'success', title: 'Стіл створено', message: `№ ${payload.number}`, duration: 3000 });
       }
       onSuccess();
       onClose();
     } catch (err: unknown) {
       const apiErr = err as { message?: string };
-      setError(apiErr.message || 'Помилка збереження');
+      const msg = apiErr.message || 'Помилка збереження';
+      setError(msg);
+      emitToast({ type: 'error', title: isEditing ? 'Не вдалось оновити стіл' : 'Не вдалось створити стіл', message: msg, duration: 4000 });
     } finally {
       setSubmitting(false);
     }

@@ -11,6 +11,7 @@ import { useState, useEffect, useCallback, type FormEvent } from 'react';
 import { Text, Button, Input, Modal, Icon } from '@/components/atoms';
 import { categoriesApi } from '@/lib/api';
 import type { Category, CategoryInput } from '@/lib/api';
+import { emitToast } from '@/lib/toastBridge';
 import styles from './CategoryFormModal.module.css';
 
 // ============================================
@@ -130,15 +131,17 @@ export function CategoryFormModal({
       try {
         if (isEditMode && category) {
           await categoriesApi.update(category.documentId, data);
+          emitToast({ type: 'success', title: 'Категорію оновлено', message: data.name, duration: 3000 });
         } else {
           await categoriesApi.create(data);
+          emitToast({ type: 'success', title: 'Категорію створено', message: data.name, duration: 3000 });
         }
         onSuccess();
         onClose();
       } catch (err) {
-        setSubmitError(
-          err instanceof Error ? err.message : 'Помилка збереження категорії'
-        );
+        const msg = err instanceof Error ? err.message : 'Помилка збереження категорії';
+        setSubmitError(msg);
+        emitToast({ type: 'error', title: isEditMode ? 'Не вдалось оновити категорію' : 'Не вдалось створити категорію', message: msg, duration: 4000 });
       } finally {
         setIsSubmitting(false);
       }
