@@ -26,7 +26,6 @@ import {
   useOrderStore,
   selectCurrentOrder,
   selectIsPaymentModalOpen,
-  useShiftStore,
   usePreferencesStore,
 } from '@/lib/store';
 import { useProducts, useActiveCategories, useRecipes, useKeyboardShortcuts, useProductAvailability, productKeys, type ShortcutConfig } from '@/lib/hooks';
@@ -374,53 +373,58 @@ export default function POSPage() {
   }, [orderItems.length, openPaymentModal]);
 
   const handlePaymentComplete = useCallback(async (method: PaymentMethod, received?: number) => {
-    setIsProcessingPayment(true);
+    if (!currentOrder) return;
 
-    const shiftStore = useShiftStore.getState();
+    setIsProcessingPayment(true);
     const total = getTotal();
 
-    // Try API-based order creation
     try {
-      if (currentOrder) {
-        const orderPayload = {
-          order: {
-            orderNumber: currentOrder.id,
-            status: 'completed' as const,
-            type: 'dine_in' as const,
-            subtotal: total,
-            total,
-            completedAt: new Date().toISOString(),
-          },
-          items: currentOrder.items.map((item) => ({
-            product: parseInt(item.productId) || undefined,
-            productDocumentId: item.productDocumentId,
-            productName: item.name,
-            quantity: item.quantity,
-            unitPrice: item.price,
-            totalPrice: item.price * item.quantity,
-            modifiers: item.modifiers,
-            variantId: item.variantId,
-            status: 'served' as const,
-          })),
-          payment: {
-            method: method as 'cash' | 'card' | 'qr',
-            amount: total,
-            receivedAmount: received,
-            changeAmount: received ? Math.max(0, received - total) : 0,
-          },
-        };
+      const orderPayload = {
+        order: {
+          orderNumber: currentOrder.id,
+          status: 'completed' as const,
+          type: 'dine_in' as const,
+          subtotal: total,
+          total,
+          completedAt: new Date().toISOString(),
+        },
+        items: currentOrder.items.map((item) => ({
+          product: parseInt(item.productId) || undefined,
+          productDocumentId: item.productDocumentId,
+          productName: item.name,
+          quantity: item.quantity,
+          unitPrice: item.price,
+          totalPrice: item.price * item.quantity,
+          modifiers: item.modifiers,
+          variantId: item.variantId,
+          status: 'served' as const,
+        })),
+        payment: {
+          method: method as 'cash' | 'card' | 'qr',
+          amount: total,
+          receivedAmount: received,
+          changeAmount: received ? Math.max(0, received - total) : 0,
+        },
+      };
 
-        await ordersApi.create({ order: orderPayload.order, items: orderPayload.items, payment: orderPayload.payment });
-        addToast({ type: 'success', title: 'Замовлення оформлено', message: `₴${total.toFixed(0)}`, duration: 3000 });
-        // Refresh availability — stockQuantity / ingredient quantities were decremented server-side
-        queryClient.invalidateQueries({ queryKey: productKeys.availability() });
-      }
+      await ordersApi.create({ order: orderPayload.order, items: orderPayload.items, payment: orderPayload.payment });
+
+      addToast({ type: 'success', title: 'Замовлення оформлено', message: `₴${total.toFixed(0)}`, duration: 3000 });
+      queryClient.invalidateQueries({ queryKey: productKeys.availability() });
+
+      // Atomic commit: clear cart + close modal ONLY after server confirmed the order.
+      // If the request fails, the cart stays intact so the barista can retry.
+      completePayment(method, received);
     } catch (err: any) {
-      addToast({ type: 'error', title: 'Не вдалось створити замовлення', message: err?.message, duration: 4000 });
+      addToast({
+        type: 'error',
+        title: 'Не вдалось оформити замовлення',
+        message: err?.message || 'Перевірте з\'єднання та спробуйте ще раз',
+        duration: 5000,
+      });
+    } finally {
+      setIsProcessingPayment(false);
     }
-
-    completePayment(method, received);
-    setIsProcessingPayment(false);
   }, [completePayment, currentOrder, getTotal, addToast, queryClient]);
 
   // Loading state

@@ -1,4 +1,5 @@
 import { factories } from '@strapi/strapi';
+import { computeAvailability } from '../../../utils/availability';
 
 export default factories.createCoreController('api::product.product', ({ strapi }) => ({
   /**
@@ -12,100 +13,33 @@ export default factories.createCoreController('api::product.product', ({ strapi 
    * Response: { data: { [productDocumentId]: number | null }, meta: { total, tracked } }
    */
   async getAvailability(ctx) {
-    const productQuery    = strapi.db.query('api::product.product');
-    const recipeQuery     = strapi.db.query('api::recipe.recipe');
-    const ingredientQuery = strapi.db.query('api::ingredient.ingredient');
-
     const [products, recipes, ingredients] = await Promise.all([
-      productQuery.findMany({
+      strapi.db.query('api::product.product').findMany({
         where:  { isActive: true },
         select: ['id', 'documentId', 'trackInventory', 'stockQuantity'],
       }),
-      recipeQuery.findMany({
+      strapi.db.query('api::recipe.recipe').findMany({
         populate: { product: { select: ['id'] } },
       }),
-      ingredientQuery.findMany({
+      strapi.db.query('api::ingredient.ingredient').findMany({
         where:  { isActive: true },
         select: ['id', 'slug', 'quantity'],
       }),
     ]);
 
-    // Lookup maps for ingredients — stable `slug` preferred, numeric `id` fallback
-    const ingredientBySlug = new Map<string, any>();
-    const ingredientById   = new Map<number, any>();
-    for (const ing of ingredients) {
-      if (ing.slug) ingredientBySlug.set(ing.slug, ing);
-      ingredientById.set(ing.id, ing);
-    }
+    const availability = computeAvailability(
+      products as any,
+      recipes  as any,
+      ingredients as any,
+    );
 
-    // Group recipes by product.id
-    const recipesByProductId = new Map<number, any[]>();
-    for (const r of recipes) {
-      const pid = r.product?.id;
-      if (!pid) continue;
-      if (!recipesByProductId.has(pid)) recipesByProductId.set(pid, []);
-      recipesByProductId.get(pid)!.push(r);
-    }
-
-    const availability: Record<string, number | null> = {};
-    let trackedCount = 0;
-
-    for (const p of products as any[]) {
-      // 1. Simple tracked product — use its own stockQuantity
-      if (p.trackInventory) {
-        availability[p.documentId] = Math.max(0, p.stockQuantity || 0);
-        trackedCount++;
-        continue;
-      }
-
-      // 2. Recipe-based — compute portions per variant, take the max
-      const prodRecipes = recipesByProductId.get(p.id) || [];
-      if (prodRecipes.length === 0) {
-        availability[p.documentId] = null;
-        continue;
-      }
-
-      let bestPortions = 0;
-      let anyVariantValid = false;
-
-      for (const recipe of prodRecipes) {
-        const riList = recipe.ingredients;
-        if (!Array.isArray(riList) || riList.length === 0) continue;
-
-        let variantPortions = Infinity;
-        let variantOk = true;
-
-        for (const ri of riList) {
-          const amount = parseFloat(ri.amount) || 0;
-          if (amount <= 0) continue; // no-op ingredient — doesn't constrain
-
-          const ing = ri.ingredientSlug
-            ? ingredientBySlug.get(ri.ingredientSlug)
-            : ri.ingredientId ? ingredientById.get(ri.ingredientId) : null;
-
-          if (!ing) { variantOk = false; break; }
-
-          const stockQty = parseFloat(ing.quantity) || 0;
-          const possible = Math.floor(stockQty / amount);
-          if (possible < variantPortions) variantPortions = possible;
-          if (variantPortions <= 0) break; // short-circuit: already 0
-        }
-
-        if (variantOk && variantPortions !== Infinity) {
-          anyVariantValid = true;
-          if (variantPortions > bestPortions) bestPortions = variantPortions;
-        }
-      }
-
-      availability[p.documentId] = anyVariantValid ? bestPortions : 0;
-      trackedCount++;
-    }
+    const tracked = Object.values(availability).filter((v) => v !== null).length;
 
     return {
       data: availability,
       meta: {
         total: products.length,
-        tracked: trackedCount,
+        tracked,
       },
     };
   },
